@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polygon, Text as SvgText } from 'react-native-svg';
 
-// --- 1. Parámetros Globales ---
+// --- Parámetros de configuración del compás ---
 const COMPASS_SIZE = 560;
 const CENTER = COMPASS_SIZE / 2; // 280
 const RADIUS = CENTER - 20; // 260
@@ -9,12 +9,12 @@ const INNER_RADIUS = RADIUS - 55; // 205
 
 const FONT_SIZE = 18;
 const FONT_SIZE_NUMERIC = FONT_SIZE;
-const FONT_SIZE_CARDINAL_LETTER = FONT_SIZE + 10; // 28px
-const COLOR_CIRCLE_BG = 'rgba(40, 40, 40, 0.75)';
-const COLOR_BORDER = '#fff';
-const COLOR_3 = '#dc1212ff'; // Rojo (COG, Línea de Crujía)
-const COLOR_INNER_DECO = 'rgba(40, 40, 40, 0.75)';
-const COLOR_TWA_EXTERIOR = '#ff9800'; // Naranja (TWA_COG)
+const FONT_SIZE_CARDINAL_LETTER = FONT_SIZE + 10; // Tamaño de letra para cardinales
+const COLOR_CIRCLE_BG = 'rgba(40, 40, 40, 0.75)'; // Fondo del compás
+const COLOR_BORDER = '#fff'; // Color de bordes y marcas
+const COLOR_3 = '#dc1212ff'; // Rojo para heading/COG
+const COLOR_INNER_DECO = 'rgba(40, 40, 40, 0.75)'; // Fondo interior
+const COLOR_TWA_EXTERIOR = '#ff9800'; // Naranja para TWA
 
 // Radios para la posición del texto:
 const TEXT_RADIUS_OUTER_DIAL = RADIUS - 60;
@@ -23,14 +23,14 @@ const TEXT_RADIUS_INNERMOST_CARDINAL = 140;
 const TWA_EXTERIOR_DISTANCE = RADIUS + 10;
 const TWA_TRIANGLE_HEIGHT = 25;
 
-// Radio y estilos para los nuevos arcos exteriores
+// Parámetros para los arcos de referencia de TWA
 const ARC_RADIUS = RADIUS + 15;
 const ARC_THICKNESS = 15;
 const ARC_COLOR_GREEN = '#00ff00'; // Verde
 const ARC_COLOR_RED = '#ff0000';   // Rojo
 
 
-// --- 2. Funciones Auxiliares ---
+// --- Funciones auxiliares para dibujo y geometría ---
 
 const getTick = (angleDeg, length, innerRadius, outerRadius, center, color) => {
     const angleRad = (angleDeg - 90) * (Math.PI / 180);
@@ -39,6 +39,7 @@ const getTick = (angleDeg, length, innerRadius, outerRadius, center, color) => {
     const x2 = center + outerRadius * Math.cos(angleRad);
     const y2 = center + outerRadius * Math.sin(angleRad);
 
+    // Dibuja una marca (tick) en el ángulo especificado
     return (
         <Line
             key={angleDeg}
@@ -50,16 +51,16 @@ const getTick = (angleDeg, length, innerRadius, outerRadius, center, color) => {
     );
 };
 
+// Calcula la posición (x, y) para un texto dado un ángulo y radio
 const getDegreeTextPosition = (angleDeg, radius, offset = 0) => {
     const angleRad = (angleDeg - 90) * (Math.PI / 180);
-
     return {
         x: CENTER + (radius + offset) * Math.cos(angleRad),
         y: CENTER + (radius + offset) * Math.sin(angleRad) + (FONT_SIZE_NUMERIC / 3)
     };
 };
 
-// FUNCIÓN PARA GENERAR EL PATH DEL ARCO SVG
+// Convierte coordenadas polares a cartesianas para SVG
 const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
     const angleInRadians = (angleInDegrees - 90) * (Math.PI / 180.0);
     return {
@@ -68,20 +69,15 @@ const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
     };
 }
 
+// Genera el path SVG para un arco entre dos ángulos dados
 const getArcPath = (startAngle, endAngle, radius) => {
     const start = polarToCartesian(CENTER, CENTER, radius, endAngle);
     const end = polarToCartesian(CENTER, CENTER, radius, startAngle);
-
-    // Si el arco es > 180 grados, largeArcFlag es 1, sino 0
-    // Siempre asumiremos arcos pequeños para rangos de 40 grados.
     const largeArcFlag = endAngle - startAngle <= 180 && endAngle - startAngle > 0 ? "0" : "1";
-
-    // Comando SVG Path: M (MoveTo), A (ArcTo)
     const d = [
         "M", start.x, start.y,
         "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
     ].join(" ");
-
     return d;
 }
 
@@ -229,7 +225,7 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog }) => {
 
                         {/* Triángulo Naranja que apunta hacia el centro */}
                         <Polygon
-                            points={`${CENTER - 10}, 5 ${CENTER + 10}, 5 ${CENTER}, 25`}
+                            points={`${CENTER - 20}, 5 ${CENTER + 20}, 5 ${CENTER}, 45`}
                             fill={COLOR_TWA_EXTERIOR}
                             stroke={COLOR_BORDER}
                             strokeWidth="2"
@@ -238,9 +234,33 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog }) => {
                 )}
 
 
+                {twd !== undefined && (
+                    <G rotation={twd} origin={`${CENTER}, ${CENTER}`}>
+                        {/* Línea que une el centro con la punta del triángulo */}
+                        <Line
+                            x1={CENTER} y1={CENTER}
+                            x2={CENTER} y2={CENTER - TWA_EXTERIOR_DISTANCE}
+                            stroke="#2196f3"
+                            strokeWidth="2"
+                            strokeDasharray="5, 5"
+                        />
+
+                        {/* Triángulo Naranja que apunta hacia el centro */}
+                        <Polygon
+                            points={`${CENTER - 20}, 5 ${CENTER + 20}, 5 ${CENTER}, 40`}
+                            fill="#2196f3"
+                            stroke={COLOR_BORDER}
+                            strokeWidth="2"
+                        />
+                    </G>
+                )}
+
+
+
                 {/* MARCADOR DE COG/PROA: Triángulo Fijo (Referencia de 0 grados) */}
                 <Polygon
-                    points={`${CENTER - 10}, 5 ${CENTER + 10}, 5 ${CENTER}, 25`}
+                    /* De -10 a -20 (izquierda), de +10 a +20 (derecha) y de 25 a 45 (punta hacia abajo) */
+                    points={`${CENTER - 20}, 5 ${CENTER + 20}, 5 ${CENTER}, 45`}
                     fill={finalHeadingColor}
                     stroke={COLOR_BORDER}
                     strokeWidth="2"
