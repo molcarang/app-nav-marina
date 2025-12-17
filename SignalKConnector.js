@@ -5,7 +5,6 @@ import DataSquare from './DataSquare';
 import HeadingGauge from './HeadingGauge';
 import { useSignalKData } from './useSignalKData';
 
-// --- Funciones de Conversión ---
 const mpsToKnots = (mps) => (mps * 1.94384).toFixed(1);
 const radToDeg = (rad) => (rad * 57.2958);
 
@@ -17,18 +16,16 @@ const normalizeAngle = (angle) => {
 };
 
 const SignalKConnector = () => {
-    // 1. Obtención de datos y Estados de Configuración
     const data = useSignalKData();
     const [isModalVisible, setModalVisible] = useState(false);
     const [isNightMode, setIsNightMode] = useState(false);
     const [depthThreshold, setDepthThreshold] = useState(3.0);
 
-    // 2. Procesamiento de Valores
     const awsKnots = mpsToKnots(data['environment.wind.speedApparent']);
-    const sogMps = data['navigation.speedOverGround'];
-    const sogKnots = mpsToKnots(sogMps);
+    const sogKnots = mpsToKnots(data['navigation.speedOverGround']);
+    const speedThroughWater = mpsToKnots(data['navigation.speedThroughWater']);
 
-    // COG (Rumbo)
+
     const cogRad = data['navigation.headingTrue'];
     let cogDegrees = 0;
     let cogDigital = '---';
@@ -40,7 +37,6 @@ const SignalKConnector = () => {
         cogDegreesSquare = cogDegrees.toFixed(0).toString().concat('°');
     }
 
-    // TWD y TWA
     const twdRad = data['environment.wind.directionTrue'];
     const twdDegrees = radToDeg(twdRad);
     const twdDigital = !isNaN(twdDegrees)
@@ -52,21 +48,45 @@ const SignalKConnector = () => {
         twaCogDegrees = normalizeAngle(twdDegrees - cogDegrees);
     }
 
-    const depthMeters = data['navigation.depthBelowTransducer'] || 0;
+    const calculateCurrent = (sog, cogRad, stw, hdgRad) => {
+    if (stw === undefined || sog === undefined) return { set: '---', drift: '---' };
 
-    // 3. Colores Dinámicos (Modo Noche / Alarmas)
+    const currentData = calculateCurrent(sogMps, cogRad, speedThroughWater, headingRad); 
+
+    // Componentes vectoriales del movimiento real (GPS)
+    const v_real_x = sog * Math.sin(cogRad);
+    const v_real_y = sog * Math.cos(cogRad);
+
+    // Componentes vectoriales del movimiento en el agua (Barco)
+    const v_boat_x = stw * Math.sin(hdgRad);
+    const v_boat_y = stw * Math.cos(hdgRad);
+
+    // El vector de la corriente es la diferencia
+    const drift_x = v_real_x - v_boat_x;
+    const drift_y = v_real_y - v_boat_y;
+
+    const drift = Math.sqrt(drift_x * drift_x + drift_y * drift_y);
+    let set = Math.atan2(drift_x, drift_y) * (180 / Math.PI);
+    if (set < 0) set += 360;
+
+    return { 
+        set: set.toFixed(0) + '°', 
+        drift: (drift * 1.94384).toFixed(1) // nudos
+    };
+};
+
+    const depthMeters = data['navigation.depthBelowTransducer'] || 0;
+    const isDepthAlarmActive = depthMeters < depthThreshold && depthMeters > 0;
+
     const headingColor = '#dc1212ff';
     const windColor = isNightMode ? '#900' : '#ff9800';
-    const twdColor = isNightMode ? '#004' : '#2196f3';
+    const twdColor = isNightMode ? '#004' : '#2196f3'; // Azul del TWD
 
     const dataSquareBg = isNightMode ? 'rgba(30, 0, 0, 0.8)' : 'rgba(45, 45, 45, 0.75)';
-    const statusDotColor = (Math.abs(twaCogDegrees) >= 20 && Math.abs(twaCogDegrees) <= 60) ? '#0f0' : '#f00';
-    const depthDotColor = depthMeters < depthThreshold ? '#f00' : '#0f0';
+    const alarmBgColor = 'rgba(210, 0, 0, 0.95)';
 
     return (
         <View style={[styles.container, { backgroundColor: isNightMode ? '#050000' : '#0a0a0a' }]}>
-
-            {/* CABECERA */}
             <View style={styles.header}>
                 <Text style={[styles.status, { color: isNightMode ? '#400' : '#666' }]}>
                     {data.isConnected ? 'SIGNAL K: OK ✅' : 'SIN CONEXIÓN 🔴'}
@@ -76,7 +96,6 @@ const SignalKConnector = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* MARCO DE CONSOLA 3D */}
             <View style={[styles.consoleFrame, isNightMode && styles.consoleFrameNight]}>
                 <ImageBackground
                     source={require('./assets/images/CarbonFiber.png')}
@@ -85,38 +104,32 @@ const SignalKConnector = () => {
                     imageStyle={{ borderRadius: 25, opacity: isNightMode ? 0.3 : 1 }}
                 >
                     <View style={styles.dataGrid}>
-                        {/* COMPÁS */}
+                        {/* COMPÁS CON TWD (AZUL) Y TWA (AMARILLO) */}
                         <HeadingGauge
                             headingColor={headingColor}
                             value={cogDigital}
                             unit="°COG"
-                            twd={twdDegrees}
-                            twaCog={twaCogDegrees}
+                            twd={twdDegrees}      // <--- Aquí pasamos la dirección del viento real
+                            twaCog={twaCogDegrees} // <--- Dirección relativa
+                            isNightMode={isNightMode}
                         />
 
-                        {/* FILA 1: AWS - SOG - TWA */}
                         <View style={styles.dataGridrow}>
                             <DataSquare label="AWS" value={awsKnots} unit="KNOTS" color={dataSquareBg} />
                             <DataSquare label="SOG" value={sogKnots} unit="KNOTS" color={dataSquareBg} />
-                            <DataSquare
-                                label="TWA"
-                                textColor={windColor}
-                                value={twaCogDegrees !== null ? twaCogDegrees.toFixed(0) + '°' : '---'}
-                                unit="DEG"
-                                color={dataSquareBg}
-                                showStatusDot={true}
-                                statusDotColor={statusDotColor}
-                            />
+                            <DataSquare label="TWA" textColor={windColor} value={twaCogDegrees !== null ? twaCogDegrees.toFixed(0) + '°' : '---'} unit="DEG" color={dataSquareBg} />
                         </View>
 
-                        {/* FILA 2: COG - DEPTH - TWD */}
                         <View style={styles.dataGridrow}>
                             <DataSquare label="COG" value={cogDegreesSquare} unit="TRUE" textColor={headingColor} color={dataSquareBg} />
                             <DataSquare
                                 label="DEPTH"
                                 value={depthMeters.toFixed(1)}
                                 unit="METERS"
-                                color={dataSquareBg}
+                                color={isDepthAlarmActive ? alarmBgColor : dataSquareBg}
+                                showStatusDot={isDepthAlarmActive}
+                                statusDotColor="#fff"
+                                textColor={isDepthAlarmActive ? "#fff" : undefined}
                             />
                             <DataSquare label="TWD" value={twdDigital} unit="TRUE" textColor={twdColor} color={dataSquareBg} />
                         </View>
@@ -124,38 +137,30 @@ const SignalKConnector = () => {
                 </ImageBackground>
             </View>
 
-            {/* MODAL DE CONFIGURACIÓN */}
+            {/* MODAL CONFIG */}
             <Modal animationType="fade" transparent={true} visible={isModalVisible}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
                         <Text style={styles.modalTitle}>Ajustes de Consola</Text>
-
                         <View style={styles.settingRow}>
                             <Text style={styles.settingLabel}>Modo Noche (Rojo)</Text>
                             <Switch value={isNightMode} onValueChange={setIsNightMode} trackColor={{ true: "#900" }} />
                         </View>
-
                         <View style={styles.settingRow}>
                             <Text style={styles.settingLabel}>Alarma Prof. ({depthThreshold}m)</Text>
                             <View style={styles.stepper}>
-                                <TouchableOpacity onPress={() => setDepthThreshold(prev => Math.max(0, prev - 0.5))} style={styles.stepBtn}>
-                                    <Text style={styles.stepText}>-</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => setDepthThreshold(prev => prev + 0.5)} style={styles.stepBtn}>
-                                    <Text style={styles.stepText}>+</Text>
-                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => setDepthThreshold(prev => Math.max(0, (prev - 0.5)))} style={styles.stepBtn}><Text style={styles.stepText}>-</Text></TouchableOpacity>
+                                <TouchableOpacity onPress={() => setDepthThreshold(prev => prev + 0.5)} style={styles.stepBtn}><Text style={styles.stepText}>+</Text></TouchableOpacity>
                             </View>
                         </View>
-
-                        <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
-                            <Text style={styles.closeBtnText}>CERRAR</Text>
-                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}><Text style={styles.closeBtnText}>CERRAR</Text></TouchableOpacity>
                     </View>
                 </View>
             </Modal>
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: { flex: 1, alignItems: 'center', paddingTop: Platform.OS === 'ios' ? 50 : 20 },
@@ -172,14 +177,11 @@ const styles = StyleSheet.create({
         borderBottomColor: '#000',
         overflow: 'hidden',
         elevation: 20,
-        shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.8, shadowRadius: 20,
     },
     consoleFrameNight: { borderTopColor: '#400', borderLeftColor: '#200', borderColor: '#100' },
-    gridBackground: { width: '100%', height: '100%' },
+    gridBackground: { width: '100%', height: '100%', alignSelf: 'stretch' },
     dataGrid: { width: '100%', backgroundColor: 'rgba(0, 0, 0, 0.4)', paddingTop: 10, paddingBottom: 30, alignItems: 'center' },
     dataGridrow: { flexDirection: 'row', justifyContent: 'space-evenly', width: '100%', paddingVertical: 5 },
-
-    // Modal Styles
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
     modalContainer: { width: '85%', backgroundColor: '#1a1a1a', borderRadius: 20, padding: 25, borderWidth: 1, borderColor: '#333' },
     modalTitle: { color: '#fff', fontSize: 22, fontWeight: 'bold', marginBottom: 25, textAlign: 'center' },

@@ -85,8 +85,10 @@ const getArcPath = (startAngle, endAngle, radius) => {
     return d;
 }
 
+const HeadingGauge = ({ value, unit, headingColor, twd, twaCog, isNightMode, set, drift }) => {
 
-const HeadingGauge = ({ value, unit, headingColor, twd, twaCog }) => {
+    const driftValue = parseFloat(drift);
+    const setAngle = parseFloat(set);
 
     const headingDegrees = parseFloat(value);
     const formattedHeading = isNaN(headingDegrees) ? '---' : headingDegrees.toFixed(0);
@@ -128,11 +130,16 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog }) => {
         <View style={styles.outerContainer(COMPASS_SIZE)}>
             <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
 
+
+
                 {/* *** 1. CAPAS INFERIORES Y DIAL ROTATORIO *** */}
                 <G
                     rotation={rotationAngle}
                     origin={`${CENTER}, ${CENTER}`}
                 >
+
+
+
                     {/* A. Fondo del Círculo Principal */}
                     <Circle
                         cx={CENTER} cy={CENTER} r={RADIUS}
@@ -187,6 +194,57 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog }) => {
                     })}
                 </G>
 
+
+{/* INDICADOR DE CORRIENTE (MÁS ANCHO Y HUECO) */}
+    <G rotation={setAngle + rotationAngle} origin={`${CENTER}, ${CENTER}`}>
+        {/* Silueta de la flecha de corriente (Cuerpo y punta anchos) */}
+        <Path
+            d={`
+                M ${CENTER - 25} ${CENTER + 120} 
+                L ${CENTER + 25} ${CENTER + 120} 
+                L ${CENTER + 25} ${CENTER - 40} 
+                L ${CENTER + 55} ${CENTER - 40} 
+                L ${CENTER} ${CENTER - 150} 
+                L ${CENTER - 55} ${CENTER - 40} 
+                L ${CENTER - 25} ${CENTER - 40} 
+                Z
+            `}
+            fill="none" 
+            stroke="#00ffff"
+            strokeWidth="4" // Borde un poco más grueso para mayor visibilidad
+            strokeLinejoin="round"
+            opacity={0.2}
+        />
+    </G>
+
+                {/* 2. SILUETA BARCO MINIMALISTA (CASCO CERRADO Y ALARGADO) */}
+                <G opacity={isNightMode ? 0.25 : 0.15}>
+                    <Path
+                        d={`
+            M ${CENTER} ${CENTER - 165} 
+            C ${CENTER + 50} ${CENTER - 80}, ${CENTER + 45} ${CENTER + 100}, ${CENTER + 40} ${CENTER + 155}
+            L ${CENTER - 40} ${CENTER + 155}
+            C ${CENTER - 45} ${CENTER + 100}, ${CENTER - 50} ${CENTER - 80}, ${CENTER} ${CENTER - 165}
+            Z
+        `}
+                        fill="none"
+                        stroke={isNightMode ? "#f00" : "#fff"}
+                        strokeWidth="2.5"
+                        strokeLinejoin="round"
+                    />
+
+                    {/* Eje de Crujía (Línea central punteada para ayudar a la puntería) */}
+                    <Line
+                        x1={CENTER} y1={CENTER - 165}
+                        x2={CENTER} y2={CENTER + 155}
+                        stroke={isNightMode ? "#f00" : "#fff"}
+                        strokeWidth="1"
+                        strokeDasharray="4, 12"
+                    />
+                </G>
+
+
+
                 {/* *** 2. CAPAS SUPERIORES (Indicadores y Marcadores FIJOS) *** */}
 
                 {/* 1. ARCO VERDE FIJO (20° a 60°) */}
@@ -229,7 +287,7 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog }) => {
 
                         {/* Triángulo Naranja que apunta hacia el centro */}
                         <Polygon
-                            points={`${CENTER - 10}, 5 ${CENTER + 10}, 5 ${CENTER}, 25`}
+                            points={`${CENTER - 20}, 5 ${CENTER + 20}, 5 ${CENTER}, 45`}
                             fill={COLOR_TWA_EXTERIOR}
                             stroke={COLOR_BORDER}
                             strokeWidth="2"
@@ -238,9 +296,33 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog }) => {
                 )}
 
 
+                {twd !== undefined && (
+                    <G rotation={twd} origin={`${CENTER}, ${CENTER}`}>
+                        {/* Línea que une el centro con la punta del triángulo */}
+                        <Line
+                            x1={CENTER} y1={CENTER}
+                            x2={CENTER} y2={CENTER - TWA_EXTERIOR_DISTANCE}
+                            stroke="#2196f3"
+                            strokeWidth="2"
+                            strokeDasharray="5, 5"
+                        />
+
+                        {/* Triángulo Naranja que apunta hacia el centro */}
+                        <Polygon
+                            points={`${CENTER - 20}, 5 ${CENTER + 20}, 5 ${CENTER}, 40`}
+                            fill="#2196f3"
+                            stroke={COLOR_BORDER}
+                            strokeWidth="2"
+                        />
+                    </G>
+                )}
+
+
+
                 {/* MARCADOR DE COG/PROA: Triángulo Fijo (Referencia de 0 grados) */}
                 <Polygon
-                    points={`${CENTER - 10}, 5 ${CENTER + 10}, 5 ${CENTER}, 25`}
+                    /* De -10 a -20 (izquierda), de +10 a +20 (derecha) y de 25 a 45 (punta hacia abajo) */
+                    points={`${CENTER - 20}, 5 ${CENTER + 20}, 5 ${CENTER}, 45`}
                     fill={finalHeadingColor}
                     stroke={COLOR_BORDER}
                     strokeWidth="2"
