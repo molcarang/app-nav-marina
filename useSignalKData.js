@@ -11,7 +11,8 @@ const INITIAL_DATA = {
     'environment.wind.speedApparent': 0, // AWS (m/s)
     'navigation.speedOverGround': 0,      // SOG (m/s)
     'navigation.headingTrue': 0,
-    'navigation.depthBelowTransducer': 0,       // Heading (rad)
+    'navigation.depthBelowTransducer': 0, 
+    'navigation.speedThroughWater': 0,      // Heading (rad)
     // Añade aquí cualquier otra ruta que necesites inicialmente
 };
 

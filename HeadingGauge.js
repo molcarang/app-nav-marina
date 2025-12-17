@@ -85,8 +85,10 @@ const getArcPath = (startAngle, endAngle, radius) => {
     return d;
 }
 
+const HeadingGauge = ({ value, unit, headingColor, twd, twaCog, isNightMode, set, drift }) => {
 
-const HeadingGauge = ({ value, unit, headingColor, twd, twaCog, isNightMode = false }) => {
+    const driftValue = parseFloat(drift);
+    const setAngle = parseFloat(set);
 
     const headingDegrees = parseFloat(value);
     const formattedHeading = isNaN(headingDegrees) ? '---' : headingDegrees.toFixed(0);
@@ -192,6 +194,29 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog, isNightMode = fa
                     })}
                 </G>
 
+
+{/* INDICADOR DE CORRIENTE (MÁS ANCHO Y HUECO) */}
+    <G rotation={setAngle + rotationAngle} origin={`${CENTER}, ${CENTER}`}>
+        {/* Silueta de la flecha de corriente (Cuerpo y punta anchos) */}
+        <Path
+            d={`
+                M ${CENTER - 25} ${CENTER + 120} 
+                L ${CENTER + 25} ${CENTER + 120} 
+                L ${CENTER + 25} ${CENTER - 40} 
+                L ${CENTER + 55} ${CENTER - 40} 
+                L ${CENTER} ${CENTER - 150} 
+                L ${CENTER - 55} ${CENTER - 40} 
+                L ${CENTER - 25} ${CENTER - 40} 
+                Z
+            `}
+            fill="none" 
+            stroke="#00ffff"
+            strokeWidth="4" // Borde un poco más grueso para mayor visibilidad
+            strokeLinejoin="round"
+            opacity={0.2}
+        />
+    </G>
+
                 {/* 2. SILUETA BARCO MINIMALISTA (CASCO CERRADO Y ALARGADO) */}
                 <G opacity={isNightMode ? 0.25 : 0.15}>
                     <Path
@@ -217,6 +242,7 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog, isNightMode = fa
                         strokeDasharray="4, 12"
                     />
                 </G>
+
 
 
                 {/* *** 2. CAPAS SUPERIORES (Indicadores y Marcadores FIJOS) *** */}

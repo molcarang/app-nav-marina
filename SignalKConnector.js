@@ -23,6 +23,8 @@ const SignalKConnector = () => {
 
     const awsKnots = mpsToKnots(data['environment.wind.speedApparent']);
     const sogKnots = mpsToKnots(data['navigation.speedOverGround']);
+    const speedThroughWater = mpsToKnots(data['navigation.speedThroughWater']);
+
 
     const cogRad = data['navigation.headingTrue'];
     let cogDegrees = 0;
@@ -45,6 +47,33 @@ const SignalKConnector = () => {
     if (!isNaN(twdDegrees) && !isNaN(cogDegrees)) {
         twaCogDegrees = normalizeAngle(twdDegrees - cogDegrees);
     }
+
+    const calculateCurrent = (sog, cogRad, stw, hdgRad) => {
+    if (stw === undefined || sog === undefined) return { set: '---', drift: '---' };
+
+    const currentData = calculateCurrent(sogMps, cogRad, speedThroughWater, headingRad); 
+
+    // Componentes vectoriales del movimiento real (GPS)
+    const v_real_x = sog * Math.sin(cogRad);
+    const v_real_y = sog * Math.cos(cogRad);
+
+    // Componentes vectoriales del movimiento en el agua (Barco)
+    const v_boat_x = stw * Math.sin(hdgRad);
+    const v_boat_y = stw * Math.cos(hdgRad);
+
+    // El vector de la corriente es la diferencia
+    const drift_x = v_real_x - v_boat_x;
+    const drift_y = v_real_y - v_boat_y;
+
+    const drift = Math.sqrt(drift_x * drift_x + drift_y * drift_y);
+    let set = Math.atan2(drift_x, drift_y) * (180 / Math.PI);
+    if (set < 0) set += 360;
+
+    return { 
+        set: set.toFixed(0) + '°', 
+        drift: (drift * 1.94384).toFixed(1) // nudos
+    };
+};
 
     const depthMeters = data['navigation.depthBelowTransducer'] || 0;
     const isDepthAlarmActive = depthMeters < depthThreshold && depthMeters > 0;
