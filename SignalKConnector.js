@@ -82,6 +82,7 @@ const SignalKConnector = () => {
                             unit="°COG"
                             twd={twdDegrees}      // <--- Aquí pasamos la dirección del viento real
                             twaCog={twaCogDegrees} // <--- Dirección relativa
+                            isNightMode={isNightMode}
                         />
 
                         <View style={styles.dataGridrow}>

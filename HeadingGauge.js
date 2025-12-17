@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polygon, Text as SvgText } from 'react-native-svg';
 
-// --- Parámetros de configuración del compás ---
+// --- 1. Parámetros Globales ---
 const COMPASS_SIZE = 560;
 const CENTER = COMPASS_SIZE / 2; // 280
 const RADIUS = CENTER - 20; // 260
@@ -9,12 +9,12 @@ const INNER_RADIUS = RADIUS - 55; // 205
 
 const FONT_SIZE = 18;
 const FONT_SIZE_NUMERIC = FONT_SIZE;
-const FONT_SIZE_CARDINAL_LETTER = FONT_SIZE + 10; // Tamaño de letra para cardinales
-const COLOR_CIRCLE_BG = 'rgba(40, 40, 40, 0.75)'; // Fondo del compás
-const COLOR_BORDER = '#fff'; // Color de bordes y marcas
-const COLOR_3 = '#dc1212ff'; // Rojo para heading/COG
-const COLOR_INNER_DECO = 'rgba(40, 40, 40, 0.75)'; // Fondo interior
-const COLOR_TWA_EXTERIOR = '#ff9800'; // Naranja para TWA
+const FONT_SIZE_CARDINAL_LETTER = FONT_SIZE + 10; // 28px
+const COLOR_CIRCLE_BG = 'rgba(40, 40, 40, 0.75)';
+const COLOR_BORDER = '#fff';
+const COLOR_3 = '#dc1212ff'; // Rojo (COG, Línea de Crujía)
+const COLOR_INNER_DECO = 'rgba(40, 40, 40, 0.75)';
+const COLOR_TWA_EXTERIOR = '#ff9800'; // Naranja (TWA_COG)
 
 // Radios para la posición del texto:
 const TEXT_RADIUS_OUTER_DIAL = RADIUS - 60;
@@ -23,14 +23,14 @@ const TEXT_RADIUS_INNERMOST_CARDINAL = 140;
 const TWA_EXTERIOR_DISTANCE = RADIUS + 10;
 const TWA_TRIANGLE_HEIGHT = 25;
 
-// Parámetros para los arcos de referencia de TWA
+// Radio y estilos para los nuevos arcos exteriores
 const ARC_RADIUS = RADIUS + 15;
 const ARC_THICKNESS = 15;
 const ARC_COLOR_GREEN = '#00ff00'; // Verde
 const ARC_COLOR_RED = '#ff0000';   // Rojo
 
 
-// --- Funciones auxiliares para dibujo y geometría ---
+// --- 2. Funciones Auxiliares ---
 
 const getTick = (angleDeg, length, innerRadius, outerRadius, center, color) => {
     const angleRad = (angleDeg - 90) * (Math.PI / 180);
@@ -39,7 +39,6 @@ const getTick = (angleDeg, length, innerRadius, outerRadius, center, color) => {
     const x2 = center + outerRadius * Math.cos(angleRad);
     const y2 = center + outerRadius * Math.sin(angleRad);
 
-    // Dibuja una marca (tick) en el ángulo especificado
     return (
         <Line
             key={angleDeg}
@@ -51,16 +50,16 @@ const getTick = (angleDeg, length, innerRadius, outerRadius, center, color) => {
     );
 };
 
-// Calcula la posición (x, y) para un texto dado un ángulo y radio
 const getDegreeTextPosition = (angleDeg, radius, offset = 0) => {
     const angleRad = (angleDeg - 90) * (Math.PI / 180);
+
     return {
         x: CENTER + (radius + offset) * Math.cos(angleRad),
         y: CENTER + (radius + offset) * Math.sin(angleRad) + (FONT_SIZE_NUMERIC / 3)
     };
 };
 
-// Convierte coordenadas polares a cartesianas para SVG
+// FUNCIÓN PARA GENERAR EL PATH DEL ARCO SVG
 const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
     const angleInRadians = (angleInDegrees - 90) * (Math.PI / 180.0);
     return {
@@ -69,20 +68,25 @@ const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
     };
 }
 
-// Genera el path SVG para un arco entre dos ángulos dados
 const getArcPath = (startAngle, endAngle, radius) => {
     const start = polarToCartesian(CENTER, CENTER, radius, endAngle);
     const end = polarToCartesian(CENTER, CENTER, radius, startAngle);
+
+    // Si el arco es > 180 grados, largeArcFlag es 1, sino 0
+    // Siempre asumiremos arcos pequeños para rangos de 40 grados.
     const largeArcFlag = endAngle - startAngle <= 180 && endAngle - startAngle > 0 ? "0" : "1";
+
+    // Comando SVG Path: M (MoveTo), A (ArcTo)
     const d = [
         "M", start.x, start.y,
         "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
     ].join(" ");
+
     return d;
 }
 
 
-const HeadingGauge = ({ value, unit, headingColor, twd, twaCog }) => {
+const HeadingGauge = ({ value, unit, headingColor, twd, twaCog, isNightMode = false }) => {
 
     const headingDegrees = parseFloat(value);
     const formattedHeading = isNaN(headingDegrees) ? '---' : headingDegrees.toFixed(0);
@@ -124,11 +128,16 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog }) => {
         <View style={styles.outerContainer(COMPASS_SIZE)}>
             <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
 
+
+
                 {/* *** 1. CAPAS INFERIORES Y DIAL ROTATORIO *** */}
                 <G
                     rotation={rotationAngle}
                     origin={`${CENTER}, ${CENTER}`}
                 >
+
+
+
                     {/* A. Fondo del Círculo Principal */}
                     <Circle
                         cx={CENTER} cy={CENTER} r={RADIUS}
@@ -182,6 +191,33 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog }) => {
                         );
                     })}
                 </G>
+
+                {/* 2. SILUETA BARCO MINIMALISTA (CASCO CERRADO Y ALARGADO) */}
+                <G opacity={isNightMode ? 0.25 : 0.15}>
+                    <Path
+                        d={`
+            M ${CENTER} ${CENTER - 165} 
+            C ${CENTER + 50} ${CENTER - 80}, ${CENTER + 45} ${CENTER + 100}, ${CENTER + 40} ${CENTER + 155}
+            L ${CENTER - 40} ${CENTER + 155}
+            C ${CENTER - 45} ${CENTER + 100}, ${CENTER - 50} ${CENTER - 80}, ${CENTER} ${CENTER - 165}
+            Z
+        `}
+                        fill="none"
+                        stroke={isNightMode ? "#f00" : "#fff"}
+                        strokeWidth="2.5"
+                        strokeLinejoin="round"
+                    />
+
+                    {/* Eje de Crujía (Línea central punteada para ayudar a la puntería) */}
+                    <Line
+                        x1={CENTER} y1={CENTER - 165}
+                        x2={CENTER} y2={CENTER + 155}
+                        stroke={isNightMode ? "#f00" : "#fff"}
+                        strokeWidth="1"
+                        strokeDasharray="4, 12"
+                    />
+                </G>
+
 
                 {/* *** 2. CAPAS SUPERIORES (Indicadores y Marcadores FIJOS) *** */}
 
