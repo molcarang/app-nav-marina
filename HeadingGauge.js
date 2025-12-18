@@ -3,190 +3,122 @@ import Svg, { Circle, G, Line, Path, Polygon, Text as SvgText } from 'react-nati
 
 // --- 1. Parámetros Globales ---
 const COMPASS_SIZE = 560;
-const CENTER = COMPASS_SIZE / 2; // 280
-const RADIUS = CENTER - 20; // 260
-const INNER_RADIUS = RADIUS - 55; // 205
+const CENTER = COMPASS_SIZE / 2;
+const RADIUS = CENTER - 20;
+const INNER_RADIUS = RADIUS - 55;
 
-const FONT_SIZE = 18;
-const FONT_SIZE_NUMERIC = FONT_SIZE;
-const FONT_SIZE_CARDINAL_LETTER = FONT_SIZE + 10; // 28px
+const FONT_SIZE_NUMERIC = 18;
+const FONT_SIZE_CARDINAL_LETTER = 28;
+
 const COLOR_CIRCLE_BG = 'rgba(40, 40, 40, 0.75)';
 const COLOR_BORDER = '#fff';
-const COLOR_3 = '#dc1212ff'; // Rojo (COG, Línea de Crujía)
-const COLOR_INNER_DECO = 'rgba(40, 40, 40, 0.75)';
-const COLOR_TWA_EXTERIOR = '#ff9800'; // Naranja (TWA_COG)
+const COLOR_RED = '#dc1212ff';
+const COLOR_TWA = '#ff9800';
+const COLOR_TWD = '#2196f3';
 
-// Radios para la posición del texto:
-const TEXT_RADIUS_OUTER_DIAL = RADIUS - 60;
-const TEXT_RADIUS_INNERMOST_CARDINAL = 140;
+const TEXT_RADIUS_OUTER = RADIUS - 60;
+const TEXT_RADIUS_CARDINAL = 140;
+const WIND_INDICATOR_DISTANCE = RADIUS + 10;
 
-const TWA_EXTERIOR_DISTANCE = RADIUS + 10;
-const TWA_TRIANGLE_HEIGHT = 25;
+// --- 2. Funciones Geométricas Auxiliares ---
 
-// Radio y estilos para los nuevos arcos exteriores
-const ARC_RADIUS = RADIUS + 15;
-const ARC_THICKNESS = 15;
-const ARC_COLOR_GREEN = '#00ff00'; // Verde
-const ARC_COLOR_RED = '#ff0000';   // Rojo
+const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+    const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+    return {
+        x: centerX + radius * Math.cos(angleInRadians),
+        y: centerY + radius * Math.sin(angleInRadians),
+    };
+};
 
+const describeArc = (x, y, radius, startAngle, endAngle) => {
+    const start = polarToCartesian(x, y, radius, endAngle);
+    const end = polarToCartesian(x, y, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return ["M", start.x, start.y, "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y].join(" ");
+};
 
-// --- 2. Funciones Auxiliares ---
-
-const getTick = (angleDeg, length, innerRadius, outerRadius, center, color) => {
+const getTick = (angleDeg, innerR, outerR, color, isBold) => {
     const angleRad = (angleDeg - 90) * (Math.PI / 180);
-    const x1 = center + innerRadius * Math.cos(angleRad);
-    const y1 = center + innerRadius * Math.sin(angleRad);
-    const x2 = center + outerRadius * Math.cos(angleRad);
-    const y2 = center + outerRadius * Math.sin(angleRad);
-
     return (
         <Line
-            key={angleDeg}
-            x1={x1} y1={y1}
-            x2={x2} y2={y2}
+            key={`tick-${angleDeg}`}
+            x1={CENTER + innerR * Math.cos(angleRad)}
+            y1={CENTER + innerR * Math.sin(angleRad)}
+            x2={CENTER + outerR * Math.cos(angleRad)}
+            y2={CENTER + outerR * Math.sin(angleRad)}
             stroke={color}
-            strokeWidth={length > 0.8 ? 2 : 1}
+            strokeWidth={isBold ? 2 : 1}
         />
     );
 };
 
-const getDegreeTextPosition = (angleDeg, radius, offset = 0) => {
-    const angleRad = (angleDeg - 90) * (Math.PI / 180);
+// --- 3. Componente Principal ---
 
-    return {
-        x: CENTER + (radius + offset) * Math.cos(angleRad),
-        y: CENTER + (radius + offset) * Math.sin(angleRad) + (FONT_SIZE_NUMERIC / 3)
-    };
-};
-
-// FUNCIÓN PARA GENERAR EL PATH DEL ARCO SVG
-const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
-    const angleInRadians = (angleInDegrees - 90) * (Math.PI / 180.0);
-    return {
-        x: centerX + (radius * Math.cos(angleInRadians)),
-        y: centerY + (radius * Math.sin(angleInRadians))
-    };
-}
-
-const getArcPath = (startAngle, endAngle, radius) => {
-    const start = polarToCartesian(CENTER, CENTER, radius, endAngle);
-    const end = polarToCartesian(CENTER, CENTER, radius, startAngle);
-
-    // Si el arco es > 180 grados, largeArcFlag es 1, sino 0
-    // Siempre asumiremos arcos pequeños para rangos de 40 grados.
-    const largeArcFlag = endAngle - startAngle <= 180 && endAngle - startAngle > 0 ? "0" : "1";
-
-    // Comando SVG Path: M (MoveTo), A (ArcTo)
-    const d = [
-        "M", start.x, start.y,
-        "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
-    ].join(" ");
-
-    return d;
-}
-
-const HeadingGauge = ({ value, unit, headingColor, twd, twaCog, isNightMode, set, drift }) => {
-
-    const driftValue = parseFloat(drift);
-    const setAngle = parseFloat(set);
-
-    const headingDegrees = parseFloat(value);
-    const formattedHeading = isNaN(headingDegrees) ? '---' : headingDegrees.toFixed(0);
+const HeadingGauge = ({ 
+    value, 
+    minLayline = 20, 
+    maxLayline = 60, 
+    rotationAngle, 
+    unit, 
+    headingColor, 
+    twd, 
+    twaCog, 
+    isNightMode, 
+    set 
+}) => {
+    const RADIUS_ARCS = RADIUS + 15;
+    const setAngle = parseFloat(set) || 0;
+    const formattedHeading = isNaN(parseFloat(value)) ? '---' : parseFloat(value).toFixed(0);
+    const finalHeadingColor = headingColor || COLOR_RED;
     const fontFamily = 'NauticalFont';
 
-    const rotationAngle = isNaN(headingDegrees) ? 0 : -headingDegrees;
-
-    const finalHeadingColor = headingColor || COLOR_3;
-
-    // Generación de Ticks y Datos de Marcas...
-    const ticks = [];
-    for (let i = 0; i < 360; i += 1) {
-        if (i % 30 === 0) {
-            ticks.push(getTick(i, 1, INNER_RADIUS + 15, RADIUS, CENTER, COLOR_3));
-        } else if (i % 10 === 0) {
-            ticks.push(getTick(i, 0.5, INNER_RADIUS + 15, RADIUS, CENTER, COLOR_BORDER));
-        } else if (i % 5 === 0) {
-            ticks.push(getTick(i, 0.3, INNER_RADIUS + 25, RADIUS, CENTER, COLOR_BORDER));
-        } else {
-            ticks.push(getTick(i, 0.1, INNER_RADIUS + 35, RADIUS, CENTER, COLOR_BORDER));
-        }
-    }
-
-    // Datos de Marcas
-    const numericalMarks = [
-        { deg: 30, label: '30', color: COLOR_BORDER }, { deg: 60, label: '60', color: COLOR_BORDER },
-        { deg: 120, label: '120', color: COLOR_BORDER }, { deg: 150, label: '150', color: COLOR_BORDER },
-        { deg: 210, label: '210', color: COLOR_BORDER }, { deg: 240, label: '240', color: COLOR_BORDER },
-        { deg: 300, label: '300', color: COLOR_BORDER }, { deg: 330, label: '330', color: COLOR_BORDER },
-    ];
-
+    // Listas de marcas del dial
+    const numericalMarks = [30, 60, 120, 150, 210, 240, 300, 330];
     const cardinalMarks = [
-        { deg: 0, label: 'N', num: '0', color: COLOR_3 }, { deg: 90, label: 'E', num: '90', color: COLOR_3 },
-        { deg: 180, label: 'S', num: '180', color: COLOR_3 }, { deg: 270, label: 'O', num: '270', color: COLOR_3 },
+        { deg: 0, label: 'N', val: '0' }, { deg: 90, label: 'E', val: '90' },
+        { deg: 180, label: 'S', val: '180' }, { deg: 270, label: 'O', val: '270' }
     ];
-
 
     return (
-        <View style={styles.outerContainer(COMPASS_SIZE)}>
+        <View style={styles.outerContainer}>
             <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
+                
+                {/* 1. DIAL ROTATORIO */}
+                <G rotation={rotationAngle} origin={`${CENTER}, ${CENTER}`}>
+                    <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill={COLOR_CIRCLE_BG} stroke={COLOR_BORDER} strokeWidth="5" />
+                    <Circle cx={CENTER} cy={CENTER} r={INNER_RADIUS - 35} fill={COLOR_CIRCLE_BG} stroke={COLOR_BORDER} strokeWidth="1" />
+                    
+                    {/* Dibujar Ticks */}
+                    {Array.from({ length: 360 }).map((_, i) => {
+                        if (i % 30 === 0) return getTick(i, INNER_RADIUS + 15, RADIUS, COLOR_RED, true);
+                        if (i % 10 === 0) return getTick(i, INNER_RADIUS + 15, RADIUS, COLOR_BORDER, false);
+                        if (i % 5 === 0)  return getTick(i, INNER_RADIUS + 25, RADIUS, COLOR_BORDER, false);
+                        return getTick(i, INNER_RADIUS + 35, RADIUS, COLOR_BORDER, false);
+                    })}
 
-
-
-                {/* *** 1. CAPAS INFERIORES Y DIAL ROTATORIO *** */}
-                <G
-                    rotation={rotationAngle}
-                    origin={`${CENTER}, ${CENTER}`}
-                >
-
-
-
-                    {/* A. Fondo del Círculo Principal */}
-                    <Circle
-                        cx={CENTER} cy={CENTER} r={RADIUS}
-                        fill={COLOR_CIRCLE_BG} stroke={COLOR_BORDER} strokeWidth="5"
-                    />
-
-                    {/* B. Círculo Decorativo Interior (el más pequeño) */}
-                    <Circle
-                        cx={CENTER} cy={CENTER} r={INNER_RADIUS - 35}
-                        fill={COLOR_INNER_DECO} stroke={COLOR_BORDER} strokeWidth="1"
-                    />
-
-                    {/* C. Dibujar las Marcas (Ticks) - ROTAN */}
-                    {ticks}
-
-                    {/* D. GRADOS NUMÉRICOS (0, 30, 60, 90, etc.) - ANILLO EXTERIOR DEL DIAL */}
-                    {[...numericalMarks, ...cardinalMarks.map(c => ({ deg: c.deg, label: c.num, color: c.color }))].map(({ deg, label, color }) => {
-                        const pos = getDegreeTextPosition(deg, TEXT_RADIUS_OUTER_DIAL);
-                        const textRotation = -rotationAngle;
-
+                    {/* Grados Numéricos */}
+                    {[...numericalMarks, ...cardinalMarks.map(m => parseInt(m.val))].map(deg => {
+                        const pos = polarToCartesian(CENTER, CENTER, TEXT_RADIUS_OUTER, deg);
                         return (
                             <SvgText
-                                key={deg + 'num_dial'} x={pos.x} y={pos.y} textAnchor="middle"
-                                fontSize={FONT_SIZE_NUMERIC}
-                                fill={color}
-                                fontFamily={fontFamily}
-                                rotation={textRotation} origin={`${pos.x}, ${pos.y}`}
+                                key={`num-${deg}`} x={pos.x} y={pos.y + (FONT_SIZE_NUMERIC/3)} textAnchor="middle"
+                                fontSize={FONT_SIZE_NUMERIC} fill={deg % 90 === 0 ? COLOR_RED : COLOR_BORDER}
+                                fontFamily={fontFamily} rotation={-rotationAngle} origin={`${pos.x}, ${pos.y}`}
                             >
-                                {label}
+                                {deg}
                             </SvgText>
                         );
                     })}
 
-                    {/* E. LETRAS CARDINALES (N, E, S, O) - EN EL CÍRCULO INTERIOR ROTANDO */}
-                    {cardinalMarks.map(({ deg, label, color }) => {
-                        const pos = getDegreeTextPosition(deg, TEXT_RADIUS_INNERMOST_CARDINAL);
-                        const textRotation = -rotationAngle;
-
-                        let yOffset = (FONT_SIZE_CARDINAL_LETTER / 2) - (FONT_SIZE_NUMERIC / 2) - 3;
-
+                    {/* Letras Cardinales */}
+                    {cardinalMarks.map(({ deg, label }) => {
+                        const pos = polarToCartesian(CENTER, CENTER, TEXT_RADIUS_CARDINAL, deg);
+                        const yOff = (FONT_SIZE_CARDINAL_LETTER / 2) - (FONT_SIZE_NUMERIC / 2) - 3;
                         return (
                             <SvgText
-                                key={deg + 'let_inner'} x={pos.x} y={pos.y + yOffset} textAnchor="middle"
-                                fontSize={FONT_SIZE_CARDINAL_LETTER}
-                                fill={color}
-                                fontFamily={fontFamily}
-                                rotation={textRotation} origin={`${pos.x}, ${pos.y + yOffset}`}
+                                key={`card-${label}`} x={pos.x} y={pos.y + yOff} textAnchor="middle"
+                                fontSize={FONT_SIZE_CARDINAL_LETTER} fill={COLOR_RED}
+                                fontFamily={fontFamily} rotation={-rotationAngle} origin={`${pos.x}, ${pos.y + yOff}`}
                             >
                                 {label}
                             </SvgText>
@@ -194,173 +126,67 @@ const HeadingGauge = ({ value, unit, headingColor, twd, twaCog, isNightMode, set
                     })}
                 </G>
 
+                {/* 2. INDICADOR DE CORRIENTE */}
+                <G rotation={setAngle + rotationAngle} origin={`${CENTER}, ${CENTER}`}>
+                    <Path
+                        d={`M ${CENTER-25} ${CENTER+120} L ${CENTER+25} ${CENTER+120} L ${CENTER+25} ${CENTER-40} L ${CENTER+55} ${CENTER-40} L ${CENTER} ${CENTER-150} L ${CENTER-55} ${CENTER-40} L ${CENTER-25} ${CENTER-40} Z`}
+                        fill="none" stroke="#00ffff" strokeWidth="4" opacity={0.2}
+                    />
+                </G>
 
-{/* INDICADOR DE CORRIENTE (MÁS ANCHO Y HUECO) */}
-    <G rotation={setAngle + rotationAngle} origin={`${CENTER}, ${CENTER}`}>
-        {/* Silueta de la flecha de corriente (Cuerpo y punta anchos) */}
-        <Path
-            d={`
-                M ${CENTER - 25} ${CENTER + 120} 
-                L ${CENTER + 25} ${CENTER + 120} 
-                L ${CENTER + 25} ${CENTER - 40} 
-                L ${CENTER + 55} ${CENTER - 40} 
-                L ${CENTER} ${CENTER - 150} 
-                L ${CENTER - 55} ${CENTER - 40} 
-                L ${CENTER - 25} ${CENTER - 40} 
-                Z
-            `}
-            fill="none" 
-            stroke="#00ffff"
-            strokeWidth="4" // Borde un poco más grueso para mayor visibilidad
-            strokeLinejoin="round"
-            opacity={0.2}
-        />
-    </G>
-
-                {/* 2. SILUETA BARCO MINIMALISTA (CASCO CERRADO Y ALARGADO) */}
+                {/* 3. BARCO Y CRUJÍA */}
                 <G opacity={isNightMode ? 0.25 : 0.15}>
                     <Path
-                        d={`
-            M ${CENTER} ${CENTER - 165} 
-            C ${CENTER + 50} ${CENTER - 80}, ${CENTER + 45} ${CENTER + 100}, ${CENTER + 40} ${CENTER + 155}
-            L ${CENTER - 40} ${CENTER + 155}
-            C ${CENTER - 45} ${CENTER + 100}, ${CENTER - 50} ${CENTER - 80}, ${CENTER} ${CENTER - 165}
-            Z
-        `}
-                        fill="none"
-                        stroke={isNightMode ? "#f00" : "#fff"}
-                        strokeWidth="2.5"
-                        strokeLinejoin="round"
+                        d={`M ${CENTER} ${CENTER-165} C ${CENTER+50} ${CENTER-80}, ${CENTER+45} ${CENTER+100}, ${CENTER+40} ${CENTER+155} L ${CENTER-40} ${CENTER+155} C ${CENTER-45} ${CENTER+100}, ${CENTER-50} ${CENTER-80}, ${CENTER} ${CENTER-165} Z`}
+                        fill="none" stroke={isNightMode ? "#f00" : "#fff"} strokeWidth="2.5"
                     />
-
-                    {/* Eje de Crujía (Línea central punteada para ayudar a la puntería) */}
-                    <Line
-                        x1={CENTER} y1={CENTER - 165}
-                        x2={CENTER} y2={CENTER + 155}
-                        stroke={isNightMode ? "#f00" : "#fff"}
-                        strokeWidth="1"
-                        strokeDasharray="4, 12"
-                    />
+                    <Line x1={CENTER} y1={CENTER-165} x2={CENTER} y2={CENTER+155} stroke={isNightMode ? "#f00" : "#fff"} strokeDasharray="4, 12" />
                 </G>
 
+                {/* 4. ARCOS DE CEÑIDA (Laylines) */}
+                <Path d={describeArc(CENTER, CENTER, RADIUS_ARCS, minLayline, maxLayline)} fill="none" stroke="#00ff00" strokeWidth="15" strokeLinecap="round" opacity={0.5} />
+                <Path d={describeArc(CENTER, CENTER, RADIUS_ARCS, 360-maxLayline, 360-minLayline)} fill="none" stroke="#ff0000" strokeWidth="15" strokeLinecap="round" opacity={0.5} />
 
-
-                {/* *** 2. CAPAS SUPERIORES (Indicadores y Marcadores FIJOS) *** */}
-
-                {/* 1. ARCO VERDE FIJO (20° a 60°) */}
-                <Path
-                    d={getArcPath(20, 60, ARC_RADIUS)}
-                    stroke={ARC_COLOR_GREEN}
-                    strokeWidth={ARC_THICKNESS}
-                    fill="none"
-                />
-
-                {/* 🚨 2. ARCO ROJO FIJO (300° a 340°) */}
-                <Path
-                    d={getArcPath(300, 340, ARC_RADIUS)}
-                    stroke={ARC_COLOR_RED}
-                    strokeWidth={ARC_THICKNESS}
-                    fill="none"
-                />
-
-                {/* LÍNEA DE CRUJÍA/COG (Roja) - Fija y visible */}
-                <Line
-                    x1={CENTER} y1={CENTER}
-                    x2={CENTER} y2={25}
-                    stroke={COLOR_3}
-                    strokeWidth="2"
-                />
-
-
-
-                {/* TWA_COG (True Wind Angle Relativo a COG) - Indicador Naranja y Línea */}
+                {/* 5. INDICADORES DE VIENTO Y RUMBO */}
                 {typeof twaCog === 'number' && (
                     <G rotation={twaCog} origin={`${CENTER}, ${CENTER}`}>
-                        {/* Línea que une el centro con la punta del triángulo */}
-                        <Line
-                            x1={CENTER} y1={CENTER}
-                            x2={CENTER} y2={CENTER - TWA_EXTERIOR_DISTANCE}
-                            stroke={COLOR_TWA_EXTERIOR}
-                            strokeWidth="2"
-                            strokeDasharray="5, 5"
-                        />
-
-                        {/* Triángulo Naranja que apunta hacia el centro */}
-                        <Polygon
-                            points={`${CENTER - 20}, 5 ${CENTER + 20}, 5 ${CENTER}, 45`}
-                            fill={COLOR_TWA_EXTERIOR}
-                            stroke={COLOR_BORDER}
-                            strokeWidth="2"
-                        />
+                        <Line x1={CENTER} y1={CENTER} x2={CENTER} y2={CENTER-WIND_INDICATOR_DISTANCE} stroke={COLOR_TWA} strokeWidth="2" strokeDasharray="5, 5" />
+                        <Polygon points={`${CENTER-20},5 ${CENTER+20},5 ${CENTER},45`} fill={COLOR_TWA} stroke={COLOR_BORDER} strokeWidth="2" />
                     </G>
                 )}
-
-
+                
                 {twd !== undefined && (
                     <G rotation={twd} origin={`${CENTER}, ${CENTER}`}>
-                        {/* Línea que une el centro con la punta del triángulo */}
-                        <Line
-                            x1={CENTER} y1={CENTER}
-                            x2={CENTER} y2={CENTER - TWA_EXTERIOR_DISTANCE}
-                            stroke="#2196f3"
-                            strokeWidth="2"
-                            strokeDasharray="5, 5"
-                        />
-
-                        {/* Triángulo Naranja que apunta hacia el centro */}
-                        <Polygon
-                            points={`${CENTER - 20}, 5 ${CENTER + 20}, 5 ${CENTER}, 40`}
-                            fill="#2196f3"
-                            stroke={COLOR_BORDER}
-                            strokeWidth="2"
-                        />
+                        <Line x1={CENTER} y1={CENTER} x2={CENTER} y2={CENTER-WIND_INDICATOR_DISTANCE} stroke={COLOR_TWD} strokeWidth="2" strokeDasharray="5, 5" />
+                        <Polygon points={`${CENTER-20},5 ${CENTER+20},5 ${CENTER},40`} fill={COLOR_TWD} stroke={COLOR_BORDER} strokeWidth="2" />
                     </G>
                 )}
 
-
-
-                {/* MARCADOR DE COG/PROA: Triángulo Fijo (Referencia de 0 grados) */}
-                <Polygon
-                    /* De -10 a -20 (izquierda), de +10 a +20 (derecha) y de 25 a 45 (punta hacia abajo) */
-                    points={`${CENTER - 20}, 5 ${CENTER + 20}, 5 ${CENTER}, 45`}
-                    fill={finalHeadingColor}
-                    stroke={COLOR_BORDER}
-                    strokeWidth="2"
-                />
+                <Line x1={CENTER} y1={CENTER} x2={CENTER} y2={25} stroke={COLOR_RED} strokeWidth="2" />
+                <Polygon points={`${CENTER-20},5 ${CENTER+20},5 ${CENTER},45`} fill={finalHeadingColor} stroke={COLOR_BORDER} strokeWidth="2" />
 
             </Svg>
 
-            {/* Rumbo Digital Central (Fijo, superpuesto) */}
+            {/* 6. DISPLAY DIGITAL */}
             <View style={styles.digitalDisplay}>
-                <Text style={[styles.headingText, { fontFamily, color: finalHeadingColor }]}>{formattedHeading}</Text>
-                {unit && <Text style={[styles.unitText, { fontFamily }]}>{unit}</Text>}
+                <Text style={[styles.headingText, { color: finalHeadingColor }]}>{formattedHeading}</Text>
+                {unit && <Text style={styles.unitText}>{unit}</Text>}
             </View>
         </View>
     );
 };
 
-// ------------------------------------------------------------------
-// ESTILOS (Sin Cambios)
-// ------------------------------------------------------------------
-
 const styles = StyleSheet.create({
-    outerContainer: (size) => ({
-        width: size + 10,
-        height: size + 40,
-        padding: 5,
-        marginTop: 10,
-        marginHorizontal: 5,
-        marginBottom: 0,
+    outerContainer: {
+        width: COMPASS_SIZE + 10,
+        height: COMPASS_SIZE + 40,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        position: 'relative',
-    }),
-
+    },
     digitalDisplay: {
         position: 'absolute',
         top: CENTER - 25,
         alignItems: 'center',
-        justifyContent: 'center',
     },
     headingText: {
         fontSize: 48,
