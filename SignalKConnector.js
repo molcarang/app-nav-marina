@@ -1,13 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
-import { ImageBackground, Modal, Platform, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DataSquare from './DataSquare';
 import HeadingGauge from './HeadingGauge';
 import { useSignalKData } from './useSignalKData';
 
 const mpsToKnots = (mps) => (mps * 1.94384).toFixed(1);
 const radToDeg = (rad) => (rad * 57.2958);
-
 const normalizeAngle = (angle) => {
     angle = angle % 360;
     if (angle > 180) angle -= 360;
@@ -15,17 +15,52 @@ const normalizeAngle = (angle) => {
     return angle;
 };
 
+
 const SignalKConnector = () => {
+    // --- ESTADOS (HOOKS) ---
     const data = useSignalKData();
     const [isModalVisible, setModalVisible] = useState(false);
     const [isNightMode, setIsNightMode] = useState(false);
     const [depthThreshold, setDepthThreshold] = useState(3.0);
+    // 1. AHORA EL ESTADO ESTÁ AQUÍ DENTRO
+    const [ajustesConsola, setAjustesConsola] = useState({
+        minAnguloCeñida: 20,
+        maxAnguloCeñida: 60,
+    });
 
+    // 2. FUNCIÓN PARA VALIDAR Y GUARDAR AJUSTES    
+    const validarYGuardar = async (clave, valor) => {
+        let num = parseInt(valor) || 0;
+        let nuevosAjustes = { ...ajustesConsola };
+
+        if (clave === 'minAnguloCeñida') {
+            if (num < 10) num = 10;
+            if (num > 90) num = 90;
+            nuevosAjustes.minAnguloCeñida = num;
+            if (nuevosAjustes.maxAnguloCeñida <= num) {
+                nuevosAjustes.maxAnguloCeñida = num + 5;
+            }
+        } else if (clave === 'maxAnguloCeñida') {
+            if (num <= nuevosAjustes.minAnguloCeñida) {
+                num = nuevosAjustes.minAnguloCeñida + 5;
+            }
+            nuevosAjustes.maxAnguloCeñida = num;
+        }
+
+        // Ahora React no dará error porque setAjustesConsola 
+        // se llama dentro del ámbito correcto del componente
+        setAjustesConsola(nuevosAjustes);
+
+        try {
+            await AsyncStorage.setItem('@ajustes_consola', JSON.stringify(nuevosAjustes));
+        } catch (e) {
+            console.error("Error guardando", e);
+        }
+    };
+
+    // --- Lógica de procesamiento de datos ---
     const awsKnots = mpsToKnots(data['environment.wind.speedApparent']);
     const sogKnots = mpsToKnots(data['navigation.speedOverGround']);
-    const speedThroughWater = mpsToKnots(data['navigation.speedThroughWater']);
-
-
     const cogRad = data['navigation.headingTrue'];
     let cogDegrees = 0;
     let cogDigital = '---';
@@ -48,40 +83,17 @@ const SignalKConnector = () => {
         twaCogDegrees = normalizeAngle(twdDegrees - cogDegrees);
     }
 
-    const calculateCurrent = (sog, cogRad, stw, hdgRad) => {
-    if (stw === undefined || sog === undefined) return { set: '---', drift: '---' };
-
-    const currentData = calculateCurrent(sogMps, cogRad, speedThroughWater, headingRad); 
-
-    // Componentes vectoriales del movimiento real (GPS)
-    const v_real_x = sog * Math.sin(cogRad);
-    const v_real_y = sog * Math.cos(cogRad);
-
-    // Componentes vectoriales del movimiento en el agua (Barco)
-    const v_boat_x = stw * Math.sin(hdgRad);
-    const v_boat_y = stw * Math.cos(hdgRad);
-
-    // El vector de la corriente es la diferencia
-    const drift_x = v_real_x - v_boat_x;
-    const drift_y = v_real_y - v_boat_y;
-
-    const drift = Math.sqrt(drift_x * drift_x + drift_y * drift_y);
-    let set = Math.atan2(drift_x, drift_y) * (180 / Math.PI);
-    if (set < 0) set += 360;
-
-    return { 
-        set: set.toFixed(0) + '°', 
-        drift: (drift * 1.94384).toFixed(1) // nudos
-    };
-};
+    const minLay = ajustesConsola.minAnguloCeñida; 
+    const maxLay = ajustesConsola.maxAnguloCeñida;
+    const absTWA = Math.abs(twaCogDegrees || 0);
+    const colorEstado = (absTWA >= minLay && absTWA <= maxLay) ? '#00FF00' : '#FF0000';
 
     const depthMeters = data['navigation.depthBelowTransducer'] || 0;
     const isDepthAlarmActive = depthMeters < depthThreshold && depthMeters > 0;
 
     const headingColor = '#dc1212ff';
     const windColor = isNightMode ? '#900' : '#ff9800';
-    const twdColor = isNightMode ? '#004' : '#2196f3'; // Azul del TWD
-
+    const twdColor = isNightMode ? '#004' : '#2196f3';
     const dataSquareBg = isNightMode ? 'rgba(30, 0, 0, 0.8)' : 'rgba(45, 45, 45, 0.75)';
     const alarmBgColor = 'rgba(210, 0, 0, 0.95)';
 
@@ -104,20 +116,29 @@ const SignalKConnector = () => {
                     imageStyle={{ borderRadius: 25, opacity: isNightMode ? 0.3 : 1 }}
                 >
                     <View style={styles.dataGrid}>
-                        {/* COMPÁS CON TWD (AZUL) Y TWA (AMARILLO) */}
                         <HeadingGauge
                             headingColor={headingColor}
                             value={cogDigital}
                             unit="°COG"
-                            twd={twdDegrees}      // <--- Aquí pasamos la dirección del viento real
-                            twaCog={twaCogDegrees} // <--- Dirección relativa
+                            twd={twdDegrees}
+                            twaCog={twaCogDegrees}
                             isNightMode={isNightMode}
+                            // 3. PASAMOS LOS VALORES AL COMPÁS
+                            minLayline={ajustesConsola.minAnguloCeñida}
+                            maxLayline={ajustesConsola.maxAnguloCeñida}
                         />
 
                         <View style={styles.dataGridrow}>
                             <DataSquare label="AWS" value={awsKnots} unit="KNOTS" color={dataSquareBg} />
                             <DataSquare label="SOG" value={sogKnots} unit="KNOTS" color={dataSquareBg} />
-                            <DataSquare label="TWA" textColor={windColor} value={twaCogDegrees !== null ? twaCogDegrees.toFixed(0) + '°' : '---'} unit="DEG" color={dataSquareBg} />
+                            <DataSquare 
+                            label="TWA" 
+                            textColor={windColor} 
+                            value={twaCogDegrees !== null ? twaCogDegrees.toFixed(0) + '°' : '---'} 
+                            unit="DEG"
+                            showStatusDot={true}
+                            statusDotColor={colorEstado}
+                            color={dataSquareBg} />
                         </View>
 
                         <View style={styles.dataGridrow}>
@@ -141,11 +162,13 @@ const SignalKConnector = () => {
             <Modal animationType="fade" transparent={true} visible={isModalVisible}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitle}>Ajustes de Consola</Text>
+                        <Text style={styles.modalTitle}>AJUSTES DE CONSOLA</Text>
+
                         <View style={styles.settingRow}>
                             <Text style={styles.settingLabel}>Modo Noche (Rojo)</Text>
                             <Switch value={isNightMode} onValueChange={setIsNightMode} trackColor={{ true: "#900" }} />
                         </View>
+
                         <View style={styles.settingRow}>
                             <Text style={styles.settingLabel}>Alarma Prof. ({depthThreshold}m)</Text>
                             <View style={styles.stepper}>
@@ -153,6 +176,27 @@ const SignalKConnector = () => {
                                 <TouchableOpacity onPress={() => setDepthThreshold(prev => prev + 0.5)} style={styles.stepBtn}><Text style={styles.stepText}>+</Text></TouchableOpacity>
                             </View>
                         </View>
+
+                        <View style={styles.settingRow}>
+                            <Text style={styles.settingLabel}>Mín. ceñida (10-90°)</Text>
+                            <TextInput
+                                style={styles.input}
+                                keyboardType="numeric"
+                                defaultValue={ajustesConsola.minAnguloCeñida.toString()}
+                                onBlur={(e) => validarYGuardar('minAnguloCeñida', e.nativeEvent.text)}
+                            />
+                        </View>
+
+                        <View style={styles.settingRow}>
+                            <Text style={styles.settingLabel}>Máx. ceñida</Text>
+                            <TextInput
+                                style={styles.input}
+                                keyboardType="numeric"
+                                defaultValue={ajustesConsola.maxAnguloCeñida.toString()}
+                                onBlur={(e) => validarYGuardar('maxAnguloCeñida', e.nativeEvent.text)}
+                            />
+                        </View>
+
                         <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}><Text style={styles.closeBtnText}>CERRAR</Text></TouchableOpacity>
                     </View>
                 </View>
@@ -161,11 +205,18 @@ const SignalKConnector = () => {
     );
 };
 
-
 const styles = StyleSheet.create({
     container: { flex: 1, alignItems: 'center', paddingTop: Platform.OS === 'ios' ? 50 : 20 },
     header: { flexDirection: 'row', justifyContent: 'space-between', width: '92%', marginBottom: 10, alignItems: 'center' },
     status: { fontSize: 12, fontWeight: 'bold' },
+    input: {
+        color: '#FFFFFF', // Blanco o el cian #00ffff que usamos antes
+        borderBottomWidth: 1,
+        borderBottomColor: '#555',
+        width: 50,
+        textAlign: 'center',
+        fontSize: 18,
+    },
     consoleFrame: {
         width: '96%',
         borderRadius: 28,
