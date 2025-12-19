@@ -1,4 +1,8 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+
+// ... (tus constantes DOT_SIZE y FONT_FAMILY)
 
 // Parámetros del dot
 const DOT_SIZE = 12; // Un poco más grande para esta versión
@@ -22,9 +26,25 @@ const DataSquare = ({
     color,
     textColor,
     showStatusDot = false,
-    statusDotColor = 'red'
+    statusDotColor = 'red',
+    showProgressBar = false,
+    maxValue = 0,
+    onPress
 }) => {
 
+    const animatedHeight = useRef(new Animated.Value(0)).current;
+
+    const numericValue = parseFloat(value) || 0;
+    const isRecord = numericValue >= maxValue && maxValue > 0;
+
+    const targetPercentage = maxValue > 0
+        ? Math.min((numericValue / maxValue) * 100, 100)
+        : 0;
+
+    const progressHeight = maxValue > 0
+        ? Math.min((numericValue / maxValue) * 100, 100)
+        : 0;
+    // ----
     // El estilo del contenedor principal se actualiza con la prop 'color'
     const containerStyle = {
         ...styles.container,
@@ -34,9 +54,41 @@ const DataSquare = ({
     // Definición de color para el label/unit, si no se provee textColor
     const labelUnitColor = textColor || styles.label.color;
 
-    return (
-        <View style={containerStyle}>
+    useEffect(() => {
+        Animated.timing(animatedHeight, {
+            toValue: targetPercentage,
+            duration: 800, // Duración del "llenado" en milisegundos
+            useNativeDriver: false, // Obligatorio para animar altura (layout)
+        }).start();
+    }, [targetPercentage]); // Se ejecuta cada vez que el valor o el máximo cambian
+    const heightStyle = animatedHeight.interpolate({
+        inputRange: [0, 100],
+        outputRange: ['0%', '100%']
+    });
 
+    return (
+        <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={onPress}
+            disabled={!onPress} // Si no hay función, no hace efecto botón
+            style={containerStyle}
+        >
+            {showProgressBar && (
+                <View style={styles.progressContainer}>
+                    {/* Línea blanca fija en el tope (100%) */}
+                    <View style={styles.maxMarker} />
+
+                    {/* Barra de progreso con color dinámico */}
+                    <Animated.View style={[
+                        styles.progressBar,
+                        {
+                            height: heightStyle, // <--- Aplicamos la altura animada
+                            backgroundColor: isRecord ? '#FFD700' : '#79f17bff',
+                            shadowColor: isRecord ? '#FFD700' : '#79f17bff',
+                        }
+                    ]} />
+                </View>
+            )}
             {/* 🚨 Contenedor para alinear la Etiqueta y el Dot */}
             <View style={styles.labelContainer}>
 
@@ -59,7 +111,7 @@ const DataSquare = ({
             {/* Unidad */}
             {/* Usamos labelUnitColor para el color de la unidad */}
             <Text style={[styles.unit, { color: labelUnitColor }]}>{unit}</Text>
-        </View>
+        </TouchableOpacity>
     );
 };
 
@@ -75,6 +127,31 @@ const styles = StyleSheet.create({
         fontFamily: FONT_FAMILY,
     },
 
+    progressContainer: {
+        position: 'absolute',
+        left: 12,
+        top: 25,
+        bottom: 25,
+        width: 8,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        justifyContent: 'flex-end', // <--- FUNDAMENTAL para que suba desde la base
+        borderRadius: 3,
+        overflow: 'hidden',
+    },
+    progressBar: {
+        width: '100%',
+        borderRadius: 3,
+        // Eliminamos el height fijo de aquí porque lo da la animación
+    },
+    maxMarker: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 2,
+        backgroundColor: 'rgba(255, 255, 255, 0.6)',
+        zIndex: 10,
+    },
     // 🚨 Nuevo contenedor para alinear la etiqueta y el punto
     labelContainer: {
         flexDirection: 'row',

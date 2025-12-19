@@ -1,10 +1,11 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ImageBackground, Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DataSquare from './DataSquare';
 import HeadingGauge from './HeadingGauge';
 import { useSignalKData } from './useSignalKData';
+
 
 const mpsToKnots = (mps) => (mps * 1.94384).toFixed(1);
 const radToDeg = (rad) => (rad * 57.2958);
@@ -58,6 +59,9 @@ const SignalKConnector = () => {
         }
     };
 
+    const [maxSOG, setMaxSOG] = useState(0);
+    const [sogHistory, setSogHistory] = useState([]);
+
     // --- Lógica de procesamiento de datos ---
     const awsKnots = mpsToKnots(data['environment.wind.speedApparent']);
     const sogKnots = mpsToKnots(data['navigation.speedOverGround']);
@@ -83,7 +87,7 @@ const SignalKConnector = () => {
         twaCogDegrees = normalizeAngle(twdDegrees - cogDegrees);
     }
 
-    const minLay = ajustesConsola.minAnguloCeñida; 
+    const minLay = ajustesConsola.minAnguloCeñida;
     const maxLay = ajustesConsola.maxAnguloCeñida;
     const absTWA = Math.abs(twaCogDegrees || 0);
     const colorEstado = (absTWA >= minLay && absTWA <= maxLay) ? '#00FF00' : '#FF0000';
@@ -97,17 +101,19 @@ const SignalKConnector = () => {
     const dataSquareBg = isNightMode ? 'rgba(30, 0, 0, 0.8)' : 'rgba(45, 45, 45, 0.75)';
     const alarmBgColor = 'rgba(210, 0, 0, 0.95)';
 
+    useEffect(() => {
+        if (sogKnots > 0) { // Solo procesar si hay movimiento
+            if (sogKnots > maxSOG) {
+                console.log("Nuevo récord:", sogKnots); // Mira si esto sale en la consola
+                setMaxSOG(sogKnots);
+            }
+        }
+    }, [sogKnots]);
+
+
+
     return (
         <View style={[styles.container, { backgroundColor: isNightMode ? '#050000' : '#0a0a0a' }]}>
-            <View style={styles.header}>
-                <Text style={[styles.status, { color: isNightMode ? '#400' : '#666' }]}>
-                    {data.isConnected ? 'SIGNAL K: OK ✅' : 'SIN CONEXIÓN 🔴'}
-                </Text>
-                <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.settingsBtn}>
-                    <MaterialIcons name="settings" size={28} color={isNightMode ? "#600" : "#aaa"} />
-                </TouchableOpacity>
-            </View>
-
             <View style={[styles.consoleFrame, isNightMode && styles.consoleFrameNight]}>
                 <ImageBackground
                     source={require('./assets/images/CarbonFiber.png')}
@@ -116,29 +122,51 @@ const SignalKConnector = () => {
                     imageStyle={{ borderRadius: 25, opacity: isNightMode ? 0.3 : 1 }}
                 >
                     <View style={styles.dataGrid}>
-                        <HeadingGauge
-                            headingColor={headingColor}
-                            value={cogDigital}
-                            unit="°COG"
-                            twd={twdDegrees}
-                            twaCog={twaCogDegrees}
-                            isNightMode={isNightMode}
-                            // 3. PASAMOS LOS VALORES AL COMPÁS
-                            minLayline={ajustesConsola.minAnguloCeñida}
-                            maxLayline={ajustesConsola.maxAnguloCeñida}
-                        />
+                        <View style={styles.dataGridrow}>
+                            <View style={styles.header}>
+                                <Text style={[styles.status, { color: isNightMode ? '#400' : '#666' }]}>
+                                    {data.isConnected ? '🟢 CONNECTED' : '🔴 NOT CONNECTED'}
+                                </Text>
+                                <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.settingsBtn}>
+                                    <MaterialIcons name="settings" size={40} color={isNightMode ? "#600" : "#aaa"} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
 
                         <View style={styles.dataGridrow}>
+                            <HeadingGauge
+                                headingColor={headingColor}
+                                value={cogDigital}
+                                unit="°COG"
+                                twd={twdDegrees}
+                                twaCog={twaCogDegrees}
+                                isNightMode={isNightMode}
+                                // 3. PASAMOS LOS VALORES AL COMPÁS
+                                minLayline={ajustesConsola.minAnguloCeñida}
+                                maxLayline={ajustesConsola.maxAnguloCeñida}
+                            />
+                        </View>
+                        <View style={styles.dataGridrow}>
                             <DataSquare label="AWS" value={awsKnots} unit="KNOTS" color={dataSquareBg} />
-                            <DataSquare label="SOG" value={sogKnots} unit="KNOTS" color={dataSquareBg} />
-                            <DataSquare 
-                            label="TWA" 
-                            textColor={windColor} 
-                            value={twaCogDegrees !== null ? twaCogDegrees.toFixed(0) + '°' : '---'} 
-                            unit="DEG"
-                            showStatusDot={true}
-                            statusDotColor={colorEstado}
-                            color={dataSquareBg} />
+                            <DataSquare label="SOG"
+                                value={sogKnots}
+                                maxValue={maxSOG}
+                                showProgressBar={true}
+                                history={sogHistory}
+                                onPress={() => {
+                                    setMaxSOG(0);
+                                    setSogHistory([]);
+                                }}
+                                unit="KNOTS"
+                                color={dataSquareBg} />
+                            <DataSquare
+                                label="TWA"
+                                textColor={windColor}
+                                value={twaCogDegrees !== null ? twaCogDegrees.toFixed(0) + '°' : '---'}
+                                unit="DEG"
+                                showStatusDot={true}
+                                statusDotColor={colorEstado}
+                                color={dataSquareBg} />
                         </View>
 
                         <View style={styles.dataGridrow}>
@@ -206,9 +234,26 @@ const SignalKConnector = () => {
 };
 
 const styles = StyleSheet.create({
+    progressContainer: {
+        position: 'absolute',
+        left: 8,          // Pegada al borde izquierdo
+        top: '15%',       // Centrada verticalmente
+        bottom: '15%',
+        width: 6,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)', // Carril casi invisible
+        borderRadius: 3,
+        overflow: 'hidden',
+        justifyContent: 'flex-end',
+    },
+    progressBar: {
+        width: '100%',
+        backgroundColor: '#79f17bff', // Tu verde náutico
+        shadowColor: '#79f17bff',
+        shadowBlur: 5,
+    },
     container: { flex: 1, alignItems: 'center', paddingTop: Platform.OS === 'ios' ? 50 : 20 },
     header: { flexDirection: 'row', justifyContent: 'space-between', width: '92%', marginBottom: 10, alignItems: 'center' },
-    status: { fontSize: 12, fontWeight: 'bold' },
+    status: { fontSize: 18, fontFamily: 'NauticalFont' },
     input: {
         color: '#FFFFFF', // Blanco o el cian #00ffff que usamos antes
         borderBottomWidth: 1,

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 // --- Configuración de Signal K ---
-const SIGNALK_IP = '192.168.1.57'; // ¡REEMPLAZA con tu IP!
+const SIGNALK_IP = 'openplotter.local'; // ¡REEMPLAZA con tu IP!
 const SOCKET_URL = `ws://${SIGNALK_IP}:3000/signalk/v1/stream`;
 
 // Definición de las Rutas de Datos que queremos monitorear
@@ -11,7 +11,7 @@ const INITIAL_DATA = {
     'environment.wind.speedApparent': 0, // AWS (m/s)
     'navigation.speedOverGround': 0,      // SOG (m/s)
     'navigation.headingTrue': 0,
-    'navigation.depthBelowTransducer': 0, 
+    'navigation.depthBelowTransducer': 0,
     'navigation.speedThroughWater': 0,      // Heading (rad)
     // Añade aquí cualquier otra ruta que necesites inicialmente
 };
