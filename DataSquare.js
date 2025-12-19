@@ -32,7 +32,11 @@ const DataSquare = ({
     onPress
 }) => {
 
+
     const animatedHeight = useRef(new Animated.Value(0)).current;
+
+
+
 
     const numericValue = parseFloat(value) || 0;
     const isRecord = numericValue >= maxValue && maxValue > 0;
@@ -61,9 +65,18 @@ const DataSquare = ({
             useNativeDriver: false, // Obligatorio para animar altura (layout)
         }).start();
     }, [targetPercentage]); // Se ejecuta cada vez que el valor o el máximo cambian
+
     const heightStyle = animatedHeight.interpolate({
         inputRange: [0, 100],
         outputRange: ['0%', '100%']
+    });
+    const opacityStyle = animatedHeight.interpolate({
+        inputRange: [0, 100],
+        outputRange: [0.3, 1], // 0.3 es tenue (poca velocidad), 1 es brillo total (máxima)
+    });
+    const glowStyle = animatedHeight.interpolate({
+        inputRange: [0, 100],
+        outputRange: [0, 8], // A más velocidad, más aura de luz alrededor
     });
 
     return (
@@ -82,9 +95,11 @@ const DataSquare = ({
                     <Animated.View style={[
                         styles.progressBar,
                         {
-                            height: heightStyle, // <--- Aplicamos la altura animada
+                            height: heightStyle,
+                            opacity: opacityStyle, // 👈 Aquí aplicamos el fade in dinámico
                             backgroundColor: isRecord ? '#FFD700' : '#79f17bff',
                             shadowColor: isRecord ? '#FFD700' : '#79f17bff',
+                            shadowRadius: glowStyle, // 👈 El brillo también crece con la velocidad
                         }
                     ]} />
                 </View>
@@ -127,21 +142,22 @@ const styles = StyleSheet.create({
         fontFamily: FONT_FAMILY,
     },
 
-    progressContainer: {
+progressContainer: {
         position: 'absolute',
         left: 12,
         top: 25,
         bottom: 25,
         width: 8,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        justifyContent: 'flex-end', // <--- FUNDAMENTAL para que suba desde la base
-        borderRadius: 3,
+        backgroundColor: 'rgba(255, 255, 255, 0.03)', // Casi invisible para que destaque el brillo
+        justifyContent: 'flex-end',
+        borderRadius: 4,
         overflow: 'hidden',
     },
     progressBar: {
         width: '100%',
-        borderRadius: 3,
-        // Eliminamos el height fijo de aquí porque lo da la animación
+        borderRadius: 4,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 1, // Mantenemos la opacidad de la sombra al máximo
     },
     maxMarker: {
         position: 'absolute',

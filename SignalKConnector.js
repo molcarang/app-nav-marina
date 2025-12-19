@@ -102,13 +102,13 @@ const SignalKConnector = () => {
     const alarmBgColor = 'rgba(210, 0, 0, 0.95)';
 
     useEffect(() => {
-        if (sogKnots > 0) { // Solo procesar si hay movimiento
-            if (sogKnots > maxSOG) {
-                console.log("Nuevo récord:", sogKnots); // Mira si esto sale en la consola
-                setMaxSOG(sogKnots);
-            }
+    if (sogKnots > 0) { // Solo procesar si hay movimiento
+        if (sogKnots > maxSOG) {
+            console.log("Nuevo récord:", sogKnots); // Mira si esto sale en la consola
+            setMaxSOG(sogKnots);
         }
-    }, [sogKnots]);
+    }
+}, [sogKnots]);
 
 
 
