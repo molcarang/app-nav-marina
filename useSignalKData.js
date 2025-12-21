@@ -12,7 +12,8 @@ const INITIAL_DATA = {
     'navigation.speedOverGround': 0,      // SOG (m/s)
     'navigation.headingTrue': 0,
     'navigation.depthBelowTransducer': 0,
-    'navigation.speedThroughWater': 0,      // Heading (rad)
+    'navigation.speedThroughWater': 0,   
+    'environment.wind.speedTrue': 0, 
     // Añade aquí cualquier otra ruta que necesites inicialmente
 };
 

@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polygon, Text as SvgText } from 'react-native-svg';
 
 // --- 1. Parámetros Globales ---
-const COMPASS_SIZE = 560;
+const COMPASS_SIZE = 550;
 const CENTER = COMPASS_SIZE / 2;
 const RADIUS = CENTER - 20;
 const INNER_RADIUS = RADIUS - 55;
@@ -179,7 +179,7 @@ const HeadingGauge = ({
 const styles = StyleSheet.create({
     outerContainer: {
         width: COMPASS_SIZE + 10,
-        height: COMPASS_SIZE + 40,
+        height: COMPASS_SIZE ,
         alignItems: 'center',
         justifyContent: 'flex-start',
     },

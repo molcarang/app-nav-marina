@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import { Path, Svg } from 'react-native-svg';
 
 // ... (tus constantes DOT_SIZE y FONT_FAMILY)
 
@@ -28,19 +28,30 @@ const DataSquare = ({
     showStatusDot = false,
     statusDotColor = 'red',
     showProgressBar = false,
+    showHistory = false,
     maxValue = 0,
     onPress
 }) => {
 
+    const getSmoothPath = (data, width, height, range) => {
+        if (data.length < 2) return "";
 
+        const points = data.map((val, index) => ({
+            x: (index / (data.length - 1)) * width,
+            y: height - (Math.min(val / range, 1) * (height - 5))
+        }));
+
+        return points.reduce((acc, point, i, a) => {
+            if (i === 0) return `M ${point.x},${point.y}`;
+
+            // Calculamos los puntos de control para la curva
+            const cp1x = a[i - 1].x + (point.x - a[i - 1].x) / 2;
+            return `${acc} C ${cp1x},${a[i - 1].y} ${cp1x},${point.y} ${point.x},${point.y}`;
+        }, "");
+    };
     const animatedHeight = useRef(new Animated.Value(0)).current;
-
-
-
-
     const numericValue = parseFloat(value) || 0;
     const isRecord = numericValue >= maxValue && maxValue > 0;
-
     const targetPercentage = maxValue > 0
         ? Math.min((numericValue / maxValue) * 100, 100)
         : 0;
@@ -57,6 +68,8 @@ const DataSquare = ({
 
     // Definición de color para el label/unit, si no se provee textColor
     const labelUnitColor = textColor || styles.label.color;
+    const [history, setHistory] = useState([]);
+
 
     useEffect(() => {
         Animated.timing(animatedHeight, {
@@ -65,6 +78,18 @@ const DataSquare = ({
             useNativeDriver: false, // Obligatorio para animar altura (layout)
         }).start();
     }, [targetPercentage]); // Se ejecuta cada vez que el valor o el máximo cambian
+
+    useEffect(() => {
+        // Solo guardamos si el valor es mayor a 0 (para evitar rayas raras al inicio)
+        if (showHistory && numericValue >= 0) {
+            setHistory(prev => {
+                const newHistory = [...prev, numericValue];
+                // Mantenemos los últimos 40 puntos para que el gráfico sea fluido
+                return newHistory.length > 40 ? newHistory.slice(1) : newHistory;
+            });
+        }
+    }, [numericValue, showHistory]);
+
 
     const heightStyle = animatedHeight.interpolate({
         inputRange: [0, 100],
@@ -79,10 +104,20 @@ const DataSquare = ({
         outputRange: [0, 8], // A más velocidad, más aura de luz alrededor
     });
 
+    const handlePress = () => {
+        // 1. Limpiamos el gráfico (estado local de DataSquare)
+        if (showHistory) {
+            setHistory([]);
+        }
+        // 2. Avisamos al padre (SignalKConnector) para resetear el récord
+        if (onPress) {
+            onPress();
+        }
+    };
     return (
         <TouchableOpacity
             activeOpacity={0.8}
-            onPress={onPress}
+            onPress={handlePress}
             disabled={!onPress} // Si no hay función, no hace efecto botón
             style={containerStyle}
         >
@@ -104,7 +139,30 @@ const DataSquare = ({
                     ]} />
                 </View>
             )}
+
+            {showHistory && history.length > 1 && (
+                <View style={styles.chartContainer} pointerEvents="none">
+                    <Svg height="100%" width="100%">
+                        {/* 1. ÁREA SUAVIZADA (Relleno) */}
+                        <Path
+                            d={`${getSmoothPath(history, 185, 60, maxValue > 0 ? maxValue : 15)} L 185,60 L 0,60 Z`}
+                            fill={isRecord ? "rgba(255, 215, 0, 0.15)" : "rgba(121, 241, 123, 0.15)"}
+                        />
+
+                        {/* 2. LÍNEA SUAVIZADA (Borde) */}
+                        <Path
+                            d={getSmoothPath(history, 185, 60, maxValue > 0 ? maxValue : 15)}
+                            fill="none"
+                            stroke={isRecord ? "rgba(255, 215, 0, 0.6)" : "rgba(121, 241, 123, 0.6)"}
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                        />
+                    </Svg>
+                </View>
+            )}
+
             {/* 🚨 Contenedor para alinear la Etiqueta y el Dot */}
+
             <View style={styles.labelContainer}>
 
                 {/* Etiqueta */}
@@ -141,8 +199,17 @@ const styles = StyleSheet.create({
         elevation: 100,
         fontFamily: FONT_FAMILY,
     },
+    chartContainer: {
+        position: 'absolute',
+        bottom: 30,         // Ajusta según donde esté tu unidad (KTS)
+        left: 20,
+        right: 20,
+        height: 50,         // Altura del área del gráfico
+        zIndex: -1,         // Por detrás de todo
+        opacity: 0.6,
+    },
 
-progressContainer: {
+    progressContainer: {
         position: 'absolute',
         left: 12,
         top: 25,

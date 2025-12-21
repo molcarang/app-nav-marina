@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ImageBackground, Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DataSquare from './DataSquare';
 import HeadingGauge from './HeadingGauge';
+import InfoPanel from './InfoPanel';
 import { useSignalKData } from './useSignalKData';
 
 
@@ -23,6 +24,7 @@ const SignalKConnector = () => {
     const [isModalVisible, setModalVisible] = useState(false);
     const [isNightMode, setIsNightMode] = useState(false);
     const [depthThreshold, setDepthThreshold] = useState(3.0);
+
     // 1. AHORA EL ESTADO ESTÁ AQUÍ DENTRO
     const [ajustesConsola, setAjustesConsola] = useState({
         minAnguloCeñida: 20,
@@ -60,9 +62,10 @@ const SignalKConnector = () => {
     };
 
     const [maxSOG, setMaxSOG] = useState(0);
-    const [sogHistory, setSogHistory] = useState([]);
+    const [maxTWS, setMaxTWS] = useState(0);
 
     // --- Lógica de procesamiento de datos ---
+    const twsKnots = mpsToKnots(data['environment.wind.speedTrue']);
     const awsKnots = mpsToKnots(data['environment.wind.speedApparent']);
     const sogKnots = mpsToKnots(data['navigation.speedOverGround']);
     const cogRad = data['navigation.headingTrue'];
@@ -100,16 +103,25 @@ const SignalKConnector = () => {
     const twdColor = isNightMode ? '#004' : '#2196f3';
     const dataSquareBg = isNightMode ? 'rgba(30, 0, 0, 0.8)' : 'rgba(45, 45, 45, 0.75)';
     const alarmBgColor = 'rgba(210, 0, 0, 0.95)';
+    const navigationData = [
+        { label: 'MAX SOG', value: maxSOG, color: '#79f17bff' },
+    ];
+    const windData = [
+        { label: 'MAX TWS', value: maxTWS, color: '#79f17bff' },
+    ];
+    useEffect(() => {
+        const sogNum = parseFloat(sogKnots); // Aseguramos que sea número
+        if (sogNum > 0 && sogNum > maxSOG) {
+            setMaxSOG(sogNum);
+        }
+    }, [sogKnots, maxSOG]);
 
     useEffect(() => {
-    if (sogKnots > 0) { // Solo procesar si hay movimiento
-        if (sogKnots > maxSOG) {
-            console.log("Nuevo récord:", sogKnots); // Mira si esto sale en la consola
-            setMaxSOG(sogKnots);
+        const twsNum = parseFloat(twsKnots);
+        if (twsNum > 0 && twsNum > maxTWS) {
+            setMaxTWS(twsNum);
         }
-    }
-}, [sogKnots]);
-
+    }, [twsKnots, maxTWS]);
 
 
     return (
@@ -132,7 +144,6 @@ const SignalKConnector = () => {
                                 </TouchableOpacity>
                             </View>
                         </View>
-
                         <View style={styles.dataGridrow}>
                             <HeadingGauge
                                 headingColor={headingColor}
@@ -147,18 +158,44 @@ const SignalKConnector = () => {
                             />
                         </View>
                         <View style={styles.dataGridrow}>
-                            <DataSquare label="AWS" value={awsKnots} unit="KNOTS" color={dataSquareBg} />
-                            <DataSquare label="SOG"
+                            <View style={styles.dataGridColumn}>
+                                <InfoPanel
+                                    dataArray={windData}
+                                    color={dataSquareBg}
+                                />
+                            </View>
+                            <View style={styles.dataGridColumn}>
+                                <InfoPanel
+                                    dataArray={navigationData}
+                                    color={dataSquareBg}
+                                />
+                            </View>
+                            <View style={styles.dataGridColumn}>
+
+                            </View>
+
+                        </View>
+                        <View style={styles.dataGridrow}>
+                            <DataSquare
+                                label="TWS"
+                                value={twsKnots}
+                                unit="KNOTS"
+                                color={dataSquareBg}
+                                showHistory={true}        // 👈 Activa el gráfico de área suavizada
+                                showProgressBar={true}    // 👈 Activa la barra lateral
+                                maxValue={maxTWS}         // 👈 Escala según el récord de viento real
+                                onPress={() => setMaxTWS(0)} // 👈 Reset del récord y gráfico
+                            />
+                            <DataSquare
+                                label="SOG"
+                                showHistory={true}
                                 value={sogKnots}
                                 maxValue={maxSOG}
                                 showProgressBar={true}
-                                history={sogHistory}
-                                onPress={() => {
-                                    setMaxSOG(0);
-                                    setSogHistory([]);
-                                }}
                                 unit="KNOTS"
-                                color={dataSquareBg} />
+                                color={dataSquareBg}
+                                onPress={() => setMaxSOG(0)} // 👈 Esto solo resetea el récord global
+                            />
                             <DataSquare
                                 label="TWA"
                                 textColor={windColor}
@@ -168,7 +205,6 @@ const SignalKConnector = () => {
                                 statusDotColor={colorEstado}
                                 color={dataSquareBg} />
                         </View>
-
                         <View style={styles.dataGridrow}>
                             <DataSquare label="COG" value={cogDegreesSquare} unit="TRUE" textColor={headingColor} color={dataSquareBg} />
                             <DataSquare
@@ -278,6 +314,12 @@ const styles = StyleSheet.create({
     gridBackground: { width: '100%', height: '100%', alignSelf: 'stretch' },
     dataGrid: { width: '100%', backgroundColor: 'rgba(0, 0, 0, 0.4)', paddingTop: 10, paddingBottom: 30, alignItems: 'center' },
     dataGridrow: { flexDirection: 'row', justifyContent: 'space-evenly', width: '100%', paddingVertical: 5 },
+    dataGridColumn: {
+        flexDirection: 'column', // Los elementos se apilan uno sobre otro
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '32%', // Ocupa un tercio del ancho del contenedor padre
+    },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
     modalContainer: { width: '85%', backgroundColor: '#1a1a1a', borderRadius: 20, padding: 25, borderWidth: 1, borderColor: '#333' },
     modalTitle: { color: '#fff', fontSize: 22, fontWeight: 'bold', marginBottom: 25, textAlign: 'center' },
