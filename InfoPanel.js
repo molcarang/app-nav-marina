@@ -1,12 +1,26 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
-const InfoPanel = ({ dataArray, color }) => {
+const getFontSizes = (width) => {
+    // Ajusta los tamaños de fuente proporcionalmente al ancho del panel
+    return {
+        label: Math.round(width * 0.07),
+        value: Math.round(width * 0.09),
+    };
+};
+
+const InfoPanel = ({ dataArray, color, width = 225 }) => {
+    const fontSizes = getFontSizes(width);
+    const { width: windowWidth } = useWindowDimensions();
+    const SQUARE_WIDTH = (windowWidth * 0.9) / 3;
     return (
-        <View style={[styles.panelContainer, { backgroundColor: color }]}>
+
+        <View style={[styles.panelContainer, {
+            backgroundColor: color, width: SQUARE_WIDTH,
+        }]}>
             {dataArray.map((item, index) => (
                 <View key={index} style={styles.dataRow}>
-                    <Text style={styles.rowLabel}>{item.label}</Text>
-                    <Text style={[styles.rowValue, { color: item.color || '#fff' }]}>
+                    <Text style={[styles.rowLabel, { fontSize: fontSizes.label }]}>{item.label}</Text>
+                    <Text style={[styles.rowValue, { color: item.color || '#fff', fontSize: fontSizes.value }]}>
                         {item.value}
                     </Text>
                 </View>
@@ -17,24 +31,14 @@ const InfoPanel = ({ dataArray, color }) => {
 
 const styles = StyleSheet.create({
     panelContainer: {
-        width: 225,
-        // Eliminamos height: 225
+        // width se controla por prop
         borderRadius: 15,
+        margin: 3, // Igual que DataSquare
         padding: 15,
         paddingBottom: 10, // Un poco menos de espacio abajo
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)',
         alignSelf: 'flex-start', // 👈 Importante: hace que no se estire verticalmente
-    },
-    panelTitle: {
-        color: '#aaa',
-        fontFamily: 'NauticalFont',
-        fontSize: 16,
-        marginBottom: 12,
-        textAlign: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.1)',
-        paddingBottom: 5,
     },
     dataRow: {
         flexDirection: 'row',
@@ -46,11 +50,15 @@ const styles = StyleSheet.create({
         color: '#888',
         fontSize: 14,
         fontFamily: 'NauticalFont',
+        textAlign: 'left',
+        marginLeft: -12,
+        
     },
     rowValue: {
         fontSize: 16,
         fontWeight: 'bold',
         fontFamily: 'NauticalFont',
+        textAlign: 'right',
     },
 });
 
