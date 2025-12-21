@@ -95,22 +95,6 @@ const guardarAjustePersistente = async (clave, valor) => {
     await AsyncStorage.setItem('@ajustes_consola', JSON.stringify(nuevos));
     console.log(`Guardado en memoria: ${clave} = ${valor}`);
 };
-
-    // --- MANEJADORES ---
-    const validarYGuardar = async (clave, valor) => {
-        let num = parseInt(valor) || 0;
-        let nuevos = { ...ajustesConsola };
-        if (clave === 'minAnguloCeñida') {
-            num = Math.max(10, Math.min(90, num));
-            nuevos.minAnguloCeñida = num;
-            if (nuevos.maxAnguloCeñida <= num) nuevos.maxAnguloCeñida = num + 5;
-        } else {
-            nuevos.maxAnguloCeñida = Math.max(nuevos.minAnguloCeñida + 5, num);
-        }
-        setAjustesConsola(nuevos);
-        await AsyncStorage.setItem('@ajustes_consola', JSON.stringify(nuevos));
-    };
-
     // --- RENDERIZADO DE PANTALLA PRINCIPAL ---
     const renderMainConsole = () => (
         <View style={[styles.screen, { width: windowWidth, backgroundColor: isNightMode ? '#050000' : '#0a0a0a' }]}>
