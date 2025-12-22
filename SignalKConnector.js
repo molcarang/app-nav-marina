@@ -1,20 +1,21 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
-import { useEffect, useState, useMemo } from 'react'; // 👈 Importado useMemo
+import { useEffect, useMemo, useState } from 'react'; // 👈 Importado useMemo
 import {
     ImageBackground, Modal, Platform, ScrollView, StyleSheet,
     Switch, Text, TouchableOpacity, useWindowDimensions, View
 } from 'react-native';
 
 // Utils y Hooks
-import { mpsToKnots, normalizeAngle, radToDeg } from './utils/Utils';
 import { useSignalKData } from './useSignalKData';
+import { mpsToKnots, normalizeAngle, radToDeg } from './utils/Utils';
 
 // Componentes
+import DataSquare from './components/gauges/DataSquare';
 import HeadingGauge from './components/gauges/HeadingGauge';
 import InfoPanel from './components/gauges/InfoPanel';
-import DataSquare from './DataSquare';
+import SogGauge from './components/gauges/SOGGauge.js';
 
 const SignalKConnector = () => {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -100,7 +101,6 @@ const SignalKConnector = () => {
         await AsyncStorage.setItem('@ajustes_consola', JSON.stringify(nuevos));
     };
 
-    // --- RENDERS ---
     const renderMainConsole = () => (
         <View style={[styles.screen, { width: windowWidth, backgroundColor: isNightMode ? '#050000' : '#0a0a0a' }]}>
             <View style={[styles.consoleFrame, isNightMode && styles.consoleFrameNight]}>
@@ -160,20 +160,45 @@ const SignalKConnector = () => {
         </View>
     );
 
+    const renderTelemetryDetails = () => (
+        <View style={[styles.screen, { width: windowWidth, height: windowHeight, backgroundColor: '#050505' }]}>
+            <ImageBackground
+                source={require('./assets/images/CarbonFiber.png')}
+                style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}
+                imageStyle={{ opacity: 0.2 }}
+            >
+                <Text style={{ color: '#666', fontSize: 18, marginBottom: 20, letterSpacing: 4 }}>TELEMETRÍA</Text>
+
+                <SogGauge
+                    size={gaugeSize * 0.9}
+                    value={parseFloat(processed.sogKnots)}
+                    // Usamos el maxSOG que ya calculas y guardas en el useEffect
+                    maxSpeed={maxSOG > 5 ? Math.ceil(maxSOG) : 10}
+                    isNightMode={isNightMode}
+                    headingColor={theme.heading}
+                />
+                <View style={{ marginTop: 40 }}>
+                    <DataSquare
+                        label="VMC"
+                        value={(processed.sogKnots * Math.cos((processed.twaCog * Math.PI) / 180)).toFixed(1)}
+                        unit="KTS"
+                        color={theme.bg}
+                    />
+                </View>
+            </ImageBackground>
+        </View>
+    );
     return (
         <View style={styles.mainContainer}>
             <ScrollView horizontal pagingEnabled contentContainerStyle={{ width: windowWidth * 2 }}>
                 {renderMainConsole()}
-                <View style={[styles.screen, { width: windowWidth, height: windowHeight, backgroundColor: '#111', justifyContent: 'center' }]}>
-                    <Text style={{ color: '#444', fontSize: 20 }}>PANTALLA DE TELEMETRÍA</Text>
-                </View>
+                {renderTelemetryDetails()}
             </ScrollView>
-
             <Modal animationType="fade" transparent visible={isModalVisible}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
                         <Text style={styles.modalTitle}>AJUSTES DE CONSOLA</Text>
-                        
+
                         {/* Render de Sliders simplificado */}
                         {[
                             { label: 'Mínimo Ceñida', key: 'minAnguloCeñida', min: 10, max: 45, color: '#00ff00' },

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 
@@ -22,9 +22,9 @@ const DataSquare = ({
 }) => {
     // 1. DIMENSIONES REACTIVAS
     const { width: windowWidth } = useWindowDimensions();
-   const SQUARE_WIDTH = (windowWidth * 0.9) / 3;
+    const SQUARE_WIDTH = (windowWidth * 0.9) / 3;
     const SQUARE_HEIGHT = SQUARE_WIDTH * 0.9;
-    
+
     // Dimensiones internas para el gráfico
     const chartW = SQUARE_WIDTH * 0.75;
     const chartH = 50;
@@ -32,7 +32,7 @@ const DataSquare = ({
     // 2. ESTADOS Y REFERENCIAS
     const [history, setHistory] = useState([]);
     const animatedHeight = useRef(new Animated.Value(0)).current;
-    
+
     const numericValue = parseFloat(value) || 0;
     const isRecord = maxValue > 0 && numericValue >= maxValue;
     const labelUnitColor = textColor || '#79f17bff';
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     },
     progressContainer: {
         position: 'absolute',
-        left: 8,
+        left: 4,
         top: 20,
         bottom: 20,
         width: 6,

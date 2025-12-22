@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polygon, Text as SvgText } from 'react-native-svg';
+import { GAUGE_THEME } from '../../styles/GaugeTheme'; // Importación del estilo común
 import { describeArc, lerpAngle, polarToCartesian } from '../../utils/Utils';
 
 
@@ -208,11 +209,12 @@ const HeadingGauge = ({
                 <Line x1={CENTER} y1={CENTER} x2={CENTER} y2={COMPASS_SIZE * 0.045} stroke={COLOR_RED} strokeWidth={COMPASS_SIZE * 0.0036} />
                 <Polygon points={`${CENTER - COMPASS_SIZE * 0.036},5 ${CENTER + COMPASS_SIZE * 0.036},5 ${CENTER},${COMPASS_SIZE * 0.082}`} fill={finalHeadingColor} stroke={COLOR_BORDER} strokeWidth={COMPASS_SIZE * 0.0036} />
             </Svg>
-            {/* 6. DISPLAY DIGITAL */}
-            <View style={[styles.digitalDisplay, { top: CENTER - COMPASS_SIZE * 0.045 }]}>
+
+            <View style={[styles.digitalDisplay, { top: CENTER - COMPASS_SIZE * 0.045, width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
                 <Text style={[styles.headingText, { color: finalHeadingColor, fontSize: Math.round(COMPASS_SIZE * 0.087) }]}>{formattedHeading}</Text>
                 {unit && <Text style={[styles.unitText, { fontSize: Math.round(COMPASS_SIZE * 0.036) }]}>{unit}</Text>}
             </View>
+
         </View>
     );
 };
@@ -220,10 +222,10 @@ const HeadingGauge = ({
 
 // --- Styles ---
 const styles = StyleSheet.create({
-    outerContainer: { alignItems: 'center', justifyContent: 'flex-start', marginBottom: 15 },
+    container: { alignItems: 'center', justifyContent: 'center' },
     digitalDisplay: { position: 'absolute', alignItems: 'center' },
-    headingText: { fontWeight: 'bold', fontFamily: FONT_FAMILY },
-    unitText: { color: '#fff', marginTop: -10, fontFamily: FONT_FAMILY },
+    headingText: { fontWeight: 'bold', fontFamily: GAUGE_THEME.fonts.main },
+    unitText: { color: GAUGE_THEME.colors.textPrimary, fontSize: 14, fontFamily: GAUGE_THEME.fonts.main, marginTop: -5 }
 });
 
 export default HeadingGauge;
