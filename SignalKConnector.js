@@ -1,71 +1,76 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react'; // 👈 Importado useMemo
 import {
     ImageBackground, Modal, Platform, ScrollView, StyleSheet,
-    Switch, Text,
-    TouchableOpacity, useWindowDimensions, View
+    Switch, Text, TouchableOpacity, useWindowDimensions, View
 } from 'react-native';
+
+// Utils y Hooks
 import { mpsToKnots, normalizeAngle, radToDeg } from './utils/Utils';
-// Componentes personalizados
-import HeadingGauge from './components/gauges/HeadingGauge';
-import DataSquare from './DataSquare';
-import InfoPanel from './components/gauges/InfoPanel';
 import { useSignalKData } from './useSignalKData';
 
+// Componentes
+import HeadingGauge from './components/gauges/HeadingGauge';
+import InfoPanel from './components/gauges/InfoPanel';
+import DataSquare from './DataSquare';
 
 const SignalKConnector = () => {
-    // --- HOOKS DE DIMENSIÓN ---
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-    const columnWidth = (windowWidth * 0.94) / 3; // Ajustado para márgenes internos
-    const gaugeSize = Math.min(windowWidth * 0.93, windowHeight * 0.45);
-    // --- ESTADOS ---
     const data = useSignalKData();
+
+    // --- ESTADOS ---
     const [isModalVisible, setModalVisible] = useState(false);
     const [isNightMode, setIsNightMode] = useState(false);
-    const [depthThreshold, setDepthThreshold] = useState(3.0);
     const [maxSOG, setMaxSOG] = useState(0);
     const [maxTWS, setMaxTWS] = useState(0);
     const [ajustesConsola, setAjustesConsola] = useState({
         minAnguloCeñida: 20,
         maxAnguloCeñida: 60,
     });
-  
 
-    // --- PROCESAMIENTO DE DATOS SIGNAL K ---
-    const twsKnots = mpsToKnots(data['environment.wind.speedTrue'] || 0);
-    const sogKnots = mpsToKnots(data['navigation.speedOverGround'] || 0);
-    const depthMeters = data['navigation.depthBelowTransducer'] || 0;
+    // --- CÁLCULOS OPTIMIZADOS (useMemo) ---
+    const processed = useMemo(() => {
+        // 1. Corriente (Set & Drift)
+        const rawDrift = data['navigation.current.drift'] ?? data['performance.currentDrift'] ?? data['ocean.drift'] ?? 0;
+        const rawSet = data['navigation.current.setTrue'] ?? data['performance.currentSetTrue'] ?? data['ocean.set'] ?? 0;
 
+        // 2. Navegación (COG)
+        const cogRad = data['navigation.headingTrue'] ?? 0;
+        const cogDeg = radToDeg(cogRad);
 
-// Opción A: Estándar de Signal K
-  
-let driftValue = 0;
-let setValue = 0;
-driftValue = data['navigation.current.drift'] * 1.94384; // m/s a nudos
-setValue = radToDeg(data['navigation.current.setTrue'] || 0);
+        // 3. Viento (TWS & TWD)
+        const twsMps = data['environment.wind.speedTrue'] ?? 0;
+        const twdRad = data['environment.wind.directionTrue'] ?? 0;
+        const twdDeg = radToDeg(twdRad);
 
-    // Heading y Viento
-    const cogRad = data['navigation.headingTrue'] || 0;
-    const rotationAngle = -(cogRad * 57.2958);
-    const cogDigital = typeof cogRad === 'number' ? (cogRad * 57.2958).toFixed(1) : '---';
-    const cogSquare = typeof cogRad === 'number' ? (cogRad * 57.2958).toFixed(0) + '°' : '---';
+        // 4. Profundidad
+        const depth = data['navigation.depthBelowTransducer'] ?? 0;
 
-    const twdDeg = radToDeg(data['environment.wind.directionTrue'] || 0);
-    const twdDigital = !isNaN(twdDeg) ? Math.abs(normalizeAngle(twdDeg)).toFixed(0) + '°' : '---';
+        return {
+            driftKnots: rawDrift * 1.94384,
+            setDeg: radToDeg(rawSet),
+            cogDeg: cogDeg,
+            cogDigital: cogDeg.toFixed(1),
+            cogSquare: cogDeg.toFixed(0) + '°',
+            twsKnots: mpsToKnots(twsMps),
+            twdDeg: twdDeg,
+            twdDigital: !isNaN(twdDeg) ? Math.abs(normalizeAngle(twdDeg)).toFixed(0) + '°' : '---',
+            twaCog: !isNaN(twdDeg) ? normalizeAngle(twdDeg - cogDeg) : null,
+            sogKnots: mpsToKnots(data['navigation.speedOverGround'] ?? 0),
+            depthMeters: depth
+        };
+    }, [data]);
 
-    const twaCogDegrees = !isNaN(twdDeg) && typeof cogRad === 'number'
-        ? normalizeAngle(twdDeg - radToDeg(cogRad))
-        : null;
-
-    // Alarma y Estados
-    const isDepthAlarmActive = depthMeters < depthThreshold && depthMeters > 0;
-    const absTWA = Math.abs(twaCogDegrees || 0);
+    // --- LÓGICA DE INTERFAZ ---
+    const columnWidth = (windowWidth * 0.94) / 3;
+    const gaugeSize = Math.min(windowWidth * 0.93, windowHeight * 0.45);
+    const rotationAngle = -processed.cogDeg;
+    const isDepthAlarmActive = processed.depthMeters < 3.0 && processed.depthMeters > 0;
+    const absTWA = Math.abs(processed.twaCog || 0);
     const isTwaInTarget = absTWA >= ajustesConsola.minAnguloCeñida && absTWA <= ajustesConsola.maxAnguloCeñida;
 
-
-    // --- COLORES DINÁMICOS ---
     const theme = {
         heading: '#dc1212ff',
         wind: isNightMode ? '#900' : '#ff9800',
@@ -75,50 +80,38 @@ setValue = radToDeg(data['navigation.current.setTrue'] || 0);
         statusDot: isTwaInTarget ? '#00FF00' : '#FF0000'
     };
 
-    // --- EFECTOS (MÁXIMOS) ---
+    // --- EFECTOS (Persistencia y Máximos) ---
     useEffect(() => {
-        const s = parseFloat(sogKnots);
-        if (s > maxSOG) setMaxSOG(s);
-    }, [sogKnots]);
-
-
-    
-    useEffect(() => {
-        const t = parseFloat(twsKnots);
-        if (t > maxTWS) setMaxTWS(t);
-    }, [twsKnots]);
+        if (parseFloat(processed.sogKnots) > maxSOG) setMaxSOG(parseFloat(processed.sogKnots));
+        if (parseFloat(processed.twsKnots) > maxTWS) setMaxTWS(parseFloat(processed.twsKnots));
+    }, [processed.sogKnots, processed.twsKnots]);
 
     useEffect(() => {
         const cargarAjustes = async () => {
             const guardados = await AsyncStorage.getItem('@ajustes_consola');
-            if (guardados) {
-                setAjustesConsola(JSON.parse(guardados));
-            } else {
-                // Valores por defecto si no hay nada guardado
-                setAjustesConsola({ minAnguloCeñida: 20, maxAnguloCeñida: 60 });
-            }
+            if (guardados) setAjustesConsola(JSON.parse(guardados));
         };
         cargarAjustes();
     }, []);
 
     const guardarAjustePersistente = async (clave, valor) => {
         const nuevos = { ...ajustesConsola, [clave]: Math.round(valor) };
+        setAjustesConsola(nuevos);
         await AsyncStorage.setItem('@ajustes_consola', JSON.stringify(nuevos));
-        console.log(`Guardado en memoria: ${clave} = ${valor}`);
     };
-    // --- RENDERIZADO DE PANTALLA PRINCIPAL ---
+
+    // --- RENDERS ---
     const renderMainConsole = () => (
         <View style={[styles.screen, { width: windowWidth, backgroundColor: isNightMode ? '#050000' : '#0a0a0a' }]}>
             <View style={[styles.consoleFrame, isNightMode && styles.consoleFrameNight]}>
                 <ImageBackground
                     source={require('./assets/images/CarbonFiber.png')}
-                    style={{ flex: 1, width: '100%' }} // 👈 flex: 1 es clave aquí
+                    style={{ flex: 1, width: '100%' }}
                     resizeMode="repeat"
                     imageStyle={{ borderRadius: 25, opacity: isNightMode ? 0.3 : 1 }}
                 >
                     <ScrollView contentContainerStyle={styles.scrollContent}>
                         <View style={styles.dataGrid}>
-                            {/* Header Status */}
                             <View style={styles.headerRow}>
                                 <Text style={[styles.statusText, { color: isNightMode ? '#400' : '#666' }]}>
                                     {data.isConnected ? '🟢 CONNECTED' : '🔴 NOT CONNECTED'}
@@ -128,58 +121,37 @@ setValue = radToDeg(data['navigation.current.setTrue'] || 0);
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Compás Principal */}
                             <HeadingGauge
                                 size={gaugeSize}
                                 headingColor={theme.heading}
-                                rotationAngle={rotationAngle} // El giro del dia
-                                value={cogDigital}
+                                rotationAngle={rotationAngle}
+                                value={processed.cogDigital}
                                 unit="°COG"
-                                twd={twdDeg}
-                                twaCog={twaCogDegrees}
+                                twd={processed.twdDeg}
+                                twaCog={processed.twaCog}
                                 isNightMode={isNightMode}
                                 minLayline={ajustesConsola.minAnguloCeñida}
                                 maxLayline={ajustesConsola.maxAnguloCeñida}
-                                set={setValue}
-                                drift={driftValue}
+                                set={processed.setDeg}
+                                drift={processed.driftKnots}
                             />
 
-                            {/* Info Paneles (Máximos) */}
                             <View style={[styles.row, { marginBottom: 0 }]}>
-                                <InfoPanel
-                                    dataArray={[{ label: 'MAX TWS', value: maxTWS, color: '#79f17bff' }]}
-                                    color={theme.bg} width={columnWidth} />
-                                <InfoPanel
-                                    dataArray={[{ label: 'MAX SOG', value: maxSOG, color: '#79f17bff' }]} color={theme.bg}
-                                    width={columnWidth} />
+                                <InfoPanel dataArray={[{ label: 'MAX TWS', value: maxTWS, color: '#79f17bff' }]} color={theme.bg} width={columnWidth} />
+                                <InfoPanel dataArray={[{ label: 'MAX SOG', value: maxSOG, color: '#79f17bff' }]} color={theme.bg} width={columnWidth} />
                                 <View style={{ width: columnWidth }} />
-
                             </View>
 
-                            {/* Fila 1: Viento y Velocidad */}
                             <View style={styles.row}>
-                                <DataSquare label="TWS" value={twsKnots} unit="KTS"
-                                    showHistory showProgressBar maxValue={maxTWS}
-                                    color={theme.bg} onPress={() => setMaxTWS(0)} />
-                                <DataSquare label="SOG" value={sogKnots} unit="KTS" showHistory showProgressBar maxValue={maxSOG} color={theme.bg} onPress={() => setMaxSOG(0)} />
-                                <DataSquare label="TWA"
-                                    value={twaCogDegrees?.toFixed(0) + '°'} unit="DEG"
-                                    textColor={theme.wind} showStatusDot
-                                    statusDotColor={theme.statusDot} color={theme.bg} />
+                                <DataSquare label="TWS" value={processed.twsKnots} unit="KTS" showHistory showProgressBar maxValue={maxTWS} color={theme.bg} onPress={() => setMaxTWS(0)} />
+                                <DataSquare label="SOG" value={processed.sogKnots} unit="KTS" showHistory showProgressBar maxValue={maxSOG} color={theme.bg} onPress={() => setMaxSOG(0)} />
+                                <DataSquare label="TWA" value={processed.twaCog?.toFixed(0) + '°'} unit="DEG" textColor={theme.wind} showStatusDot statusDotColor={theme.statusDot} color={theme.bg} />
                             </View>
 
-                            {/* Fila 2: Rumbo y Profundidad */}
                             <View style={styles.row}>
-                                <DataSquare label="COG" value={cogSquare} unit="TRUE" textColor={theme.heading} color={theme.bg} />
-                                <DataSquare
-                                    label="DEPTH" value={depthMeters.toFixed(1)} unit="MTRS"
-                                    color={isDepthAlarmActive ? theme.alarm : theme.bg}
-                                    showStatusDot={isDepthAlarmActive} statusDotColor="#fff" textColor={isDepthAlarmActive ? "#fff" : undefined}
-                                />
-                                <DataSquare label="TWD" value={twdDigital} unit="TRUE" textColor={theme.twd} color={theme.bg} />
-                            </View>
-                            <View style={styles.row}>
-
+                                <DataSquare label="COG" value={processed.cogSquare} unit="TRUE" textColor={theme.heading} color={theme.bg} />
+                                <DataSquare label="DEPTH" value={processed.depthMeters.toFixed(1)} unit="MTRS" color={isDepthAlarmActive ? theme.alarm : theme.bg} showStatusDot={isDepthAlarmActive} statusDotColor="#fff" textColor={isDepthAlarmActive ? "#fff" : undefined} />
+                                <DataSquare label="TWD" value={processed.twdDigital} unit="TRUE" textColor={theme.twd} color={theme.bg} />
                             </View>
                         </View>
                     </ScrollView>
@@ -188,21 +160,10 @@ setValue = radToDeg(data['navigation.current.setTrue'] || 0);
         </View>
     );
 
-    const actualizarAjuste = async (clave, valor) => {
-        const nuevos = { ...ajustesConsola, [clave]: Math.round(valor) };
-        setAjustesConsola(nuevos);
-        await AsyncStorage.setItem('@ajustes_consola', JSON.stringify(nuevos));
-    };
     return (
         <View style={styles.mainContainer}>
-            <ScrollView
-                horizontal
-                pagingEnabled
-                contentContainerStyle={{ width: windowWidth * 2 }}
-            >
+            <ScrollView horizontal pagingEnabled contentContainerStyle={{ width: windowWidth * 2 }}>
                 {renderMainConsole()}
-
-                {/* Segunda Pantalla (Detalles) */}
                 <View style={[styles.screen, { width: windowWidth, height: windowHeight, backgroundColor: '#111', justifyContent: 'center' }]}>
                     <Text style={{ color: '#444', fontSize: 20 }}>PANTALLA DE TELEMETRÍA</Text>
                 </View>
@@ -212,71 +173,34 @@ setValue = radToDeg(data['navigation.current.setTrue'] || 0);
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
                         <Text style={styles.modalTitle}>AJUSTES DE CONSOLA</Text>
-
-                        {/* Slider Mínimo (20°) */}
-                        <View style={styles.settingRowContainer}>
-                            <View style={styles.labelRow}>
-                                <Text style={styles.settingLabel}>Mínimo Ceñida</Text>
-                                {/* Este texto se actualizará en tiempo real gracias a setAjustesConsola */}
-                                <Text style={[styles.valueLabel, { color: '#00ff00' }]}>
-                                    {ajustesConsola.minAnguloCeñida}°
-                                </Text>
+                        
+                        {/* Render de Sliders simplificado */}
+                        {[
+                            { label: 'Mínimo Ceñida', key: 'minAnguloCeñida', min: 10, max: 45, color: '#00ff00' },
+                            { label: 'Máximo Ceñida', key: 'maxAnguloCeñida', min: 50, max: 90, color: '#ff0000' }
+                        ].map(s => (
+                            <View key={s.key} style={styles.settingRowContainer}>
+                                <View style={styles.labelRow}>
+                                    <Text style={styles.settingLabel}>{s.label}</Text>
+                                    <Text style={[styles.valueLabel, { color: s.color }]}>{ajustesConsola[s.key]}°</Text>
+                                </View>
+                                <Slider
+                                    style={styles.slider}
+                                    minimumValue={s.min} maximumValue={s.max} step={1}
+                                    value={ajustesConsola[s.key]}
+                                    onValueChange={(v) => setAjustesConsola({ ...ajustesConsola, [s.key]: Math.round(v) })}
+                                    onSlidingComplete={(v) => guardarAjustePersistente(s.key, v)}
+                                    minimumTrackTintColor={s.color} thumbTintColor={s.color}
+                                />
                             </View>
-                            <Slider
-                                style={styles.slider}
-                                minimumValue={10}
-                                maximumValue={45}
-                                step={1}
-                                value={ajustesConsola.minAnguloCeñida}
-                                // Actualiza el estado VISUAL mientras mueves
-                                onValueChange={(v) => setAjustesConsola({ ...ajustesConsola, minAnguloCeñida: Math.round(v) })}
-                                // GUARDA en memoria solo cuando sueltas
-                                onSlidingComplete={(v) => guardarAjustePersistente('minAnguloCeñida', v)}
-                                minimumTrackTintColor="#00ff00"
-                                maximumTrackTintColor="#333"
-                                thumbTintColor="#00ff00"
-                            />
-                        </View>
-
-                        {/* Slider Máximo (60°) */}
-                        <View style={styles.settingRowContainer}>
-                            <View style={styles.labelRow}>
-                                <Text style={styles.settingLabel}>Máximo Ceñida</Text>
-                                <Text style={[styles.valueLabel, { color: '#ff0000' }]}>
-                                    {ajustesConsola.maxAnguloCeñida}°
-                                </Text>
-                            </View>
-                            <Slider
-                                style={styles.slider}
-                                minimumValue={50}
-                                maximumValue={90}
-                                step={1}
-                                value={ajustesConsola.maxAnguloCeñida}
-                                // Actualiza el estado VISUAL mientras mueves
-                                onValueChange={(v) => setAjustesConsola({ ...ajustesConsola, maxAnguloCeñida: Math.round(v) })}
-                                // GUARDA en memoria solo cuando sueltas
-                                onSlidingComplete={(v) => guardarAjustePersistente('maxAnguloCeñida', v)}
-                                minimumTrackTintColor="#ff0000"
-                                maximumTrackTintColor="#333"
-                                thumbTintColor="#ff0000"
-                            />
-                        </View>
+                        ))}
 
                         <View style={styles.divider} />
-
                         <View style={styles.settingRow}>
                             <Text style={styles.settingLabel}>Modo Noche</Text>
-                            <Switch
-                                value={isNightMode}
-                                onValueChange={setIsNightMode}
-                                trackColor={{ false: "#333", true: "#dc1212" }}
-                            />
+                            <Switch value={isNightMode} onValueChange={setIsNightMode} trackColor={{ false: "#333", true: "#dc1212" }} />
                         </View>
-
-                        <TouchableOpacity
-                            onPress={() => setModalVisible(false)}
-                            style={styles.closeBtn}
-                        >
+                        <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
                             <Text style={styles.closeBtnText}>CERRAR</Text>
                         </TouchableOpacity>
                     </View>
@@ -286,37 +210,28 @@ setValue = radToDeg(data['navigation.current.setTrue'] || 0);
     );
 };
 
+// ... Estilos (se mantienen igual pero añadí unos necesarios para los sliders nuevos)
 const styles = StyleSheet.create({
     mainContainer: { flex: 1, backgroundColor: '#000' },
     screen: { alignItems: 'center', paddingTop: Platform.OS === 'ios' ? 50 : 20 },
-    fullSize: { width: '100%', height: '100%' },
     scrollContent: { alignItems: 'center', paddingBottom: 45 },
-    consoleFrame: {
-        alignSelf: 'center',
-        width: '96%',
-        height: '98%',
-        borderRadius: 28,
-        backgroundColor: '#111',
-        borderWidth: 2,
-        borderColor: '#333',
-        overflow: 'hidden',
-    },
+    consoleFrame: { alignSelf: 'center', width: '96%', height: '98%', borderRadius: 28, backgroundColor: '#111', borderWidth: 2, borderColor: '#333', overflow: 'hidden' },
     consoleFrameNight: { borderColor: '#400' },
     dataGrid: { width: '100%', backgroundColor: 'rgba(0, 0, 0, 0.4)', paddingVertical: 10, alignItems: 'center' },
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', width: '92%', alignSelf: 'center', marginBottom: 15 },
     statusText: { fontSize: 12, fontWeight: 'bold', fontFamily: 'NauticalFont' },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-evenly',
-        width: '100%',
-        marginBottom: 8, // Espacio entre filas
-    },
+    row: { flexDirection: 'row', justifyContent: 'space-evenly', width: '100%', marginBottom: 8 },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
     modalContainer: { width: '85%', backgroundColor: '#1a1a1a', borderRadius: 20, padding: 25 },
     modalTitle: { color: '#fff', fontSize: 22, textAlign: 'center', marginBottom: 20 },
-    settingRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+    settingRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20, alignItems: 'center' },
+    settingRowContainer: { marginBottom: 20 },
+    labelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
     settingLabel: { color: '#ccc' },
-    closeBtn: { backgroundColor: '#dc1212', padding: 15, borderRadius: 12, alignItems: 'center' },
+    valueLabel: { fontWeight: 'bold' },
+    slider: { width: '100%', height: 40 },
+    divider: { height: 1, backgroundColor: '#333', marginVertical: 15 },
+    closeBtn: { backgroundColor: '#dc1212', padding: 15, borderRadius: 12, alignItems: 'center', marginTop: 10 },
     closeBtnText: { color: '#fff', fontWeight: 'bold' },
 });
 
