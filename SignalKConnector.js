@@ -1,17 +1,17 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Slider from '@react-native-community/slider';
 import { useEffect, useState } from 'react';
 import {
     ImageBackground, Modal, Platform, ScrollView, StyleSheet,
     Switch, Text,
     TouchableOpacity, useWindowDimensions, View
 } from 'react-native';
-import { radToDeg, mpsToKnots, normalizeAngle } from './utils/Utils';
-import Slider from '@react-native-community/slider';
+import { mpsToKnots, normalizeAngle, radToDeg } from './utils/Utils';
 // Componentes personalizados
+import HeadingGauge from './components/gauges/HeadingGauge';
 import DataSquare from './DataSquare';
-import HeadingGauge from './HeadingGauge';
-import InfoPanel from './InfoPanel';
+import InfoPanel from './components/gauges/InfoPanel';
 import { useSignalKData } from './useSignalKData';
 
 
@@ -31,11 +31,20 @@ const SignalKConnector = () => {
         minAnguloCeñida: 20,
         maxAnguloCeñida: 60,
     });
+  
 
     // --- PROCESAMIENTO DE DATOS SIGNAL K ---
     const twsKnots = mpsToKnots(data['environment.wind.speedTrue'] || 0);
     const sogKnots = mpsToKnots(data['navigation.speedOverGround'] || 0);
     const depthMeters = data['navigation.depthBelowTransducer'] || 0;
+
+
+// Opción A: Estándar de Signal K
+  
+let driftValue = 0;
+let setValue = 0;
+driftValue = data['navigation.current.drift'] * 1.94384; // m/s a nudos
+setValue = radToDeg(data['navigation.current.setTrue'] || 0);
 
     // Heading y Viento
     const cogRad = data['navigation.headingTrue'] || 0;
@@ -55,7 +64,7 @@ const SignalKConnector = () => {
     const absTWA = Math.abs(twaCogDegrees || 0);
     const isTwaInTarget = absTWA >= ajustesConsola.minAnguloCeñida && absTWA <= ajustesConsola.maxAnguloCeñida;
 
-    
+
     // --- COLORES DINÁMICOS ---
     const theme = {
         heading: '#dc1212ff',
@@ -72,6 +81,8 @@ const SignalKConnector = () => {
         if (s > maxSOG) setMaxSOG(s);
     }, [sogKnots]);
 
+
+    
     useEffect(() => {
         const t = parseFloat(twsKnots);
         if (t > maxTWS) setMaxTWS(t);
@@ -90,11 +101,11 @@ const SignalKConnector = () => {
         cargarAjustes();
     }, []);
 
-const guardarAjustePersistente = async (clave, valor) => {
-    const nuevos = { ...ajustesConsola, [clave]: Math.round(valor) };
-    await AsyncStorage.setItem('@ajustes_consola', JSON.stringify(nuevos));
-    console.log(`Guardado en memoria: ${clave} = ${valor}`);
-};
+    const guardarAjustePersistente = async (clave, valor) => {
+        const nuevos = { ...ajustesConsola, [clave]: Math.round(valor) };
+        await AsyncStorage.setItem('@ajustes_consola', JSON.stringify(nuevos));
+        console.log(`Guardado en memoria: ${clave} = ${valor}`);
+    };
     // --- RENDERIZADO DE PANTALLA PRINCIPAL ---
     const renderMainConsole = () => (
         <View style={[styles.screen, { width: windowWidth, backgroundColor: isNightMode ? '#050000' : '#0a0a0a' }]}>
@@ -129,7 +140,8 @@ const guardarAjustePersistente = async (clave, valor) => {
                                 isNightMode={isNightMode}
                                 minLayline={ajustesConsola.minAnguloCeñida}
                                 maxLayline={ajustesConsola.maxAnguloCeñida}
-                                set={data['ocean.set']}
+                                set={setValue}
+                                drift={driftValue}
                             />
 
                             {/* Info Paneles (Máximos) */}
@@ -146,14 +158,14 @@ const guardarAjustePersistente = async (clave, valor) => {
 
                             {/* Fila 1: Viento y Velocidad */}
                             <View style={styles.row}>
-                                <DataSquare label="TWS" value={twsKnots} unit="KTS" 
-                                showHistory showProgressBar maxValue={maxTWS} 
-                                color={theme.bg} onPress={() => setMaxTWS(0)} />
+                                <DataSquare label="TWS" value={twsKnots} unit="KTS"
+                                    showHistory showProgressBar maxValue={maxTWS}
+                                    color={theme.bg} onPress={() => setMaxTWS(0)} />
                                 <DataSquare label="SOG" value={sogKnots} unit="KTS" showHistory showProgressBar maxValue={maxSOG} color={theme.bg} onPress={() => setMaxSOG(0)} />
-                                <DataSquare label="TWA" 
-                                value={twaCogDegrees?.toFixed(0) + '°'} unit="DEG" 
-                                textColor={theme.wind} showStatusDot 
-                                statusDotColor={theme.statusDot} color={theme.bg} />
+                                <DataSquare label="TWA"
+                                    value={twaCogDegrees?.toFixed(0) + '°'} unit="DEG"
+                                    textColor={theme.wind} showStatusDot
+                                    statusDotColor={theme.statusDot} color={theme.bg} />
                             </View>
 
                             {/* Fila 2: Rumbo y Profundidad */}
@@ -177,10 +189,10 @@ const guardarAjustePersistente = async (clave, valor) => {
     );
 
     const actualizarAjuste = async (clave, valor) => {
-    const nuevos = { ...ajustesConsola, [clave]: Math.round(valor) };
-    setAjustesConsola(nuevos);
-    await AsyncStorage.setItem('@ajustes_consola', JSON.stringify(nuevos));
-};
+        const nuevos = { ...ajustesConsola, [clave]: Math.round(valor) };
+        setAjustesConsola(nuevos);
+        await AsyncStorage.setItem('@ajustes_consola', JSON.stringify(nuevos));
+    };
     return (
         <View style={styles.mainContainer}>
             <ScrollView
@@ -196,80 +208,80 @@ const guardarAjustePersistente = async (clave, valor) => {
                 </View>
             </ScrollView>
 
-<Modal animationType="fade" transparent visible={isModalVisible}>
-    <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>AJUSTES DE CONSOLA</Text>
+            <Modal animationType="fade" transparent visible={isModalVisible}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalTitle}>AJUSTES DE CONSOLA</Text>
 
-            {/* Slider Mínimo (20°) */}
-            <View style={styles.settingRowContainer}>
-                <View style={styles.labelRow}>
-                    <Text style={styles.settingLabel}>Mínimo Ceñida</Text>
-                    {/* Este texto se actualizará en tiempo real gracias a setAjustesConsola */}
-                    <Text style={[styles.valueLabel, { color: '#00ff00' }]}>
-                        {ajustesConsola.minAnguloCeñida}°
-                    </Text>
+                        {/* Slider Mínimo (20°) */}
+                        <View style={styles.settingRowContainer}>
+                            <View style={styles.labelRow}>
+                                <Text style={styles.settingLabel}>Mínimo Ceñida</Text>
+                                {/* Este texto se actualizará en tiempo real gracias a setAjustesConsola */}
+                                <Text style={[styles.valueLabel, { color: '#00ff00' }]}>
+                                    {ajustesConsola.minAnguloCeñida}°
+                                </Text>
+                            </View>
+                            <Slider
+                                style={styles.slider}
+                                minimumValue={10}
+                                maximumValue={45}
+                                step={1}
+                                value={ajustesConsola.minAnguloCeñida}
+                                // Actualiza el estado VISUAL mientras mueves
+                                onValueChange={(v) => setAjustesConsola({ ...ajustesConsola, minAnguloCeñida: Math.round(v) })}
+                                // GUARDA en memoria solo cuando sueltas
+                                onSlidingComplete={(v) => guardarAjustePersistente('minAnguloCeñida', v)}
+                                minimumTrackTintColor="#00ff00"
+                                maximumTrackTintColor="#333"
+                                thumbTintColor="#00ff00"
+                            />
+                        </View>
+
+                        {/* Slider Máximo (60°) */}
+                        <View style={styles.settingRowContainer}>
+                            <View style={styles.labelRow}>
+                                <Text style={styles.settingLabel}>Máximo Ceñida</Text>
+                                <Text style={[styles.valueLabel, { color: '#ff0000' }]}>
+                                    {ajustesConsola.maxAnguloCeñida}°
+                                </Text>
+                            </View>
+                            <Slider
+                                style={styles.slider}
+                                minimumValue={50}
+                                maximumValue={90}
+                                step={1}
+                                value={ajustesConsola.maxAnguloCeñida}
+                                // Actualiza el estado VISUAL mientras mueves
+                                onValueChange={(v) => setAjustesConsola({ ...ajustesConsola, maxAnguloCeñida: Math.round(v) })}
+                                // GUARDA en memoria solo cuando sueltas
+                                onSlidingComplete={(v) => guardarAjustePersistente('maxAnguloCeñida', v)}
+                                minimumTrackTintColor="#ff0000"
+                                maximumTrackTintColor="#333"
+                                thumbTintColor="#ff0000"
+                            />
+                        </View>
+
+                        <View style={styles.divider} />
+
+                        <View style={styles.settingRow}>
+                            <Text style={styles.settingLabel}>Modo Noche</Text>
+                            <Switch
+                                value={isNightMode}
+                                onValueChange={setIsNightMode}
+                                trackColor={{ false: "#333", true: "#dc1212" }}
+                            />
+                        </View>
+
+                        <TouchableOpacity
+                            onPress={() => setModalVisible(false)}
+                            style={styles.closeBtn}
+                        >
+                            <Text style={styles.closeBtnText}>CERRAR</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-                <Slider
-                    style={styles.slider}
-                    minimumValue={10}
-                    maximumValue={45}
-                    step={1}
-                    value={ajustesConsola.minAnguloCeñida}
-                    // Actualiza el estado VISUAL mientras mueves
-                    onValueChange={(v) => setAjustesConsola({ ...ajustesConsola, minAnguloCeñida: Math.round(v) })}
-                    // GUARDA en memoria solo cuando sueltas
-                    onSlidingComplete={(v) => guardarAjustePersistente('minAnguloCeñida', v)}
-                    minimumTrackTintColor="#00ff00"
-                    maximumTrackTintColor="#333"
-                    thumbTintColor="#00ff00"
-                />
-            </View>
-
-            {/* Slider Máximo (60°) */}
-            <View style={styles.settingRowContainer}>
-                <View style={styles.labelRow}>
-                    <Text style={styles.settingLabel}>Máximo Ceñida</Text>
-                    <Text style={[styles.valueLabel, { color: '#ff0000' }]}>
-                        {ajustesConsola.maxAnguloCeñida}°
-                    </Text>
-                </View>
-                <Slider
-                    style={styles.slider}
-                    minimumValue={50}
-                    maximumValue={90}
-                    step={1}
-                    value={ajustesConsola.maxAnguloCeñida}
-                    // Actualiza el estado VISUAL mientras mueves
-                    onValueChange={(v) => setAjustesConsola({ ...ajustesConsola, maxAnguloCeñida: Math.round(v) })}
-                    // GUARDA en memoria solo cuando sueltas
-                    onSlidingComplete={(v) => guardarAjustePersistente('maxAnguloCeñida', v)}
-                    minimumTrackTintColor="#ff0000"
-                    maximumTrackTintColor="#333"
-                    thumbTintColor="#ff0000"
-                />
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>Modo Noche</Text>
-                <Switch 
-                    value={isNightMode} 
-                    onValueChange={setIsNightMode}
-                    trackColor={{ false: "#333", true: "#dc1212" }}
-                />
-            </View>
-
-            <TouchableOpacity 
-                onPress={() => setModalVisible(false)} 
-                style={styles.closeBtn}
-            >
-                <Text style={styles.closeBtnText}>CERRAR</Text>
-            </TouchableOpacity>
-        </View>
-    </View>
-</Modal>
+            </Modal>
         </View>
     );
 };
