@@ -57,17 +57,10 @@ const HeadingGauge = React.memo(({
         requestRef.current = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(requestRef.current);
     }, [value, twaCog, twd]); // Añadimos los vientos a las dependencias
+    // REDUNDANCIA: Hay dos useEffect muy similares que animan displayHeading y pulse. El segundo useEffect (abajo) repite parte de la lógica del primero, pero solo para displayHeading y pulse. Se podría unificar en uno solo para evitar duplicidad.
 
 
-    useEffect(() => {
-        const animate = (time) => {
-            setDisplayHeading(prev => lerpAngle(prev, parseFloat(value) || 0, 0.1));
-            if (time) setPulse((Math.sin(time / 600) + 1) / 2);
-            requestRef.current = requestAnimationFrame(animate);
-        };
-        requestRef.current = requestAnimationFrame(animate);
-        return () => cancelAnimationFrame(requestRef.current);
-    }, [value]);
+    // Eliminado useEffect redundante. La animación de displayHeading y pulse ya está cubierta por el useEffect anterior.
 
     // --- 2. DIMENSIONES Y CÁLCULOS ---
     const dims = useMemo(() => {
@@ -93,40 +86,34 @@ const HeadingGauge = React.memo(({
         <View style={[styles.outerContainer, { width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
             <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
                 <Defs>
-                    <Defs>
-                        {/* Gradientes con efecto de biselado */}
-                        {/* Gradientes para Aguja 3D (Estilo SOGGauge) */}
-
-                        <LinearGradient id="needleSideA" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <Stop offset="0%" stopColor="#ff4d4d" />
-                            <Stop offset="100%" stopColor="#b30000" />
-                        </LinearGradient>
-                        <LinearGradient id="needleSideB" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <Stop offset="0%" stopColor="#990000" />
-                            <Stop offset="100%" stopColor="#660000" />
-                        </LinearGradient>
-                        <LinearGradient id="hub3D" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <Stop offset="0%" stopColor="#888" />
-                            <Stop offset="100%" stopColor="#222" />
-                        </LinearGradient>
-                        <LinearGradient id="needleCompass" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <Stop offset="0%" stopColor="#ff4444" />
-                            <Stop offset="50%" stopColor="#ff0000" />
-                            <Stop offset="50.1%" stopColor="#cc0000" />
-                            <Stop offset="100%" stopColor="#990000" />
-                        </LinearGradient>
-
-                        <LinearGradient id="needleRed" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <Stop offset="0%" stopColor="#ff4444" /><Stop offset="50%" stopColor="#ff0000" /><Stop offset="100%" stopColor="#990000" />
-                        </LinearGradient>
-                        <LinearGradient id="needleBlue" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <Stop offset="0%" stopColor="#42a5f5" /><Stop offset="50%" stopColor="#2196f3" /><Stop offset="100%" stopColor="#0d47a1" />
-                        </LinearGradient>
-                        <LinearGradient id="needleOrange" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <Stop offset="0%" stopColor="#ffb74d" /><Stop offset="50%" stopColor="#ff9800" /><Stop offset="100%" stopColor="#e65100" />
-                        </LinearGradient>
-                        {/* ... tus otros gradientes de bisel y cristal ... */}
-                    </Defs>
+                    {/* Gradientes con efecto de biselado y todos los gradientes fusionados en un solo bloque */}
+                    <LinearGradient id="needleSideA" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="#ff4d4d" />
+                        <Stop offset="100%" stopColor="#b30000" />
+                    </LinearGradient>
+                    <LinearGradient id="needleSideB" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="#990000" />
+                        <Stop offset="100%" stopColor="#660000" />
+                    </LinearGradient>
+                    <LinearGradient id="hub3D" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#888" />
+                        <Stop offset="100%" stopColor="#222" />
+                    </LinearGradient>
+                    <LinearGradient id="needleCompass" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <Stop offset="0%" stopColor="#ff4444" />
+                        <Stop offset="50%" stopColor="#ff0000" />
+                        <Stop offset="50.1%" stopColor="#cc0000" />
+                        <Stop offset="100%" stopColor="#990000" />
+                    </LinearGradient>
+                    <LinearGradient id="needleRed" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <Stop offset="0%" stopColor="#ff4444" /><Stop offset="50%" stopColor="#ff0000" /><Stop offset="100%" stopColor="#990000" />
+                    </LinearGradient>
+                    <LinearGradient id="needleBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <Stop offset="0%" stopColor="#42a5f5" /><Stop offset="50%" stopColor="#2196f3" /><Stop offset="100%" stopColor="#0d47a1" />
+                    </LinearGradient>
+                    <LinearGradient id="needleOrange" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <Stop offset="0%" stopColor="#ffb74d" /><Stop offset="50%" stopColor="#ff9800" /><Stop offset="100%" stopColor="#e65100" />
+                    </LinearGradient>
                     {/* BISEL METÁLICO 3D */}
                     <LinearGradient id="bezelOuter" x1="0%" y1="0%" x2="100%" y2="100%">
                         <Stop offset="0%" stopColor="#efefef" />
@@ -142,7 +129,6 @@ const HeadingGauge = React.memo(({
                         <Stop offset="0%" stopColor="#fff" stopOpacity="0.8" />
                         <Stop offset="100%" stopColor="#666" stopOpacity="0" />
                     </LinearGradient>
-
                     {/* ANILLO ROJO MECANIZADO */}
                     <LinearGradient id="redMetalOuter" x1="0%" y1="0%" x2="100%" y2="100%">
                         <Stop offset="0%" stopColor="#ff4d4d" />
@@ -156,24 +142,17 @@ const HeadingGauge = React.memo(({
                         <Stop offset="0%" stopColor="#ffcccc" stopOpacity="0.8" />
                         <Stop offset="100%" stopColor="#ff0000" stopOpacity="0" />
                     </LinearGradient>
-
-
-
-                    <Defs>
-                        {/* Reflejo principal superior */}
-                        <LinearGradient id="glassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
-                            <Stop offset="40%" stopColor="#ffffff" stopOpacity="0.05" />
-                            <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                        </LinearGradient>
-
-                        {/* Destello de luz lateral (Flare) */}
-                        <RadialGradient id="flareGradient" cx="50%" cy="50%" rx="50%" ry="50%">
-                            <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
-                            <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                        </RadialGradient>
-                    </Defs>
-
+                    {/* Reflejo principal superior */}
+                    <LinearGradient id="glassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
+                        <Stop offset="40%" stopColor="#ffffff" stopOpacity="0.05" />
+                        <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                    </LinearGradient>
+                    {/* Destello de luz lateral (Flare) */}
+                    <RadialGradient id="flareGradient" cx="50%" cy="50%" rx="50%" ry="50%">
+                        <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+                        <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                    </RadialGradient>
                 </Defs>
 
                 {/* --- CAPA 1: FONDO Y BISEL EXTERIOR --- */}
@@ -363,7 +342,7 @@ const HeadingGauge = React.memo(({
                     />
                 </G>*/}
 
-             
+
 
                 {/* ... (aquí termina tu Capa 5 anterior) ... */}
 
@@ -415,27 +394,27 @@ const HeadingGauge = React.memo(({
                     </G>
                 </G>
 
-            {/* --- CAPA FINAL: CRISTAL IDENTICO AL SOGGAUGE --- */}
-<G pointerEvents="none">
-    {/* 1. Reflejo elíptico superior */}
-    <Ellipse 
-        cx={dims.CENTER} 
-        cy={dims.CENTER - (dims.RADIUS * 0.4)} 
-        rx={dims.RADIUS * 0.85} 
-        ry={dims.RADIUS * 0.5} 
-        fill="url(#glassReflection)" 
-    />
+                {/* --- CAPA FINAL: CRISTAL IDENTICO AL SOGGAUGE --- */}
+                <G pointerEvents="none">
+                    {/* 1. Reflejo elíptico superior */}
+                    <Ellipse
+                        cx={dims.CENTER}
+                        cy={dims.CENTER - (dims.RADIUS * 0.4)}
+                        rx={dims.RADIUS * 0.85}
+                        ry={dims.RADIUS * 0.5}
+                        fill="url(#glassReflection)"
+                    />
 
-    {/* 2. Destello de foco (Flare) en la esquina superior izquierda */}
-    <Ellipse
-        cx={dims.CENTER - (dims.RADIUS * 0.6)}
-        cy={dims.CENTER - (dims.RADIUS * 0.6)}
-        rx={COMPASS_SIZE * 0.08}
-        ry={COMPASS_SIZE * 0.03}
-        fill="url(#flareGradient)"
-        transform={`rotate(-45, ${dims.CENTER - (dims.RADIUS * 0.6)}, ${dims.CENTER - (dims.RADIUS * 0.6)})`}
-    />
-</G>
+                    {/* 2. Destello de foco (Flare) en la esquina superior izquierda */}
+                    <Ellipse
+                        cx={dims.CENTER - (dims.RADIUS * 0.6)}
+                        cy={dims.CENTER - (dims.RADIUS * 0.6)}
+                        rx={COMPASS_SIZE * 0.08}
+                        ry={COMPASS_SIZE * 0.03}
+                        fill="url(#flareGradient)"
+                        transform={`rotate(-45, ${dims.CENTER - (dims.RADIUS * 0.6)}, ${dims.CENTER - (dims.RADIUS * 0.6)})`}
+                    />
+                </G>
 
 
             </Svg>
