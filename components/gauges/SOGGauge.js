@@ -6,20 +6,23 @@ import Svg, {
     Ellipse,
     G,
     Line,
+    LinearGradient,
+    Path,
     Polygon,
     Rect,
+    Stop,
     Text as SvgText
 } from 'react-native-svg';
 import { GAUGE_THEME } from '../../styles/GaugeTheme';
+import { describeArc } from '../../utils/Utils';
 import { GaugeDefs } from './shared/GaugeDefs';
 import { computeCommonDims, polarToCartesian } from './shared/gaugeUtils';
 
 const SogGauge = React.memo(({
     size,
     value = 0,
-    maxSpeed = 10
+    maxSpeed = 12
 }) => {
-    // Tamaño relativo a la pantalla si no se pasa size
     const { width: windowWidth, height: windowHeight } = require('react-native').useWindowDimensions();
     const COMPASS_SIZE = size || Math.min(windowWidth * 0.9, windowHeight * 0.45);
 
@@ -44,8 +47,6 @@ const SogGauge = React.memo(({
         };
     }, [value]);
 
-    // polarToCartesian ahora importado desde helpers compartidos
-
     const dims = useMemo(() => {
         const base = computeCommonDims(COMPASS_SIZE);
         const START_ANGLE = 225;
@@ -56,177 +57,95 @@ const SogGauge = React.memo(({
             TOTAL_SWEEP,
             TEXT_RAD: base.RADIUS - COMPASS_SIZE * 0.12,
             FONT_NUM: Math.round(COMPASS_SIZE * 0.045),
+            RADIUS_ARCS: base.RADIUS - 12
         };
     }, [COMPASS_SIZE]);
 
-    const labels = useMemo(() => {
-        const max = Math.ceil(maxSpeed);
-        return Array.from({ length: max + 1 }, (_, i) => i);
-    }, [maxSpeed]);
+    const speedToAngle = (speed) => {
+        return dims.START_ANGLE + (speed / maxSpeed) * dims.TOTAL_SWEEP;
+    };
 
-    const needleRotation = dims.START_ANGLE + (displaySog / maxSpeed) * dims.TOTAL_SWEEP;
+    const needleRotation = speedToAngle(displaySog);
+
+    // --- LÓGICA DE TERCIOS ---
+    // El arco comienza a 1/3 de la velocidad máxima
+    const startOfArcSpeed = 1;
 
     return (
         <View style={[styles.outerContainer, { width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
             <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
                 <Defs>
                     <GaugeDefs />
+                    {/* GRADIENTE INVERSO: Invisible (0%) -> Sólido (100%) */}
+                    <LinearGradient id="speedIntensityFade" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <Stop offset="0%" stopColor={GAUGE_THEME.colors.red} stopOpacity="0" />
+                        <Stop offset="100%" stopColor={GAUGE_THEME.colors.red} stopOpacity="1" />
+                    </LinearGradient>
                 </Defs>
 
-                {/* --- CAPA 1: BISEL MECANIZADO --- */}
+                {/* --- CAPA 1: BISEL Y FONDO --- */}
                 <G>
                     <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.CENTER - (dims.BEZEL_SIZE / 4)} fill="none" stroke="url(#bezelOuter)" strokeWidth={dims.BEZEL_SIZE / 2} />
                     <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS + (dims.BEZEL_SIZE / 4)} fill="none" stroke="url(#bezelInner)" strokeWidth={dims.BEZEL_SIZE / 2} />
-                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.CENTER - (dims.BEZEL_SIZE / 2)} fill="none" stroke="url(#bezelRidge)" strokeWidth="1.5" opacity={0.6} />
-                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill={GAUGE_THEME.colors.bg} stroke="#000" strokeWidth="2" />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill={GAUGE_THEME.colors.bg} />
                 </G>
 
-
-                {/* --- CAPA 2: ANILLO ROJO MECANIZADO 3D (SUSTITUCIÓN) --- */}
+                {/* --- CAPA 2: ARCO DE INTENSIDAD CRECIENTE --- */}
                 <G>
-                    {/* Cara exterior (subida) */}
-                    <Circle
-                        cx={dims.CENTER} cy={dims.CENTER}
-                        r={dims.INNER_RADIUS - 35}
+                    <Path
+                        d={describeArc(
+                            dims.CENTER,
+                            dims.CENTER,
+                            dims.RADIUS_ARCS,
+                            speedToAngle(startOfArcSpeed),
+                            speedToAngle(maxSpeed)
+                        )}
                         fill="none"
-                        stroke="url(#redMetalOuter)"
-                        strokeWidth="5"
-                    />
-
-                    {/* Cara interior (bajada) */}
-                    <Circle
-                        cx={dims.CENTER} cy={dims.CENTER}
-                        r={dims.INNER_RADIUS - 40}
-                        fill="none"
-                        stroke="url(#redMetalInner)"
-                        strokeWidth="5"
-                    />
-
-                    {/* Arista de brillo central (el "filo" metálico) */}
-                    <Circle
-                        cx={dims.CENTER} cy={dims.CENTER}
-                        r={dims.INNER_RADIUS - 37.5}
-                        fill="none"
-                        stroke="url(#redMetalRidge)"
-                        strokeWidth="1"
-                        opacity={0.8}
-                    />
-
-                    {/* Sombra de profundidad interior */}
-                    <Circle
-                        cx={dims.CENTER} cy={dims.CENTER}
-                        r={dims.INNER_RADIUS - 43}
-                        fill="none"
-                        stroke="#000"
-                        strokeWidth="1.5"
-                        opacity={0.4}
+                        stroke="url(#speedIntensityFade)"
+                        strokeWidth={COMPASS_SIZE * 0.040}
                     />
                 </G>
 
-                {/* --- CAPA 3: TICKS Y NÚMEROS --- */}
+                {/* --- CAPA 3: ANILLO ROJO 3D --- */}
                 <G>
-                    {/* Ticks: 0.1 nudos (pequeños), 0.5 nudos (medianos, blancos), 10 nudos (mayores, rojos) */}
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 35} fill="none" stroke="url(#redMetalOuter)" strokeWidth="5" />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 40} fill="none" stroke="url(#redMetalInner)" strokeWidth="5" />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 37.5} fill="none" stroke="url(#redMetalRidge)" strokeWidth="1" opacity={0.8} />
+                </G>
+
+                {/* --- CAPA 4: ESCALA --- */}
+                <G>
                     {Array.from({ length: Math.round(maxSpeed * 10) + 1 }).map((_, i) => {
                         const val = i * 0.1;
                         if (val > maxSpeed) return null;
-                        const angle = dims.START_ANGLE + (val / maxSpeed) * dims.TOTAL_SWEEP;
+                        const angle = speedToAngle(val);
                         const angleRad = (angle - 90) * (Math.PI / 180);
-                        // Ticks mayores cada 10
-                        if (val % 10 === 0) {
-                            return (
-                                <Line
-                                    key={`tick-major-${val}`}
-                                    x1={dims.CENTER + (dims.RADIUS - 18) * Math.cos(angleRad)}
-                                    y1={dims.CENTER + (dims.RADIUS - 18) * Math.sin(angleRad)}
-                                    x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
-                                    y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
-                                    stroke={GAUGE_THEME.colors.red}
-                                    strokeWidth={3}
-                                />
-                            );
-                        }
-                        // Ticks medianos cada 0.5 nudos
-                        if (val % 0.5 === 0) {
-                            return (
-                                <Line
-                                    key={`tick-half-${val.toFixed(1)}`}
-                                    x1={dims.CENTER + (dims.RADIUS - 14) * Math.cos(angleRad)}
-                                    y1={dims.CENTER + (dims.RADIUS - 14) * Math.sin(angleRad)}
-                                    x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
-                                    y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
-                                    stroke={"#fff"}
-                                    strokeWidth={1.5}
-                                />
-                            );
-                        }
-                        // Ticks menores cada 0.1
-                        return (
-                            <Line
-                                key={`tick-minor-${val.toFixed(1)}`}
-                                x1={dims.CENTER + (dims.RADIUS - 10) * Math.cos(angleRad)}
-                                y1={dims.CENTER + (dims.RADIUS - 10) * Math.sin(angleRad)}
-                                x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
-                                y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
-                                stroke={"rgba(255,255,255,0.4)"}
-                                strokeWidth={1}
-                            />
-                        );
-                    })}
 
-                    {/* Ticks Rojos y Números */}
-                    {labels.map((val) => {
-                        const angle = dims.START_ANGLE + (val / maxSpeed) * dims.TOTAL_SWEEP;
-                        const angleRad = (angle - 90) * (Math.PI / 180);
-                        const pos = polarToCartesian(dims.CENTER, dims.CENTER, dims.TEXT_RAD, angle);
-                        return (
-                            <G key={`label-${val}`}>
-                                <Line
-                                    x1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.cos(angleRad)}
-                                    y1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.sin(angleRad)}
-                                    x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
-                                    y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
-                                    stroke={GAUGE_THEME.colors.red}
-                                    strokeWidth={2.5}
-                                />
-                                <SvgText
-                                    x={pos.x} y={pos.y + (dims.FONT_NUM / 3)}
-                                    textAnchor="middle" fontSize={dims.FONT_NUM}
-                                    fill={GAUGE_THEME.colors.textPrimary}
-                                    fontFamily="NauticalFont" fontWeight="bold"
-                                >
-                                    {val}
-                                </SvgText>
-                            </G>
-                        );
+                        if (val % 1 === 0) {
+                            const pos = polarToCartesian(dims.CENTER, dims.CENTER, dims.TEXT_RAD, angle);
+                            return (
+                                <G key={`n-${val}`}>
+                                    <Line x1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.cos(angleRad)} y1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.sin(angleRad)} x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)} y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)} stroke={GAUGE_THEME.colors.red} strokeWidth={2.5} />
+                                    <SvgText x={pos.x} y={pos.y + (dims.FONT_NUM / 3)} textAnchor="middle" fontSize={dims.FONT_NUM} fill={GAUGE_THEME.colors.textPrimary} fontFamily="NauticalFont" fontWeight="bold">{val}</SvgText>
+                                </G>
+                            );
+                        }
+                        if (val % 0.5 === 0) return <Line key={`h-${val}`} x1={dims.CENTER + (dims.RADIUS - 14) * Math.cos(angleRad)} y1={dims.CENTER + (dims.RADIUS - 14) * Math.sin(angleRad)} x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)} y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)} stroke={"#fff"} strokeWidth={1.5} />;
+                        return <Line key={`m-${val}`} x1={dims.CENTER + (dims.RADIUS - 10) * Math.cos(angleRad)} y1={dims.CENTER + (dims.RADIUS - 10) * Math.sin(angleRad)} x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)} y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)} stroke={"rgba(255,255,255,0.4)"} strokeWidth={1} />;
                     })}
                 </G>
 
-                {/* --- CAPA 4: AGUJA PRO 3D --- */}
+                {/* --- CAPA 5: AGUJA --- */}
                 <G rotation={needleRotation - 90} origin={`${dims.CENTER}, ${dims.CENTER}`}>
                     <Rect x={dims.CENTER - 20} y={dims.CENTER - 1.5} width={25} height={3} fill="#333" rx={1} />
                     <Polygon points={`${dims.CENTER},${dims.CENTER - 4.5} ${dims.CENTER + dims.RADIUS - 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER}`} fill="url(#needleSideA)" />
                     <Polygon points={`${dims.CENTER},${dims.CENTER} ${dims.CENTER + dims.RADIUS - 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER + 4.5}`} fill="url(#needleSideB)" />
-                    <Line x1={dims.CENTER + dims.RADIUS - 15} y1={dims.CENTER} x2={dims.CENTER + dims.RADIUS - 10} y2={dims.CENTER} stroke="#fff" strokeWidth="1" />
                 </G>
 
-                {/* --- CAPA 5: HUB CENTRAL --- */}
-                <G>
-                    <Circle cx={dims.CENTER + 1} cy={dims.CENTER + 1} r={12} fill="rgba(0,0,0,0.4)" />
-                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={11} fill="url(#hub3D)" stroke="#444" strokeWidth="1" />
-                    <Circle cx={dims.CENTER - 3} cy={dims.CENTER - 3} r={3} fill="rgba(255,255,255,0.2)" />
-                </G>
-
-                {/* --- CAPA FINAL: CRISTAL Y DESTELLO --- */}
+                {/* --- CAPA FINAL: CRISTAL --- */}
                 <G pointerEvents="none">
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={11} fill="url(#hub3D)" stroke="#444" strokeWidth="1" />
                     <Ellipse cx={dims.CENTER} cy={dims.CENTER - (dims.RADIUS * 0.4)} rx={dims.RADIUS * 0.85} ry={dims.RADIUS * 0.5} fill="url(#glassReflection)" />
-                    <Ellipse
-                        cx={dims.CENTER - (dims.RADIUS * 0.6)}
-                        cy={dims.CENTER - (dims.RADIUS * 0.6)}
-                        rx={COMPASS_SIZE * 0.08}
-                        ry={COMPASS_SIZE * 0.03}
-                        fill="url(#flareGradient)"
-                        transform={`rotate(-45, ${dims.CENTER - (dims.RADIUS * 0.6)}, ${dims.CENTER - (dims.RADIUS * 0.6)})`}
-                    />
                 </G>
             </Svg>
         </View>
