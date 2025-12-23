@@ -66,7 +66,7 @@ const SignalKConnector = () => {
 
     // --- LÓGICA DE INTERFAZ ---
     const columnWidth = (windowWidth * 0.94) / 3;
-    const gaugeSize = Math.min(windowWidth * 0.93, windowHeight * 0.45);
+    const gaugeSize = Math.min(windowWidth * 0.90, windowHeight * 0.45);
     const rotationAngle = -processed.cogDeg;
     const isDepthAlarmActive = processed.depthMeters < 3.0 && processed.depthMeters > 0;
     const absTWA = Math.abs(processed.twaCog || 0);
@@ -181,7 +181,7 @@ const SignalKConnector = () => {
 
                         <View style={styles.row}>
                             <SogGauge
-                                size={gaugeSize * 0.96}
+                                size={gaugeSize}
                                 value={parseFloat(processed.sogKnots)}
                                 // Usamos el maxSOG que ya calculas y guardas en el useEffect
                                 maxSpeed={maxSOG > 5 ? Math.ceil(maxSOG) : 10}

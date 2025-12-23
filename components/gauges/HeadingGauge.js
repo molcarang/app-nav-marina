@@ -1,52 +1,20 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Svg, {
+    Circle,
+    Defs,
+    Ellipse,
+    G, Line,
+    LinearGradient,
+    Path, Polygon,
+    Stop, Text as SvgText
+} from 'react-native-svg';
+import { GAUGE_THEME } from '../../styles/GaugeTheme';
+import { describeArc, lerpAngle } from '../../utils/Utils';
 
-import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, G, Line, Path, Polygon, Text as SvgText } from 'react-native-svg';
-import { GAUGE_THEME } from '../../styles/GaugeTheme'; // Importación del estilo común
-import { describeArc, lerpAngle, polarToCartesian } from '../../utils/Utils';
-
-
-// =============================
-// HeadingGauge Component
-// =============================
-// Muestra un compás con rumbo, laylines, viento y corriente.
-
-// --- Constants ---
-const COLOR_CIRCLE_BG = 'rgba(40, 40, 40, 0.75)';
-const COLOR_BORDER = '#fff';
-const COLOR_RED = '#dc1212ff';
-const COLOR_TWA = '#ff9800';
-const COLOR_TWD = '#2196f3';
-const FONT_FAMILY = 'NauticalFont';
-
-// --- Helper: Tick Mark ---
-function getTick(angleDeg, innerR, outerR, color, isBold, COMPASS_SIZE, CENTER) {
-    const angleRad = (angleDeg - 90) * (Math.PI / 180);
-    return (
-        <Line
-            key={`tick-${angleDeg}`}
-            x1={CENTER + innerR * Math.cos(angleRad)}
-            y1={CENTER + innerR * Math.sin(angleRad)}
-            x2={CENTER + outerR * Math.cos(angleRad)}
-            y2={CENTER + outerR * Math.sin(angleRad)}
-            stroke={color}
-            strokeWidth={isBold ? COMPASS_SIZE * 0.0036 : COMPASS_SIZE * 0.0018}
-        />
-    );
-}
-
-const numericalMarks = [30, 60, 120, 150, 210, 240, 300, 330];
-const cardinalMarks = [
-    { deg: 0, label: 'N', val: '0' },
-    { deg: 90, label: 'E', val: '90' },
-    { deg: 180, label: 'S', val: '180' },
-    { deg: 270, label: 'O', val: '270' }
-];
-
-// --- Main Component ---
-const HeadingGauge = ({
+const HeadingGauge = React.memo(({
     size: COMPASS_SIZE = 400,
-    value,
+    value = 0,
     minLayline = 20,
     maxLayline = 60,
     unit,
@@ -57,175 +25,331 @@ const HeadingGauge = ({
     set = 0,
     drift = 0
 }) => {
-    // --- State and Animation ---
+    // --- 1. ESTADO Y ANIMACIÓN ---
     const [displayHeading, setDisplayHeading] = useState(parseFloat(value) || 0);
+    // Añadimos estados para los vientos:
+    const [displayTwa, setDisplayTwa] = useState(twaCog || 0);
+    const [displayTwd, setDisplayTwd] = useState(twd || 0);
     const [pulse, setPulse] = useState(0);
     const requestRef = useRef();
 
-    // Animation loop for heading smoothing and pulse
-    const animate = (time) => {
-        setDisplayHeading(prev => {
-            const nextValue = lerpAngle(prev, parseFloat(value) || 0, 0.1);
-            if (Math.abs(nextValue - prev) < 0.01) return prev;
-            return nextValue;
-        });
-        if (time) {
-            const p = (Math.sin(time / 600) + 1) / 2;
-            setPulse(p);
-        }
-        requestRef.current = requestAnimationFrame(animate);
-    };
+
 
     useEffect(() => {
+        const animate = (time) => {
+            // Interpolación para el Rumbo
+            setDisplayHeading(prev => lerpAngle(prev, parseFloat(value) || 0, 0.1));
+
+            // Interpolación para el Viento Aparente (TWA)
+            if (typeof twaCog === 'number') {
+                setDisplayTwa(prev => lerpAngle(prev, twaCog, 0.1)); // 0.05 es más suave
+            }
+
+            // Interpolación para el Viento Real (TWD)
+            if (typeof twd === 'number') {
+                setDisplayTwd(prev => lerpAngle(prev, twd, 0.1));
+            }
+
+            if (time) setPulse((Math.sin(time / 600) + 1) / 2);
+            requestRef.current = requestAnimationFrame(animate);
+        };
+        requestRef.current = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(requestRef.current);
+    }, [value, twaCog, twd]); // Añadimos los vientos a las dependencias
+
+
+    useEffect(() => {
+        const animate = (time) => {
+            setDisplayHeading(prev => lerpAngle(prev, parseFloat(value) || 0, 0.1));
+            if (time) setPulse((Math.sin(time / 600) + 1) / 2);
+            requestRef.current = requestAnimationFrame(animate);
+        };
         requestRef.current = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(requestRef.current);
     }, [value]);
 
-    // --- Derived/Proportional Values ---
+    // --- 2. DIMENSIONES Y CÁLCULOS ---
+    const dims = useMemo(() => {
+        const CENTER = COMPASS_SIZE / 2;
+        const BEZEL_SIZE = COMPASS_SIZE * 0.06;
+        const RADIUS = CENTER - BEZEL_SIZE;
+        const INNER_RADIUS = RADIUS - (COMPASS_SIZE * 0.08);
+        return {
+            CENTER, RADIUS, BEZEL_SIZE, INNER_RADIUS,
+            // Ajustamos el radio del texto para que entre en el círculo central
+            TEXT_RAD: INNER_RADIUS - COMPASS_SIZE * 0.16,
+            FONT_NUM: Math.round(COMPASS_SIZE * 0.035),
+            FONT_CARD: Math.round(COMPASS_SIZE * 0.050),
+            RADIUS_ARCS: RADIUS - 13
+        };
+    }, [COMPASS_SIZE]);
+
     const rotationAngle = -displayHeading;
-    const CENTER = COMPASS_SIZE / 2;
-    const RADIUS = CENTER - COMPASS_SIZE * 0.036;
-    const INNER_RADIUS = RADIUS - COMPASS_SIZE * 0.1;
-    const MAX_ARROW_RADIUS = INNER_RADIUS - 25;
-    const ARROW_BASE_LENGTH = 50;
-    const SCALE_LIMIT = (MAX_ARROW_RADIUS - 10) / ARROW_BASE_LENGTH;
-    const FONT_SIZE_NUMERIC = Math.round(COMPASS_SIZE * 0.032);
-    const FONT_SIZE_CARDINAL_LETTER = Math.round(COMPASS_SIZE * 0.051);
-    const TEXT_RADIUS_OUTER = RADIUS - COMPASS_SIZE * 0.11;
-    const TEXT_RADIUS_CARDINAL = COMPASS_SIZE * 0.255;
-    const WIND_INDICATOR_DISTANCE = RADIUS + COMPASS_SIZE * 0.018;
-    const RADIUS_ARCS = RADIUS + 15;
-
-    // --- Dynamic Calculations ---
+    const finalHeadingColor = headingColor || GAUGE_THEME.colors.red;
     const formattedHeading = isNaN(parseFloat(value)) ? '---' : parseFloat(value).toFixed(0);
-    const finalHeadingColor = headingColor || COLOR_RED;
-    const dynamicScale = Math.min(Math.max(drift * 0.8, 0.4), SCALE_LIMIT);
-    const pulseFactor = 1 + (pulse * 0.1);
-    const finalScale = dynamicScale * pulseFactor;
 
-
-    // --- Render ---
     return (
-        <View style={[styles.outerContainer, { width: COMPASS_SIZE + 10, height: COMPASS_SIZE }]}>
+        <View style={[styles.outerContainer, { width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
             <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
-                {/* 1. DIAL ROTATORIO */}
-                <G rotation={rotationAngle} origin={`${CENTER}, ${CENTER}`}>
-                    <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill={COLOR_CIRCLE_BG} stroke={COLOR_BORDER} strokeWidth="5" />
-                    <Circle cx={CENTER} cy={CENTER} r={INNER_RADIUS - 25} fill={COLOR_CIRCLE_BG} stroke={COLOR_BORDER} strokeWidth="1" />
+                <Defs>
+                    <Defs>
+                        {/* Gradientes con efecto de biselado */}
+                        <LinearGradient id="needleRed" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <Stop offset="0%" stopColor="#ff4444" /><Stop offset="50%" stopColor="#ff0000" /><Stop offset="100%" stopColor="#990000" />
+                        </LinearGradient>
+                        <LinearGradient id="needleBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <Stop offset="0%" stopColor="#42a5f5" /><Stop offset="50%" stopColor="#2196f3" /><Stop offset="100%" stopColor="#0d47a1" />
+                        </LinearGradient>
+                        <LinearGradient id="needleOrange" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <Stop offset="0%" stopColor="#ffb74d" /><Stop offset="50%" stopColor="#ff9800" /><Stop offset="100%" stopColor="#e65100" />
+                        </LinearGradient>
+                        {/* ... tus otros gradientes de bisel y cristal ... */}
+                    </Defs>
+                    {/* BISEL METÁLICO 3D */}
+                    <LinearGradient id="bezelOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#efefef" />
+                        <Stop offset="50%" stopColor="#888" />
+                        <Stop offset="100%" stopColor="#444" />
+                    </LinearGradient>
+                    <LinearGradient id="bezelInner" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#222" />
+                        <Stop offset="50%" stopColor="#444" />
+                        <Stop offset="100%" stopColor="#111" />
+                    </LinearGradient>
+                    <LinearGradient id="bezelRidge" x1="100%" y1="100%" x2="0%" y2="0%">
+                        <Stop offset="0%" stopColor="#fff" stopOpacity="0.8" />
+                        <Stop offset="100%" stopColor="#666" stopOpacity="0" />
+                    </LinearGradient>
+
+                    {/* ANILLO ROJO MECANIZADO */}
+                    <LinearGradient id="redMetalOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#ff4d4d" />
+                        <Stop offset="100%" stopColor="#800000" />
+                    </LinearGradient>
+                    <LinearGradient id="redMetalInner" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#660000" />
+                        <Stop offset="100%" stopColor="#330000" />
+                    </LinearGradient>
+                    <LinearGradient id="redMetalRidge" x1="100%" y1="100%" x2="0%" y2="0%">
+                        <Stop offset="0%" stopColor="#ffcccc" stopOpacity="0.8" />
+                        <Stop offset="100%" stopColor="#ff0000" stopOpacity="0" />
+                    </LinearGradient>
+
+                    {/* CRISTAL */}
+                    <LinearGradient id="glassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
+                        <Stop offset="40%" stopColor="#ffffff" stopOpacity="0.05" />
+                        <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                    </LinearGradient>
+                </Defs>
+
+                {/* --- CAPA 1: FONDO Y BISEL EXTERIOR --- */}
+                <G>
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.CENTER - (dims.BEZEL_SIZE / 4)} fill="none" stroke="url(#bezelOuter)" strokeWidth={dims.BEZEL_SIZE / 2} />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS + (dims.BEZEL_SIZE / 4)} fill="none" stroke="url(#bezelInner)" strokeWidth={dims.BEZEL_SIZE / 2} />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.CENTER - (dims.BEZEL_SIZE / 2)} fill="none" stroke="url(#bezelRidge)" strokeWidth="1.5" opacity={0.6} />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill={GAUGE_THEME.colors.bg} />
+                </G>
+
+                {/* --- CAPA 2: ELEMENTOS ESTÁTICOS (BARCO Y LAYLINES) --- */}
+                <G>
+                    {/* Laylines */}
+                    <Path
+                        d={describeArc(dims.CENTER, dims.CENTER, dims.RADIUS_ARCS, minLayline, maxLayline)}
+                        fill="none" stroke="#00ff00" strokeWidth={COMPASS_SIZE * 0.07} strokeLinecap="butt" opacity={0.5}
+                    />
+                    <Path
+                        d={describeArc(dims.CENTER, dims.CENTER, dims.RADIUS_ARCS, 360 - maxLayline, 360 - minLayline)}
+                        fill="none" stroke="#ff0000" strokeWidth={COMPASS_SIZE * 0.07} strokeLinecap="butt" opacity={0.5}
+                    />
+
+                    {/* Barco: Redimensionado para caber dentro del anillo rojo central */}
+                    {/* Barco: Tamaño máximo para casi tocar el anillo rojo */}
+                    <G opacity={isNightMode ? 0.3 : 0.4}>
+                        <Path
+                            d={`
+            M ${dims.CENTER} ${dims.CENTER - COMPASS_SIZE * 0.22} 
+            C ${dims.CENTER + COMPASS_SIZE * 0.08} ${dims.CENTER - COMPASS_SIZE * 0.10}, 
+              ${dims.CENTER + COMPASS_SIZE * 0.075} ${dims.CENTER + COMPASS_SIZE * 0.15}, 
+              ${dims.CENTER + COMPASS_SIZE * 0.07} ${dims.CENTER + COMPASS_SIZE * 0.21} 
+            L ${dims.CENTER - COMPASS_SIZE * 0.07} ${dims.CENTER + COMPASS_SIZE * 0.21} 
+            C ${dims.CENTER - COMPASS_SIZE * 0.075} ${dims.CENTER + COMPASS_SIZE * 0.15}, 
+              ${dims.CENTER - COMPASS_SIZE * 0.08} ${dims.CENTER - COMPASS_SIZE * 0.10}, 
+              ${dims.CENTER} ${dims.CENTER - COMPASS_SIZE * 0.22} 
+            Z
+        `}
+                            fill="none"
+                            stroke="#fff"
+                            strokeWidth="2"
+                        />
+                        {/* Línea de crujía ajustada al nuevo tamaño */}
+                        <Line
+                            x1={dims.CENTER}
+                            y1={dims.CENTER - COMPASS_SIZE * 0.22}
+                            x2={dims.CENTER}
+                            y2={dims.CENTER + COMPASS_SIZE * 0.21}
+                            stroke="#fff"
+                            strokeDasharray="3, 5"
+                            opacity={0.5}
+                        />
+                    </G>
+                </G>
+                {/* --- CAPA 3: DIAL ROTATIVO (NÚMEROS EXTERIORES Y CARDINALES INTERIORES) --- */}
+                <G rotation={rotationAngle} origin={`${dims.CENTER}, ${dims.CENTER}`}>
                     {Array.from({ length: 72 }).map((_, i) => {
                         const deg = i * 5;
-                        if (deg % 30 === 0) return getTick(deg, INNER_RADIUS + COMPASS_SIZE * 0.027, RADIUS, COLOR_RED, true, COMPASS_SIZE, CENTER);
-                        if (deg % 10 === 0) return getTick(deg, INNER_RADIUS + COMPASS_SIZE * 0.027, RADIUS, COLOR_BORDER, false, COMPASS_SIZE, CENTER);
-                        return getTick(deg, INNER_RADIUS + COMPASS_SIZE * 0.045, RADIUS, COLOR_BORDER, false, COMPASS_SIZE, CENTER);
-                    })}
-                    {numericalMarks.concat([0, 90, 180, 270]).map(deg => {
-                        const pos = polarToCartesian(CENTER, CENTER, TEXT_RADIUS_OUTER, deg);
+                        const angleRad = (deg - 90) * (Math.PI / 180);
+                        const isMajor = deg % 30 === 0;
+                        const isMid = deg % 10 === 0;
+                        const tLen = isMajor ? 20 : isMid ? 12 : 7;
+
+                        const degreeRad = dims.RADIUS - 35;
+                        const cardinalRad = dims.INNER_RADIUS - 65;
+
                         return (
-                            <SvgText
-                                key={`num-${deg}`} x={pos.x} y={pos.y + (FONT_SIZE_NUMERIC / 3)} textAnchor="middle"
-                                fontSize={FONT_SIZE_NUMERIC} fill={deg % 90 === 0 ? COLOR_RED : COLOR_BORDER}
-                                fontFamily={FONT_FAMILY}
-                                rotation={-rotationAngle} origin={`${pos.x}, ${pos.y}`}
-                            >
-                                {deg}
-                            </SvgText>
+                            <G key={`tick-${deg}`}>
+                                <Line
+                                    x1={dims.CENTER + (dims.RADIUS - tLen) * Math.cos(angleRad)}
+                                    y1={dims.CENTER + (dims.RADIUS - tLen) * Math.sin(angleRad)}
+                                    x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
+                                    y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
+                                    stroke={isMajor ? GAUGE_THEME.colors.red : (isMid ? "#fff" : "rgba(255,255,255,0.4)")}
+                                    strokeWidth={isMajor ? 3 : 1.5}
+                                />
+
+                                {isMajor && (
+                                    <G>
+                                        <G rotation={-rotationAngle} origin={`${dims.CENTER + degreeRad * Math.cos(angleRad)}, ${dims.CENTER + degreeRad * Math.sin(angleRad)}`}>
+                                            <SvgText
+                                                x={dims.CENTER + degreeRad * Math.cos(angleRad)}
+                                                y={dims.CENTER + degreeRad * Math.sin(angleRad) + 5}
+                                                fill="white"
+                                                fontSize={dims.FONT_NUM}
+                                                textAnchor="middle"
+                                                fontFamily="NauticalFont"
+                                            >
+                                                {deg}
+                                            </SvgText>
+                                        </G>
+
+                                        {(deg % 90 === 0) && (
+                                            <G rotation={-rotationAngle} origin={`${dims.CENTER + cardinalRad * Math.cos(angleRad)}, ${dims.CENTER + cardinalRad * Math.sin(angleRad)}`}>
+                                                <SvgText
+                                                    x={dims.CENTER + cardinalRad * Math.cos(angleRad)}
+                                                    y={dims.CENTER + cardinalRad * Math.sin(angleRad) + 5}
+                                                    fill={GAUGE_THEME.colors.red}
+                                                    fontSize={dims.FONT_CARD}
+                                                    textAnchor="middle"
+                                                    fontFamily="NauticalFont"
+                                                >
+                                                    {deg === 0 ? 'N' : deg === 90 ? 'E' : deg === 180 ? 'S' : deg === 270 ? 'O' : ''}
+                                                </SvgText>
+                                            </G>
+                                        )}
+                                    </G>
+                                )}
+                            </G>
                         );
                     })}
-                    {cardinalMarks.map(({ deg, label }) => {
-                        const pos = polarToCartesian(CENTER, CENTER, TEXT_RADIUS_CARDINAL, deg);
-                        return (
-                            <SvgText
-                                key={`card-${label}`} x={pos.x} y={pos.y + (FONT_SIZE_CARDINAL_LETTER / 3)} textAnchor="middle"
-                                fontSize={FONT_SIZE_CARDINAL_LETTER} fill={COLOR_RED}
-                                fontFamily={FONT_FAMILY}
-                                rotation={-rotationAngle} origin={`${pos.x}, ${pos.y}`}
-                            >
-                                {label}
-                            </SvgText>
-                        );
-                    })}
-                </G>
-                {/* 2. CORRIENTE (Revisado para escalado real) */}
-                {drift > 0.1 && (
-                    <G rotation={rotationAngle + set} origin={`${CENTER}, ${CENTER}`}>
-                        <G
-                            key={`drift-arrow-${finalScale}`}
-                            transform={[
-                                { translateX: CENTER },
-                                { translateY: CENTER },
-                                { scale: finalScale },
-                                { translateX: -CENTER },
-                                { translateY: -CENTER }
-                            ]}
-                        >
-                            <Path
-                                d={`M ${CENTER - 10} ${CENTER + 45} L ${CENTER + 10} ${CENTER + 45} L ${CENTER + 10} ${CENTER + 5} L ${CENTER + 20} ${CENTER + 5} L ${CENTER} ${CENTER - 50} L ${CENTER - 20} ${CENTER + 5} L ${CENTER - 10} ${CENTER + 5} Z`}
-                                fill={drift > 2.0 ? "#ffcc00" : "#00ffff"}
-                                opacity={0.3 + (pulse * 0.2)}
-                                stroke={isNightMode ? "#400" : "#fff"}
-                                strokeWidth={0.5 / finalScale}
+
+                    {/* --- INDICADORES DE VIENTO CON LÍNEAS DE UNIÓN --- */}
+
+                    {/* --- INDICADORES DE VIENTO CON LÍNEAS VISIBLES --- */}
+
+                    {/* Viento Aparente (TWA) - AHORA FLUIDO */}
+                    {typeof twaCog === 'number' && (
+                        <G rotation={displayTwa} origin={`${dims.CENTER}, ${dims.CENTER}`}>
+                            <Line
+                                x1={dims.CENTER} y1={dims.CENTER}
+                                x2={dims.CENTER} y2={dims.BEZEL_SIZE + 35}
+                                stroke="#ff9800" strokeWidth="2" strokeDasharray="5, 3" opacity={0.8}
+                            />
+                            <Polygon
+                                points={`${dims.CENTER - 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER + 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER},${dims.BEZEL_SIZE + 35}`}
+                                fill="url(#needleOrange)" stroke="#fff" strokeWidth="1"
                             />
                         </G>
-                        <SvgText
-                            x={CENTER} y={CENTER + (65 * finalScale)}
+                    )}
+
+                    {/* Viento Real (TWD) - AHORA FLUIDO */}
+                    {typeof twd === 'number' && (
+                        <G rotation={displayTwd} origin={`${dims.CENTER}, ${dims.CENTER}`}>
+                            <Line
+                                x1={dims.CENTER} y1={dims.CENTER}
+                                x2={dims.CENTER} y2={dims.BEZEL_SIZE + 35}
+                                stroke="#2196f3" strokeWidth="2" strokeDasharray="5, 3" opacity={0.8}
+                            />
+                            <Polygon
+                                points={`${dims.CENTER - 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER + 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER},${dims.BEZEL_SIZE + 35}`}
+                                fill="url(#needleBlue)" stroke="#fff" strokeWidth="1"
+                            />
+                        </G>
+                    )}
+                </G>
+                {/* --- CAPA 4: ANILLO ROJO MECANIZADO (ENCIMA DEL DIAL) --- */}
+                <G>
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 30} fill="none" stroke="url(#redMetalOuter)" strokeWidth="6" />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 36} fill="none" stroke="url(#redMetalInner)" strokeWidth="6" />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 33} fill="none" stroke="url(#redMetalRidge)" strokeWidth="1.5" opacity={0.8} />
+                </G>
+                {/* --- CAPA 5: CORRIENTE (DRIFT / SET) --- */}
+                {drift > 0.1 && (
+                    <G rotation={rotationAngle + set} origin={`${dims.CENTER}, ${dims.CENTER}`}>
+                        {/* Triángulo de Drift (Forma Antigua: Sólido y Grande) */}
+                        <Polygon
+                            points={`
+                ${dims.CENTER - 15},${dims.CENTER + COMPASS_SIZE * 0.15} 
+                ${dims.CENTER + 15},${dims.CENTER + COMPASS_SIZE * 0.15} 
+                ${dims.CENTER},${dims.CENTER + COMPASS_SIZE * 0.26}
+            `}
                             fill={drift > 2.0 ? "#ffcc00" : "#00ffff"}
-                            fontSize={COMPASS_SIZE * 0.03}
-                            fontFamily={FONT_FAMILY}
+                            opacity={0.5 + (pulse * 0.3)}
+                        />
+
+                        {/* Texto de velocidad con NauticalFont */}
+                        <SvgText
+                            x={dims.CENTER}
+                            y={dims.CENTER + COMPASS_SIZE * 0.30}
+                            fill={drift > 2.0 ? "#ffcc00" : "#00ffff"}
+                            fontSize={dims.FONT_NUM * 0.8}
                             textAnchor="middle"
-                            opacity={0.6}
+                            fontFamily="NauticalFont"
                             rotation={-(rotationAngle + set)}
-                            origin={`${CENTER}, ${CENTER + (65 * finalScale)}`}
+                            origin={`${dims.CENTER}, ${dims.CENTER + COMPASS_SIZE * 0.30}`}
                         >
-                            {drift.toFixed(1)} kt
+                            {drift.toFixed(1)} kn
                         </SvgText>
                     </G>
                 )}
-                {/* 3. BARCO (Estático) */}
-                <G opacity={isNightMode ? 0.25 : 0.15}>
-                    <Path
-                        d={`M ${CENTER} ${CENTER - COMPASS_SIZE * 0.3} C ${CENTER + COMPASS_SIZE * 0.091} ${CENTER - COMPASS_SIZE * 0.145}, ${CENTER + COMPASS_SIZE * 0.082} ${CENTER + COMPASS_SIZE * 0.182}, ${CENTER + COMPASS_SIZE * 0.073} ${CENTER + COMPASS_SIZE * 0.282} L ${CENTER - COMPASS_SIZE * 0.073} ${CENTER + COMPASS_SIZE * 0.282} C ${CENTER - COMPASS_SIZE * 0.082} ${CENTER + COMPASS_SIZE * 0.182}, ${CENTER - COMPASS_SIZE * 0.091} ${CENTER - COMPASS_SIZE * 0.145}, ${CENTER} ${CENTER - COMPASS_SIZE * 0.3} Z`}
-                        fill="none" stroke={isNightMode ? "#f00" : "#fff"} strokeWidth="2.5"
-                    />
-                    <Line x1={CENTER} y1={CENTER - COMPASS_SIZE * 0.3} x2={CENTER} y2={CENTER + COMPASS_SIZE * 0.282} stroke={isNightMode ? "#f00" : "#fff"} strokeDasharray={`${COMPASS_SIZE * 0.0073}, ${COMPASS_SIZE * 0.0218}`} />
-                </G>
-                {/* 4. ARCOS DE CEÑIDA (Estáticos respecto al barco) */}
+
+                {/* Puntero de Rumbo (Línea de Fe Roja) */}
                 <G>
-                    <Path d={describeArc(CENTER, CENTER, RADIUS_ARCS, minLayline, maxLayline)} fill="none" stroke="#00ff00" strokeWidth={COMPASS_SIZE * 0.027} strokeLinecap="round" opacity={0.5} />
-                    <Path d={describeArc(CENTER, CENTER, RADIUS_ARCS, 360 - maxLayline, 360 - minLayline)} fill="none" stroke="#ff0000" strokeWidth={COMPASS_SIZE * 0.027} strokeLinecap="round" opacity={0.5} />
+                    <Polygon
+                        points={`${dims.CENTER - 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER + 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER},${dims.BEZEL_SIZE + 35}`}
+                        fill="url(#needleRed)" stroke="#fff" strokeWidth="1"
+                    />
                 </G>
-                {/* 5. VIENTOS (Giran con el dial) */}
-                {typeof twaCog === 'number' && (
-                    <G rotation={rotationAngle + twaCog} origin={`${CENTER}, ${CENTER}`}>
-                        <Line x1={CENTER} y1={CENTER} x2={CENTER} y2={CENTER - WIND_INDICATOR_DISTANCE} stroke={COLOR_TWA} strokeWidth="2" strokeDasharray="5, 5" />
-                        <Polygon points={`${CENTER - COMPASS_SIZE * 0.036},5 ${CENTER + COMPASS_SIZE * 0.036},5 ${CENTER},${COMPASS_SIZE * 0.082}`} fill={COLOR_TWA} stroke={COLOR_BORDER} strokeWidth="1" />
-                    </G>
-                )}
-                {typeof twd === 'number' && (
-                    <G rotation={rotationAngle + twd} origin={`${CENTER}, ${CENTER}`}>
-                        <Line x1={CENTER} y1={CENTER} x2={CENTER} y2={CENTER - WIND_INDICATOR_DISTANCE} stroke={COLOR_TWD} strokeWidth="2" strokeDasharray="5, 5" />
-                        <Polygon points={`${CENTER - COMPASS_SIZE * 0.036},5 ${CENTER + COMPASS_SIZE * 0.036},5 ${CENTER},${COMPASS_SIZE * 0.073}`} fill={COLOR_TWD} stroke={COLOR_BORDER} strokeWidth="1" />
-                    </G>
-                )}
-                <Line x1={CENTER} y1={CENTER} x2={CENTER} y2={COMPASS_SIZE * 0.045} stroke={COLOR_RED} strokeWidth={COMPASS_SIZE * 0.0036} />
-                <Polygon points={`${CENTER - COMPASS_SIZE * 0.036},5 ${CENTER + COMPASS_SIZE * 0.036},5 ${CENTER},${COMPASS_SIZE * 0.082}`} fill={finalHeadingColor} stroke={COLOR_BORDER} strokeWidth={COMPASS_SIZE * 0.0036} />
+
+                {/* --- CAPA FINAL: CRISTAL --- */}
+                <G pointerEvents="none">
+                    <Ellipse cx={dims.CENTER} cy={dims.CENTER - (dims.RADIUS * 0.4)} rx={dims.RADIUS * 0.85} ry={dims.RADIUS * 0.5} fill="url(#glassReflection)" />
+                </G>
             </Svg>
 
-            <View style={[styles.digitalDisplay, { top: CENTER - COMPASS_SIZE * 0.045, width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
-                <Text style={[styles.headingText, { color: finalHeadingColor, fontSize: Math.round(COMPASS_SIZE * 0.087) }]}>{formattedHeading}</Text>
-                {unit && <Text style={[styles.unitText, { fontSize: Math.round(COMPASS_SIZE * 0.036) }]}>{unit}</Text>}
-            </View>
-
+            {/* Display Digital 
+            <View style={styles.digitalDisplay}>
+                <Text style={[styles.headingText, { color: finalHeadingColor, fontSize: dims.FONT_NUM * 2 }]}>{formattedHeading}</Text>
+                <Text style={styles.unitText}>{unit || 'HDG'}</Text>
+            </View>*/}
         </View>
     );
-};
+});
 
-
-// --- Styles ---
 const styles = StyleSheet.create({
-    container: { alignItems: 'center', justifyContent: 'center' },
-    digitalDisplay: { position: 'absolute', alignItems: 'center' },
+    outerContainer: { alignItems: 'center', justifyContent: 'center' },
+    digitalDisplay: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
     headingText: { fontWeight: 'bold', fontFamily: GAUGE_THEME.fonts.main },
-    unitText: { color: GAUGE_THEME.colors.textPrimary, fontSize: 14, fontFamily: GAUGE_THEME.fonts.main, marginTop: -5 }
+    unitText: { color: GAUGE_THEME.colors.textPrimary, fontSize: 14, marginTop: -5 }
 });
 
 export default HeadingGauge;
