@@ -1,4 +1,4 @@
-// src/styles/GaugeTheme.js
+// styles/GaugeTheme.js
 export const GAUGE_THEME = {
     colors: {
         bg: 'rgba(40, 40, 40, 0.75)',

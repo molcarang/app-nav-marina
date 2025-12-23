@@ -65,11 +65,17 @@ const DataSquare = ({
     useEffect(() => {
         if (showHistory && numericValue >= 0) {
             setHistory(prev => {
+                if (prev.length > 0 && prev[prev.length - 1] === numericValue) return prev;
                 const newHistory = [...prev, numericValue];
                 return newHistory.length > 40 ? newHistory.slice(1) : newHistory;
             });
         }
     }, [numericValue, showHistory]);
+
+    // Limpiar historial solo cuando showHistory cambia a false
+    useEffect(() => {
+        if (!showHistory) setHistory([]);
+    }, [showHistory]);
 
     // 5. ANIMACIONES DE ESTILO
     const heightInterpolated = animatedHeight.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] });

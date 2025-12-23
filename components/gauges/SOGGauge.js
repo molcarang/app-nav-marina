@@ -17,32 +17,28 @@ import { computeCommonDims, polarToCartesian } from './shared/gaugeUtils';
 const SogGauge = React.memo(({
     size: COMPASS_SIZE = 400,
     value = 0,
-    maxSpeed = 10,
-    headingColor = GAUGE_THEME.colors.red
+    maxSpeed = 10
 }) => {
-    const [displaySog, setDisplaySog] = useState(0);
-    const targetSog = useRef(0);
+    const [displaySog, setDisplaySog] = useState(parseFloat(value) || 0);
     const requestRef = useRef();
 
     useEffect(() => {
-        targetSog.current = parseFloat(value) || 0;
-    }, [value]);
-
-    const animate = () => {
-        setDisplaySog(prev => {
-            const diff = targetSog.current - prev;
-            if (Math.abs(diff) < 0.005) return targetSog.current;
-            return prev + diff * 0.08;
-        });
-        requestRef.current = requestAnimationFrame(animate);
-    };
-
-    useEffect(() => {
+        let mounted = true;
+        const animate = () => {
+            setDisplaySog(prev => {
+                const target = parseFloat(value) || 0;
+                const diff = target - prev;
+                if (Math.abs(diff) < 0.005) return target;
+                return prev + diff * 0.08;
+            });
+            if (mounted) requestRef.current = requestAnimationFrame(animate);
+        };
         requestRef.current = requestAnimationFrame(animate);
         return () => {
+            mounted = false;
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
         };
-    }, []);
+    }, [value]);
 
     // polarToCartesian ahora importado desde helpers compartidos
 
@@ -125,23 +121,36 @@ const SogGauge = React.memo(({
 
                 {/* --- CAPA 3: TICKS Y NÚMEROS --- */}
                 <G>
-                    {/* Ticks pequeños blancos (cada 0.2) */}
-                    {Array.from({ length: maxSpeed * 5 + 1 }).map((_, i) => {
+                    {/* Ticks menores cada 0.2 nudos y mayores cada 10 nudos */}
+                    {Array.from({ length: Math.round(maxSpeed * 5) + 1 }).map((_, i) => {
                         const val = i * 0.2;
                         if (val > maxSpeed) return null;
                         const angle = dims.START_ANGLE + (val / maxSpeed) * dims.TOTAL_SWEEP;
                         const angleRad = (angle - 90) * (Math.PI / 180);
-                        const isMajor = val % 1 === 0;
-                        const tLen = isMajor ? 12 : 6;
+                        // Ticks mayores cada 10
+                        if (val % 10 === 0) {
+                            return (
+                                <Line
+                                    key={`tick-major-${val}`}
+                                    x1={dims.CENTER + (dims.RADIUS - 18) * Math.cos(angleRad)}
+                                    y1={dims.CENTER + (dims.RADIUS - 18) * Math.sin(angleRad)}
+                                    x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
+                                    y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
+                                    stroke={GAUGE_THEME.colors.red}
+                                    strokeWidth={3}
+                                />
+                            );
+                        }
+                        // Ticks menores cada 0.2
                         return (
                             <Line
-                                key={`tick-${i}`}
-                                x1={dims.CENTER + (dims.RADIUS - tLen) * Math.cos(angleRad)}
-                                y1={dims.CENTER + (dims.RADIUS - tLen) * Math.sin(angleRad)}
+                                key={`tick-minor-${val}`}
+                                x1={dims.CENTER + (dims.RADIUS - 10) * Math.cos(angleRad)}
+                                y1={dims.CENTER + (dims.RADIUS - 10) * Math.sin(angleRad)}
                                 x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
                                 y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
-                                stroke={isMajor ? "#fff" : "rgba(255,255,255,0.3)"}
-                                strokeWidth={isMajor ? 1.5 : 1}
+                                stroke={"rgba(255,255,255,0.4)"}
+                                strokeWidth={1}
                             />
                         );
                     })}

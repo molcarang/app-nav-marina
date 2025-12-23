@@ -18,8 +18,6 @@ const HeadingGauge = React.memo(({
     value = 0,
     minLayline = 20,
     maxLayline = 60,
-    unit,
-    headingColor,
     twd,
     twaCog,
     isNightMode,
@@ -27,57 +25,55 @@ const HeadingGauge = React.memo(({
     drift = 0
 }) => {
     // --- 1. ESTADO Y ANIMACIÓN ---
-    const [displayHeading, setDisplayHeading] = useState(parseFloat(value) || 0);
-    // Añadimos estados para los vientos:
-    const [displayTwa, setDisplayTwa] = useState(twaCog || 0);
-    const [displayTwd, setDisplayTwd] = useState(twd || 0);
-    const [pulse, setPulse] = useState(0);
+    const [display, setDisplay] = useState({
+        heading: parseFloat(value) || 0,
+        twa: twaCog || 0,
+        twd: twd || 0,
+        pulse: 0
+    });
     const requestRef = useRef();
 
-
-
     useEffect(() => {
+        let mounted = true;
         const animate = (time) => {
-            // Interpolación para el Rumbo
-            setDisplayHeading(prev => lerpAngle(prev, parseFloat(value) || 0, 0.1));
-
-            // Interpolación para el Viento Aparente (TWA)
-            if (typeof twaCog === 'number') {
-                setDisplayTwa(prev => lerpAngle(prev, twaCog, 0.1)); // 0.05 es más suave
-            }
-
-            // Interpolación para el Viento Real (TWD)
-            if (typeof twd === 'number') {
-                setDisplayTwd(prev => lerpAngle(prev, twd, 0.1));
-            }
-
-            if (time) setPulse((Math.sin(time / 600) + 1) / 2);
-            requestRef.current = requestAnimationFrame(animate);
+            setDisplay(prev => {
+                // Solo actualiza si hay cambios significativos
+                const nextHeading = lerpAngle(prev.heading, parseFloat(value) || 0, 0.1);
+                const nextTwa = typeof twaCog === 'number' ? lerpAngle(prev.twa, twaCog, 0.1) : prev.twa;
+                const nextTwd = typeof twd === 'number' ? lerpAngle(prev.twd, twd, 0.1) : prev.twd;
+                const nextPulse = time ? (Math.sin(time / 600) + 1) / 2 : prev.pulse;
+                // Solo setState si cambia algo relevante
+                if (
+                    Math.abs(nextHeading - prev.heading) > 0.01 ||
+                    Math.abs(nextTwa - prev.twa) > 0.01 ||
+                    Math.abs(nextTwd - prev.twd) > 0.01 ||
+                    Math.abs(nextPulse - prev.pulse) > 0.01
+                ) {
+                    return { heading: nextHeading, twa: nextTwa, twd: nextTwd, pulse: nextPulse };
+                }
+                return prev;
+            });
+            if (mounted) requestRef.current = requestAnimationFrame(animate);
         };
         requestRef.current = requestAnimationFrame(animate);
-        return () => cancelAnimationFrame(requestRef.current);
-    }, [value, twaCog, twd]); // Añadimos los vientos a las dependencias
-    // REDUNDANCIA: Hay dos useEffect muy similares que animan displayHeading y pulse. El segundo useEffect (abajo) repite parte de la lógica del primero, pero solo para displayHeading y pulse. Se podría unificar en uno solo para evitar duplicidad.
-
-
-    // Eliminado useEffect redundante. La animación de displayHeading y pulse ya está cubierta por el useEffect anterior.
+        return () => {
+            mounted = false;
+            cancelAnimationFrame(requestRef.current);
+        };
+    }, [value, twaCog, twd]);
 
     // --- 2. DIMENSIONES Y CÁLCULOS ---
     const dims = useMemo(() => {
         const base = computeCommonDims(COMPASS_SIZE);
         return {
             ...base,
-            // Ajustamos el radio del texto para que entre en el círculo central
-            TEXT_RAD: base.INNER_RADIUS - COMPASS_SIZE * 0.16,
             FONT_NUM: Math.round(COMPASS_SIZE * 0.035),
             FONT_CARD: Math.round(COMPASS_SIZE * 0.050),
             RADIUS_ARCS: base.RADIUS - 13
         };
     }, [COMPASS_SIZE]);
 
-    const rotationAngle = -displayHeading;
-    const finalHeadingColor = headingColor || GAUGE_THEME.colors.red;
-    const formattedHeading = isNaN(parseFloat(value)) ? '---' : parseFloat(value).toFixed(0);
+    const rotationAngle = -display.heading;
 
     return (
         <View style={[styles.outerContainer, { width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
@@ -106,8 +102,7 @@ const HeadingGauge = React.memo(({
                         fill="none" stroke="#ff0000" strokeWidth={COMPASS_SIZE * 0.07} strokeLinecap="butt" opacity={0.5}
                     />
 
-                    {/* Barco: Redimensionado para caber dentro del anillo rojo central */}
-                    {/* Barco: Tamaño máximo para casi tocar el anillo rojo */}
+                    {/* Barco estilizado */}
                     <G opacity={isNightMode ? 0.3 : 0.4}>
                         <Path
                             d={`
@@ -199,9 +194,9 @@ const HeadingGauge = React.memo(({
 
                     {/* --- INDICADORES DE VIENTO CON LÍNEAS VISIBLES --- */}
 
-                    {/* Viento Aparente (TWA) - AHORA FLUIDO */}
+                    {/* Viento Aparente (TWA) en azul */}
                     {typeof twaCog === 'number' && (
-                        <G rotation={displayTwa} origin={`${dims.CENTER}, ${dims.CENTER}`}>
+                        <G rotation={display.twa} origin={`${dims.CENTER}, ${dims.CENTER}`}>
                             <Line
                                 x1={dims.CENTER} y1={dims.CENTER}
                                 x2={dims.CENTER} y2={dims.BEZEL_SIZE + 35}
@@ -214,9 +209,9 @@ const HeadingGauge = React.memo(({
                         </G>
                     )}
 
-                    {/* Viento Real (TWD) - AHORA FLUIDO */}
+                    {/* Viento Real (TWD) en naranja */}
                     {typeof twd === 'number' && (
-                        <G rotation={displayTwd} origin={`${dims.CENTER}, ${dims.CENTER}`}>
+                        <G rotation={display.twd} origin={`${dims.CENTER}, ${dims.CENTER}`}>
                             <Line
                                 x1={dims.CENTER} y1={dims.CENTER}
                                 x2={dims.CENTER} y2={dims.BEZEL_SIZE + 35}
@@ -238,7 +233,7 @@ const HeadingGauge = React.memo(({
                 {/* --- CAPA 5: CORRIENTE (DRIFT / SET) --- */}
                 {drift > 0.1 && (
                     <G rotation={rotationAngle + set} origin={`${dims.CENTER}, ${dims.CENTER}`}>
-                        {/* Triángulo de Drift (Forma Antigua: Sólido y Grande) */}
+                        {/* Triángulo de Drift */}
                         <Polygon
                             points={`
                 ${dims.CENTER - 15},${dims.CENTER + COMPASS_SIZE * 0.15} 
@@ -246,10 +241,10 @@ const HeadingGauge = React.memo(({
                 ${dims.CENTER},${dims.CENTER + COMPASS_SIZE * 0.26}
             `}
                             fill={drift > 2.0 ? "#ffcc00" : "#00ffff"}
-                            opacity={0.5 + (pulse * 0.3)}
+                            opacity={0.5 + (display.pulse * 0.3)}
                         />
 
-                        {/* Texto de velocidad con NauticalFont */}
+                        {/* Texto de velocidad */}
                         <SvgText
                             x={dims.CENTER}
                             y={dims.CENTER + COMPASS_SIZE * 0.30}
@@ -265,17 +260,7 @@ const HeadingGauge = React.memo(({
                     </G>
                 )}
 
-                {/* Puntero de Rumbo (Línea de Fe Roja) 
-                <G>
-                    <Polygon
-                        points={`${dims.CENTER - 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER + 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER},${dims.BEZEL_SIZE + 35}`}
-                        fill="url(#needleRed)" stroke="#fff" strokeWidth="1"
-                    />
-                </G>*/}
 
-
-
-                {/* ... (aquí termina tu Capa 5 anterior) ... */}
 
                 {/* --- AGUJA DE COMPÁS PROFESIONAL 3D --- */}
                 <G pointerEvents="none">
@@ -325,7 +310,7 @@ const HeadingGauge = React.memo(({
                     </G>
                 </G>
 
-                {/* --- CAPA FINAL: CRISTAL IDENTICO AL SOGGAUGE --- */}
+                {/* --- CAPA FINAL: CRISTAL --- */}
                 <G pointerEvents="none">
                     {/* 1. Reflejo elíptico superior */}
                     <Ellipse
@@ -347,23 +332,13 @@ const HeadingGauge = React.memo(({
                     />
                 </G>
 
-
             </Svg>
-
-            {/* Display Digital 
-            <View style={styles.digitalDisplay}>
-                <Text style={[styles.headingText, { color: finalHeadingColor, fontSize: dims.FONT_NUM * 2 }]}>{formattedHeading}</Text>
-                <Text style={styles.unitText}>{unit || 'HDG'}</Text>
-            </View>*/}
         </View>
     );
 });
 
 const styles = StyleSheet.create({
-    outerContainer: { alignItems: 'center', justifyContent: 'center' },
-    digitalDisplay: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-    headingText: { fontWeight: 'bold', fontFamily: GAUGE_THEME.fonts.main },
-    unitText: { color: GAUGE_THEME.colors.textPrimary, fontSize: 14, marginTop: -5 }
+    outerContainer: { alignItems: 'center', justifyContent: 'center' }
 });
 
 export default HeadingGauge;
