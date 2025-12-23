@@ -6,14 +6,12 @@ import Svg, {
     Ellipse,
     G,
     Line,
-    LinearGradient,
     Polygon,
-    RadialGradient,
     Rect,
-    Stop,
     Text as SvgText
 } from 'react-native-svg';
 import { GAUGE_THEME } from '../../styles/GaugeTheme';
+import { GaugeDefs } from './shared/GaugeDefs';
 
 const SogGauge = React.memo(({
     size: COMPASS_SIZE = 400,
@@ -79,70 +77,7 @@ const SogGauge = React.memo(({
         <View style={[styles.outerContainer, { width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
             <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
                 <Defs>
-                    {/* GRADIENTES DEL BISEL */}
-                    <LinearGradient id="bezelOuter" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#efefef" stopOpacity="1" />
-                        <Stop offset="50%" stopColor="#888" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#444" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="bezelInner" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#222" stopOpacity="1" />
-                        <Stop offset="50%" stopColor="#444" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#111" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="bezelRidge" x1="100%" y1="100%" x2="0%" y2="0%">
-                        <Stop offset="0%" stopColor="#fff" stopOpacity="0.8" />
-                        <Stop offset="100%" stopColor="#666" stopOpacity="0" />
-                    </LinearGradient>
-                    <RadialGradient id="flareGradient" cx="50%" cy="50%" rx="50%" ry="50%">
-                        <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
-                        <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                    </RadialGradient>
-
-                    {/* Cara exterior del anillo rojo (Luz) */}
-                    <LinearGradient id="redMetalOuter" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#ff4d4d" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#800000" stopOpacity="1" />
-                    </LinearGradient>
-
-                    {/* Cara interior del anillo rojo (Sombra) */}
-                    <LinearGradient id="redMetalInner" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#660000" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#330000" stopOpacity="1" />
-                    </LinearGradient>
-
-                    {/* El "Filo" del anillo rojo (Brillo metálico) */}
-                    <LinearGradient id="redMetalRidge" x1="100%" y1="100%" x2="0%" y2="0%">
-                        <Stop offset="0%" stopColor="#ff9999" stopOpacity="0.6" />
-                        <Stop offset="100%" stopColor="#ff0000" stopOpacity="0" />
-                    </LinearGradient>
-
-
-
-                    {/* GRADIENTES DEL DIAL E INTERIOR */}
-                    <LinearGradient id="innerRedGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="#cc0000" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#800000" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="glassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
-                        <Stop offset="40%" stopColor="#ffffff" stopOpacity="0.05" />
-                        <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                    </LinearGradient>
-
-                    {/* GRADIENTES DE LA AGUJA */}
-                    <LinearGradient id="needleSideA" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="#ff4d4d" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#b30000" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="needleSideB" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="#990000" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#660000" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="hub3D" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#888" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#222" stopOpacity="1" />
-                    </LinearGradient>
+                    <GaugeDefs />
                 </Defs>
 
                 {/* --- CAPA 1: BISEL MECANIZADO --- */}
