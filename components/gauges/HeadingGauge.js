@@ -14,7 +14,7 @@ import { GaugeDefs } from './shared/GaugeDefs';
 import { computeCommonDims } from './shared/gaugeUtils';
 
 const HeadingGauge = React.memo(({
-    size: COMPASS_SIZE = 400,
+    size,
     value = 0,
     minLayline = 20,
     maxLayline = 60,
@@ -25,6 +25,10 @@ const HeadingGauge = React.memo(({
     drift = 0
 }) => {
     // --- 1. ESTADO Y ANIMACIÓN ---
+    // Tamaño relativo a la pantalla si no se pasa size
+    const { width: windowWidth, height: windowHeight } = require('react-native').useWindowDimensions();
+    const COMPASS_SIZE = size || Math.min(windowWidth * 0.9, windowHeight * 0.45);
+
     const [display, setDisplay] = useState({
         heading: parseFloat(value) || 0,
         twa: twaCog || 0,

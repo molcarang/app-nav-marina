@@ -15,10 +15,14 @@ import { GaugeDefs } from './shared/GaugeDefs';
 import { computeCommonDims, polarToCartesian } from './shared/gaugeUtils';
 
 const SogGauge = React.memo(({
-    size: COMPASS_SIZE = 400,
+    size,
     value = 0,
     maxSpeed = 10
 }) => {
+    // Tamaño relativo a la pantalla si no se pasa size
+    const { width: windowWidth, height: windowHeight } = require('react-native').useWindowDimensions();
+    const COMPASS_SIZE = size || Math.min(windowWidth * 0.9, windowHeight * 0.45);
+
     const [displaySog, setDisplaySog] = useState(parseFloat(value) || 0);
     const requestRef = useRef();
 
@@ -121,9 +125,9 @@ const SogGauge = React.memo(({
 
                 {/* --- CAPA 3: TICKS Y NÚMEROS --- */}
                 <G>
-                    {/* Ticks menores cada 0.2 nudos y mayores cada 10 nudos */}
-                    {Array.from({ length: Math.round(maxSpeed * 5) + 1 }).map((_, i) => {
-                        const val = i * 0.2;
+                    {/* Ticks: 0.1 nudos (pequeños), 0.5 nudos (medianos, blancos), 10 nudos (mayores, rojos) */}
+                    {Array.from({ length: Math.round(maxSpeed * 10) + 1 }).map((_, i) => {
+                        const val = i * 0.1;
                         if (val > maxSpeed) return null;
                         const angle = dims.START_ANGLE + (val / maxSpeed) * dims.TOTAL_SWEEP;
                         const angleRad = (angle - 90) * (Math.PI / 180);
@@ -141,10 +145,24 @@ const SogGauge = React.memo(({
                                 />
                             );
                         }
-                        // Ticks menores cada 0.2
+                        // Ticks medianos cada 0.5 nudos
+                        if (val % 0.5 === 0) {
+                            return (
+                                <Line
+                                    key={`tick-half-${val.toFixed(1)}`}
+                                    x1={dims.CENTER + (dims.RADIUS - 14) * Math.cos(angleRad)}
+                                    y1={dims.CENTER + (dims.RADIUS - 14) * Math.sin(angleRad)}
+                                    x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
+                                    y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
+                                    stroke={"#fff"}
+                                    strokeWidth={1.5}
+                                />
+                            );
+                        }
+                        // Ticks menores cada 0.1
                         return (
                             <Line
-                                key={`tick-minor-${val}`}
+                                key={`tick-minor-${val.toFixed(1)}`}
                                 x1={dims.CENTER + (dims.RADIUS - 10) * Math.cos(angleRad)}
                                 y1={dims.CENTER + (dims.RADIUS - 10) * Math.sin(angleRad)}
                                 x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
