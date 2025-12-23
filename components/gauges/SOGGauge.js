@@ -75,19 +75,41 @@ const SogGauge = React.memo(({
     return (
         <View style={[styles.outerContainer, { width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
             <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
+                <Defs>
+                    {/* Gradiente para el cuerpo principal del bisel (Efecto Metalizado) */}
+                    <LinearGradient id="metalBezel" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="#888" stopOpacity="1" />
+                        <Stop offset="20%" stopColor="#333" stopOpacity="1" />
+                        <Stop offset="50%" stopColor="#111" stopOpacity="1" />
+                        <Stop offset="80%" stopColor="#333" stopOpacity="1" />
+                        <Stop offset="100%" stopColor="#555" stopOpacity="1" />
+                    </LinearGradient>
+
+                    {/* Gradiente para el brillo diagonal (Efecto Cristal/Cromo) */}
+                    <LinearGradient id="shineEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#fff" stopOpacity="0.4" />
+                        <Stop offset="50%" stopColor="#444" stopOpacity="0" />
+                        <Stop offset="100%" stopColor="#fff" stopOpacity="0.2" />
+                    </LinearGradient>
+                </Defs>
                 <G>
+                    {/* 1. Usamos el ID del gradiente aquí para el bisel */}
                     <Circle
-                        cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS}
-                        fill={GAUGE_THEME.colors.bg}
-                        stroke={GAUGE_THEME.colors.border}
-                        strokeWidth={GAUGE_THEME.strokeWidths.outerBorder}
+                        cx={dims.CENTER}
+                        cy={dims.CENTER}
+                        r={dims.CENTER - 2}
+                        fill="url(#metalBezel)"
+                        stroke="#000"
+                        strokeWidth="1"
                     />
+
+                    {/* 2. Superponemos el brillo */}
                     <Circle
-                        cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 25}
-                        fill="transparent"
-                        stroke={GAUGE_THEME.colors.border}
-                        strokeWidth={GAUGE_THEME.strokeWidths.innerCircle}
-                        opacity={GAUGE_THEME.opacities.innerCircle}
+                        cx={dims.CENTER}
+                        cy={dims.CENTER}
+                        r={dims.CENTER - 3}
+                        fill="url(#shineEdge)"
+                        pointerEvents="none"
                     />
 
                     {subTicks.map((val) => {
