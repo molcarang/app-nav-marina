@@ -121,7 +121,7 @@ const SignalKConnector = () => {
                                     <MaterialIcons name="settings" size={40} color={isNightMode ? "#600" : "#aaa"} />
                                 </TouchableOpacity>
                             </View>
-                            <View style={[styles.row, { marginBottom: 0 }]}>
+                            <View style={[styles.row, { marginBottom: 25 }]}>
                                 <HeadingGauge
                                     size={gaugeSize}
                                     headingColor={theme.heading}
@@ -138,7 +138,7 @@ const SignalKConnector = () => {
                                 />
                             </View>
 
-                            <View style={[styles.row, { marginBottom: 0 }]}>
+                            <View style={[styles.row, { marginBottom: 7 }]}>
                                 <InfoPanel dataArray={[{ label: 'MAX TWS', value: maxTWS, color: '#79f17bff' }]} color={theme.bg} width={columnWidth} />
                                 <InfoPanel dataArray={[{ label: 'MAX SOG', value: maxSOG, color: '#79f17bff' }]} color={theme.bg} width={columnWidth} />
                                 <View style={{ width: columnWidth }} />
@@ -146,7 +146,12 @@ const SignalKConnector = () => {
 
                             <View style={styles.row}>
                                 <DataSquare label="TWS" value={processed.twsKnots} unit="KTS" showHistory showProgressBar maxValue={maxTWS} color={theme.bg} onPress={() => setMaxTWS(0)} />
-                                <DataSquare label="SOG" value={processed.sogKnots} unit="KTS" showHistory showProgressBar maxValue={maxSOG} color={theme.bg} onPress={() => setMaxSOG(0)} />
+                                <DataSquare 
+                                label="SOG" 
+                                value={processed.sogKnots} unit="KTS" 
+                                showHistory showProgressBar 
+                                maxValue={maxSOG} color={theme.bg} 
+                                onPress={() => setMaxSOG(0)} />
                                 <DataSquare
                                     label={processed.twa > 0 ? "TWA (P)" : processed.twa < 0 ? "TWA (S)" : "TWA"}
                                     value={processed.twa?.toFixed(0) + '°'}
@@ -160,7 +165,11 @@ const SignalKConnector = () => {
 
                             <View style={styles.row}>
                                 <DataSquare label="COG" value={processed.cogSquare} unit="TRUE" textColor={theme.heading} color={theme.bg} />
-                                <DataSquare label="DEPTH" value={processed.depthMeters.toFixed(1)} unit="MTRS" color={isDepthAlarmActive ? theme.alarm : theme.bg} showStatusDot={isDepthAlarmActive} statusDotColor="#fff" textColor={isDepthAlarmActive ? "#fff" : undefined} />
+                                <DataSquare label="DEPTH" 
+                                value={processed.depthMeters.toFixed(1)} 
+                                unit="MTRS" 
+                                color={isDepthAlarmActive ? theme.alarm : theme.bg} 
+                                textColor={isDepthAlarmActive ? "#fff" : undefined} />
                                 <DataSquare label="TWD" value={processed.twdDigital} unit="TRUE" textColor={theme.twd} color={theme.bg} />
                             </View>
                         </View>
@@ -188,7 +197,7 @@ const SignalKConnector = () => {
                             </View>
                         </View>
 
-                        <View style={styles.row}>
+                        <View style={[styles.row, { marginBottom: 20 }]}>
                             <SogGauge
                                 size={gaugeSize}
                                 value={parseFloat(processed.sogKnots)}
