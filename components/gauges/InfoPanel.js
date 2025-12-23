@@ -36,8 +36,6 @@ const styles = StyleSheet.create({
         margin: 3, // Igual que DataSquare
         padding: 15,
         paddingBottom: 10, // Un poco menos de espacio abajo
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
         alignSelf: 'flex-start', // 👈 Importante: hace que no se estire verticalmente
     },
     dataRow: {
