@@ -1,0 +1,285 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Svg, {
+    Circle,
+    Defs,
+    Ellipse,
+    G,
+    Line,
+    LinearGradient,
+    Polygon,
+    RadialGradient,
+    Rect,
+    Stop,
+    Text as SvgText
+} from 'react-native-svg';
+import { GAUGE_THEME } from '../../styles/GaugeTheme';
+
+const SogGauge = React.memo(({
+    size: COMPASS_SIZE = 400,
+    value = 0,
+    maxSpeed = 10,
+    headingColor = GAUGE_THEME.colors.red
+}) => {
+    const [displaySog, setDisplaySog] = useState(0);
+    const targetSog = useRef(0);
+    const requestRef = useRef();
+
+    useEffect(() => {
+        targetSog.current = parseFloat(value) || 0;
+    }, [value]);
+
+    const animate = () => {
+        setDisplaySog(prev => {
+            const diff = targetSog.current - prev;
+            if (Math.abs(diff) < 0.005) return targetSog.current;
+            return prev + diff * 0.08;
+        });
+        requestRef.current = requestAnimationFrame(animate);
+    };
+
+    useEffect(() => {
+        requestRef.current = requestAnimationFrame(animate);
+        return () => {
+            if (requestRef.current) cancelAnimationFrame(requestRef.current);
+        };
+    }, []);
+
+    const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+        const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+        return {
+            x: centerX + radius * Math.cos(angleInRadians),
+            y: centerY + radius * Math.sin(angleInRadians),
+        };
+    };
+
+    const dims = useMemo(() => {
+        const CENTER = COMPASS_SIZE / 2;
+        const BEZEL_SIZE = COMPASS_SIZE * 0.06;
+        const RADIUS = CENTER - BEZEL_SIZE;
+        // Posición del círculo rojo alineada con los ticks
+        const INNER_RADIUS = RADIUS - (COMPASS_SIZE * 0.08);
+        const START_ANGLE = 225;
+        const TOTAL_SWEEP = 270;
+        return {
+            CENTER, RADIUS, BEZEL_SIZE, INNER_RADIUS, START_ANGLE, TOTAL_SWEEP,
+            TEXT_RAD: RADIUS - COMPASS_SIZE * 0.12,
+            FONT_NUM: Math.round(COMPASS_SIZE * 0.045),
+        };
+    }, [COMPASS_SIZE]);
+
+    const labels = useMemo(() => {
+        const max = Math.ceil(maxSpeed);
+        return Array.from({ length: max + 1 }, (_, i) => i);
+    }, [maxSpeed]);
+
+    const needleRotation = dims.START_ANGLE + (displaySog / maxSpeed) * dims.TOTAL_SWEEP;
+
+    return (
+        <View style={[styles.outerContainer, { width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
+            <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
+                <Defs>
+                    {/* GRADIENTES DEL BISEL */}
+                    <LinearGradient id="bezelOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#efefef" stopOpacity="1" />
+                        <Stop offset="50%" stopColor="#888" stopOpacity="1" />
+                        <Stop offset="100%" stopColor="#444" stopOpacity="1" />
+                    </LinearGradient>
+                    <LinearGradient id="bezelInner" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#222" stopOpacity="1" />
+                        <Stop offset="50%" stopColor="#444" stopOpacity="1" />
+                        <Stop offset="100%" stopColor="#111" stopOpacity="1" />
+                    </LinearGradient>
+                    <LinearGradient id="bezelRidge" x1="100%" y1="100%" x2="0%" y2="0%">
+                        <Stop offset="0%" stopColor="#fff" stopOpacity="0.8" />
+                        <Stop offset="100%" stopColor="#666" stopOpacity="0" />
+                    </LinearGradient>
+                    <RadialGradient id="flareGradient" cx="50%" cy="50%" rx="50%" ry="50%">
+                        <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+                        <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                    </RadialGradient>
+
+                    {/* Cara exterior del anillo rojo (Luz) */}
+                    <LinearGradient id="redMetalOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#ff4d4d" stopOpacity="1" />
+                        <Stop offset="100%" stopColor="#800000" stopOpacity="1" />
+                    </LinearGradient>
+
+                    {/* Cara interior del anillo rojo (Sombra) */}
+                    <LinearGradient id="redMetalInner" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#660000" stopOpacity="1" />
+                        <Stop offset="100%" stopColor="#330000" stopOpacity="1" />
+                    </LinearGradient>
+
+                    {/* El "Filo" del anillo rojo (Brillo metálico) */}
+                    <LinearGradient id="redMetalRidge" x1="100%" y1="100%" x2="0%" y2="0%">
+                        <Stop offset="0%" stopColor="#ff9999" stopOpacity="0.6" />
+                        <Stop offset="100%" stopColor="#ff0000" stopOpacity="0" />
+                    </LinearGradient>
+
+
+
+                    {/* GRADIENTES DEL DIAL E INTERIOR */}
+                    <LinearGradient id="innerRedGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="#cc0000" stopOpacity="1" />
+                        <Stop offset="100%" stopColor="#800000" stopOpacity="1" />
+                    </LinearGradient>
+                    <LinearGradient id="glassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
+                        <Stop offset="40%" stopColor="#ffffff" stopOpacity="0.05" />
+                        <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                    </LinearGradient>
+
+                    {/* GRADIENTES DE LA AGUJA */}
+                    <LinearGradient id="needleSideA" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="#ff4d4d" stopOpacity="1" />
+                        <Stop offset="100%" stopColor="#b30000" stopOpacity="1" />
+                    </LinearGradient>
+                    <LinearGradient id="needleSideB" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="#990000" stopOpacity="1" />
+                        <Stop offset="100%" stopColor="#660000" stopOpacity="1" />
+                    </LinearGradient>
+                    <LinearGradient id="hub3D" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <Stop offset="0%" stopColor="#888" stopOpacity="1" />
+                        <Stop offset="100%" stopColor="#222" stopOpacity="1" />
+                    </LinearGradient>
+                </Defs>
+
+                {/* --- CAPA 1: BISEL MECANIZADO --- */}
+                <G>
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.CENTER - (dims.BEZEL_SIZE / 4)} fill="none" stroke="url(#bezelOuter)" strokeWidth={dims.BEZEL_SIZE / 2} />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS + (dims.BEZEL_SIZE / 4)} fill="none" stroke="url(#bezelInner)" strokeWidth={dims.BEZEL_SIZE / 2} />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.CENTER - (dims.BEZEL_SIZE / 2)} fill="none" stroke="url(#bezelRidge)" strokeWidth="1.5" opacity={0.6} />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill={GAUGE_THEME.colors.bg} stroke="#000" strokeWidth="2" />
+                </G>
+
+
+                {/* --- CAPA 2: ANILLO ROJO MECANIZADO 3D (SUSTITUCIÓN) --- */}
+                <G>
+                    {/* Cara exterior (subida) */}
+                    <Circle
+                        cx={dims.CENTER} cy={dims.CENTER}
+                        r={dims.INNER_RADIUS - 35}
+                        fill="none"
+                        stroke="url(#redMetalOuter)"
+                        strokeWidth="5"
+                    />
+
+                    {/* Cara interior (bajada) */}
+                    <Circle
+                        cx={dims.CENTER} cy={dims.CENTER}
+                        r={dims.INNER_RADIUS - 40}
+                        fill="none"
+                        stroke="url(#redMetalInner)"
+                        strokeWidth="5"
+                    />
+
+                    {/* Arista de brillo central (el "filo" metálico) */}
+                    <Circle
+                        cx={dims.CENTER} cy={dims.CENTER}
+                        r={dims.INNER_RADIUS - 37.5}
+                        fill="none"
+                        stroke="url(#redMetalRidge)"
+                        strokeWidth="1"
+                        opacity={0.8}
+                    />
+
+                    {/* Sombra de profundidad interior */}
+                    <Circle
+                        cx={dims.CENTER} cy={dims.CENTER}
+                        r={dims.INNER_RADIUS - 43}
+                        fill="none"
+                        stroke="#000"
+                        strokeWidth="1.5"
+                        opacity={0.4}
+                    />
+                </G>
+
+                {/* --- CAPA 3: TICKS Y NÚMEROS --- */}
+                <G>
+                    {/* Ticks pequeños blancos (cada 0.2) */}
+                    {Array.from({ length: maxSpeed * 5 + 1 }).map((_, i) => {
+                        const val = i * 0.2;
+                        if (val > maxSpeed) return null;
+                        const angle = dims.START_ANGLE + (val / maxSpeed) * dims.TOTAL_SWEEP;
+                        const angleRad = (angle - 90) * (Math.PI / 180);
+                        const isMajor = val % 1 === 0;
+                        const tLen = isMajor ? 12 : 6;
+                        return (
+                            <Line
+                                key={`tick-${i}`}
+                                x1={dims.CENTER + (dims.RADIUS - tLen) * Math.cos(angleRad)}
+                                y1={dims.CENTER + (dims.RADIUS - tLen) * Math.sin(angleRad)}
+                                x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
+                                y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
+                                stroke={isMajor ? "#fff" : "rgba(255,255,255,0.3)"}
+                                strokeWidth={isMajor ? 1.5 : 1}
+                            />
+                        );
+                    })}
+
+                    {/* Ticks Rojos y Números */}
+                    {labels.map((val) => {
+                        const angle = dims.START_ANGLE + (val / maxSpeed) * dims.TOTAL_SWEEP;
+                        const angleRad = (angle - 90) * (Math.PI / 180);
+                        const pos = polarToCartesian(dims.CENTER, dims.CENTER, dims.TEXT_RAD, angle);
+                        return (
+                            <G key={`label-${val}`}>
+                                <Line
+                                    x1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.cos(angleRad)}
+                                    y1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.sin(angleRad)}
+                                    x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
+                                    y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
+                                    stroke={GAUGE_THEME.colors.red}
+                                    strokeWidth={2.5}
+                                />
+                                <SvgText
+                                    x={pos.x} y={pos.y + (dims.FONT_NUM / 3)}
+                                    textAnchor="middle" fontSize={dims.FONT_NUM}
+                                    fill={GAUGE_THEME.colors.textPrimary}
+                                    fontFamily="NauticalFont" fontWeight="bold"
+                                >
+                                    {val}
+                                </SvgText>
+                            </G>
+                        );
+                    })}
+                </G>
+
+                {/* --- CAPA 4: AGUJA PRO 3D --- */}
+                <G rotation={needleRotation - 90} origin={`${dims.CENTER}, ${dims.CENTER}`}>
+                    <Rect x={dims.CENTER - 20} y={dims.CENTER - 1.5} width={25} height={3} fill="#333" rx={1} />
+                    <Polygon points={`${dims.CENTER},${dims.CENTER - 4.5} ${dims.CENTER + dims.RADIUS - 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER}`} fill="url(#needleSideA)" />
+                    <Polygon points={`${dims.CENTER},${dims.CENTER} ${dims.CENTER + dims.RADIUS - 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER + 4.5}`} fill="url(#needleSideB)" />
+                    <Line x1={dims.CENTER + dims.RADIUS - 15} y1={dims.CENTER} x2={dims.CENTER + dims.RADIUS - 10} y2={dims.CENTER} stroke="#fff" strokeWidth="1" />
+                </G>
+
+                {/* --- CAPA 5: HUB CENTRAL --- */}
+                <G>
+                    <Circle cx={dims.CENTER + 1} cy={dims.CENTER + 1} r={12} fill="rgba(0,0,0,0.4)" />
+                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={11} fill="url(#hub3D)" stroke="#444" strokeWidth="1" />
+                    <Circle cx={dims.CENTER - 3} cy={dims.CENTER - 3} r={3} fill="rgba(255,255,255,0.2)" />
+                </G>
+
+                {/* --- CAPA FINAL: CRISTAL Y DESTELLO --- */}
+                <G pointerEvents="none">
+                    <Ellipse cx={dims.CENTER} cy={dims.CENTER - (dims.RADIUS * 0.4)} rx={dims.RADIUS * 0.85} ry={dims.RADIUS * 0.5} fill="url(#glassReflection)" />
+                    <Ellipse
+                        cx={dims.CENTER - (dims.RADIUS * 0.6)}
+                        cy={dims.CENTER - (dims.RADIUS * 0.6)}
+                        rx={COMPASS_SIZE * 0.08}
+                        ry={COMPASS_SIZE * 0.03}
+                        fill="url(#flareGradient)"
+                        transform={`rotate(-45, ${dims.CENTER - (dims.RADIUS * 0.6)}, ${dims.CENTER - (dims.RADIUS * 0.6)})`}
+                    />
+                </G>
+            </Svg>
+        </View>
+    );
+});
+
+const styles = StyleSheet.create({
+    outerContainer: { alignItems: 'center', justifyContent: 'center' }
+});
+
+export default SogGauge;
