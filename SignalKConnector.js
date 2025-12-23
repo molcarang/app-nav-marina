@@ -38,8 +38,8 @@ const SignalKConnector = () => {
         const rawSet = data['navigation.current.setTrue'] ?? data['performance.currentSetTrue'] ?? data['ocean.set'] ?? 0;
 
         // 2. Navegación (COG)
-        const cogRad = data['navigation.headingTrue'] ?? 0;
-        const cogDeg = radToDeg(cogRad);
+        const headingRad = data['navigation.headingTrue'] ?? 0;
+        const headingDeg = radToDeg(headingRad);
 
         // 3. Viento (TWS & TWD)
         const twsMps = data['environment.wind.speedTrue'] ?? 0;
@@ -52,13 +52,14 @@ const SignalKConnector = () => {
         return {
             driftKnots: rawDrift * 1.94384,
             setDeg: radToDeg(rawSet),
-            cogDeg: cogDeg,
-            cogDigital: cogDeg.toFixed(1),
-            cogSquare: cogDeg.toFixed(0) + '°',
+            cogDeg: headingDeg, // Para compatibilidad con componentes existentes
+            cogDigital: headingDeg.toFixed(1),
+            cogSquare: headingDeg.toFixed(0) + '°',
             twsKnots: mpsToKnots(twsMps),
             twdDeg: twdDeg,
             twdDigital: !isNaN(twdDeg) ? Math.abs(normalizeAngle(twdDeg)).toFixed(0) + '°' : '---',
-            twaCog: !isNaN(twdDeg) ? normalizeAngle(twdDeg - cogDeg) : null,
+            twaCog: !isNaN(twdDeg) ? normalizeAngle(headingDeg - twdDeg) : null, // TWA respecto a proa (signed, COG)
+            twa: !isNaN(twdDeg) ? -normalizeAngle(headingDeg - twdDeg) : null, // TWA con signo (positivo = estribor, negativo = babor)
             sogKnots: mpsToKnots(data['navigation.speedOverGround'] ?? 0),
             depthMeters: depth
         };
@@ -66,7 +67,7 @@ const SignalKConnector = () => {
 
     // --- LÓGICA DE INTERFAZ ---
     const columnWidth = (windowWidth * 0.94) / 3;
-    const gaugeSize = Math.min(windowWidth * 0.93, windowHeight * 0.45);
+    const gaugeSize = Math.min(windowWidth * 0.90, windowHeight * 0.45);
     const rotationAngle = -processed.cogDeg;
     const isDepthAlarmActive = processed.depthMeters < 3.0 && processed.depthMeters > 0;
     const absTWA = Math.abs(processed.twaCog || 0);
@@ -146,7 +147,15 @@ const SignalKConnector = () => {
                             <View style={styles.row}>
                                 <DataSquare label="TWS" value={processed.twsKnots} unit="KTS" showHistory showProgressBar maxValue={maxTWS} color={theme.bg} onPress={() => setMaxTWS(0)} />
                                 <DataSquare label="SOG" value={processed.sogKnots} unit="KTS" showHistory showProgressBar maxValue={maxSOG} color={theme.bg} onPress={() => setMaxSOG(0)} />
-                                <DataSquare label="TWA" value={processed.twaCog?.toFixed(0) + '°'} unit="DEG" textColor={theme.wind} showStatusDot statusDotColor={theme.statusDot} color={theme.bg} />
+                                <DataSquare
+                                    label={processed.twa > 0 ? "TWA (P)" : processed.twa < 0 ? "TWA (S)" : "TWA"}
+                                    value={processed.twa?.toFixed(0) + '°'}
+                                    unit="DEG"
+                                    textColor={theme.wind}
+                                    showStatusDot
+                                    statusDotColor={theme.statusDot}
+                                    color={theme.bg}
+                                />
                             </View>
 
                             <View style={styles.row}>
@@ -181,7 +190,7 @@ const SignalKConnector = () => {
 
                         <View style={styles.row}>
                             <SogGauge
-                                size={gaugeSize * 0.96}
+                                size={gaugeSize}
                                 value={parseFloat(processed.sogKnots)}
                                 // Usamos el maxSOG que ya calculas y guardas en el useEffect
                                 maxSpeed={maxSOG > 5 ? Math.ceil(maxSOG) : 10}

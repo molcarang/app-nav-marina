@@ -6,64 +6,55 @@ import Svg, {
     Ellipse,
     G,
     Line,
-    LinearGradient,
     Polygon,
-    RadialGradient,
     Rect,
-    Stop,
     Text as SvgText
 } from 'react-native-svg';
 import { GAUGE_THEME } from '../../styles/GaugeTheme';
+import { GaugeDefs } from './shared/GaugeDefs';
+import { computeCommonDims, polarToCartesian } from './shared/gaugeUtils';
 
 const SogGauge = React.memo(({
-    size: COMPASS_SIZE = 400,
+    size,
     value = 0,
-    maxSpeed = 10,
-    headingColor = GAUGE_THEME.colors.red
+    maxSpeed = 10
 }) => {
-    const [displaySog, setDisplaySog] = useState(0);
-    const targetSog = useRef(0);
+    // Tamaño relativo a la pantalla si no se pasa size
+    const { width: windowWidth, height: windowHeight } = require('react-native').useWindowDimensions();
+    const COMPASS_SIZE = size || Math.min(windowWidth * 0.9, windowHeight * 0.45);
+
+    const [displaySog, setDisplaySog] = useState(parseFloat(value) || 0);
     const requestRef = useRef();
 
     useEffect(() => {
-        targetSog.current = parseFloat(value) || 0;
-    }, [value]);
-
-    const animate = () => {
-        setDisplaySog(prev => {
-            const diff = targetSog.current - prev;
-            if (Math.abs(diff) < 0.005) return targetSog.current;
-            return prev + diff * 0.08;
-        });
-        requestRef.current = requestAnimationFrame(animate);
-    };
-
-    useEffect(() => {
+        let mounted = true;
+        const animate = () => {
+            setDisplaySog(prev => {
+                const target = parseFloat(value) || 0;
+                const diff = target - prev;
+                if (Math.abs(diff) < 0.005) return target;
+                return prev + diff * 0.08;
+            });
+            if (mounted) requestRef.current = requestAnimationFrame(animate);
+        };
         requestRef.current = requestAnimationFrame(animate);
         return () => {
+            mounted = false;
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
         };
-    }, []);
+    }, [value]);
 
-    const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
-        const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
-        return {
-            x: centerX + radius * Math.cos(angleInRadians),
-            y: centerY + radius * Math.sin(angleInRadians),
-        };
-    };
+    // polarToCartesian ahora importado desde helpers compartidos
 
     const dims = useMemo(() => {
-        const CENTER = COMPASS_SIZE / 2;
-        const BEZEL_SIZE = COMPASS_SIZE * 0.06;
-        const RADIUS = CENTER - BEZEL_SIZE;
-        // Posición del círculo rojo alineada con los ticks
-        const INNER_RADIUS = RADIUS - (COMPASS_SIZE * 0.08);
+        const base = computeCommonDims(COMPASS_SIZE);
         const START_ANGLE = 225;
         const TOTAL_SWEEP = 270;
         return {
-            CENTER, RADIUS, BEZEL_SIZE, INNER_RADIUS, START_ANGLE, TOTAL_SWEEP,
-            TEXT_RAD: RADIUS - COMPASS_SIZE * 0.12,
+            ...base,
+            START_ANGLE,
+            TOTAL_SWEEP,
+            TEXT_RAD: base.RADIUS - COMPASS_SIZE * 0.12,
             FONT_NUM: Math.round(COMPASS_SIZE * 0.045),
         };
     }, [COMPASS_SIZE]);
@@ -79,70 +70,7 @@ const SogGauge = React.memo(({
         <View style={[styles.outerContainer, { width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
             <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
                 <Defs>
-                    {/* GRADIENTES DEL BISEL */}
-                    <LinearGradient id="bezelOuter" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#efefef" stopOpacity="1" />
-                        <Stop offset="50%" stopColor="#888" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#444" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="bezelInner" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#222" stopOpacity="1" />
-                        <Stop offset="50%" stopColor="#444" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#111" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="bezelRidge" x1="100%" y1="100%" x2="0%" y2="0%">
-                        <Stop offset="0%" stopColor="#fff" stopOpacity="0.8" />
-                        <Stop offset="100%" stopColor="#666" stopOpacity="0" />
-                    </LinearGradient>
-                    <RadialGradient id="flareGradient" cx="50%" cy="50%" rx="50%" ry="50%">
-                        <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
-                        <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                    </RadialGradient>
-
-                    {/* Cara exterior del anillo rojo (Luz) */}
-                    <LinearGradient id="redMetalOuter" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#ff4d4d" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#800000" stopOpacity="1" />
-                    </LinearGradient>
-
-                    {/* Cara interior del anillo rojo (Sombra) */}
-                    <LinearGradient id="redMetalInner" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#660000" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#330000" stopOpacity="1" />
-                    </LinearGradient>
-
-                    {/* El "Filo" del anillo rojo (Brillo metálico) */}
-                    <LinearGradient id="redMetalRidge" x1="100%" y1="100%" x2="0%" y2="0%">
-                        <Stop offset="0%" stopColor="#ff9999" stopOpacity="0.6" />
-                        <Stop offset="100%" stopColor="#ff0000" stopOpacity="0" />
-                    </LinearGradient>
-
-
-
-                    {/* GRADIENTES DEL DIAL E INTERIOR */}
-                    <LinearGradient id="innerRedGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="#cc0000" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#800000" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="glassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
-                        <Stop offset="40%" stopColor="#ffffff" stopOpacity="0.05" />
-                        <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                    </LinearGradient>
-
-                    {/* GRADIENTES DE LA AGUJA */}
-                    <LinearGradient id="needleSideA" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="#ff4d4d" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#b30000" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="needleSideB" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="#990000" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#660000" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="hub3D" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#888" stopOpacity="1" />
-                        <Stop offset="100%" stopColor="#222" stopOpacity="1" />
-                    </LinearGradient>
+                    <GaugeDefs />
                 </Defs>
 
                 {/* --- CAPA 1: BISEL MECANIZADO --- */}
@@ -197,23 +125,50 @@ const SogGauge = React.memo(({
 
                 {/* --- CAPA 3: TICKS Y NÚMEROS --- */}
                 <G>
-                    {/* Ticks pequeños blancos (cada 0.2) */}
-                    {Array.from({ length: maxSpeed * 5 + 1 }).map((_, i) => {
-                        const val = i * 0.2;
+                    {/* Ticks: 0.1 nudos (pequeños), 0.5 nudos (medianos, blancos), 10 nudos (mayores, rojos) */}
+                    {Array.from({ length: Math.round(maxSpeed * 10) + 1 }).map((_, i) => {
+                        const val = i * 0.1;
                         if (val > maxSpeed) return null;
                         const angle = dims.START_ANGLE + (val / maxSpeed) * dims.TOTAL_SWEEP;
                         const angleRad = (angle - 90) * (Math.PI / 180);
-                        const isMajor = val % 1 === 0;
-                        const tLen = isMajor ? 12 : 6;
+                        // Ticks mayores cada 10
+                        if (val % 10 === 0) {
+                            return (
+                                <Line
+                                    key={`tick-major-${val}`}
+                                    x1={dims.CENTER + (dims.RADIUS - 18) * Math.cos(angleRad)}
+                                    y1={dims.CENTER + (dims.RADIUS - 18) * Math.sin(angleRad)}
+                                    x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
+                                    y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
+                                    stroke={GAUGE_THEME.colors.red}
+                                    strokeWidth={3}
+                                />
+                            );
+                        }
+                        // Ticks medianos cada 0.5 nudos
+                        if (val % 0.5 === 0) {
+                            return (
+                                <Line
+                                    key={`tick-half-${val.toFixed(1)}`}
+                                    x1={dims.CENTER + (dims.RADIUS - 14) * Math.cos(angleRad)}
+                                    y1={dims.CENTER + (dims.RADIUS - 14) * Math.sin(angleRad)}
+                                    x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
+                                    y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
+                                    stroke={"#fff"}
+                                    strokeWidth={1.5}
+                                />
+                            );
+                        }
+                        // Ticks menores cada 0.1
                         return (
                             <Line
-                                key={`tick-${i}`}
-                                x1={dims.CENTER + (dims.RADIUS - tLen) * Math.cos(angleRad)}
-                                y1={dims.CENTER + (dims.RADIUS - tLen) * Math.sin(angleRad)}
+                                key={`tick-minor-${val.toFixed(1)}`}
+                                x1={dims.CENTER + (dims.RADIUS - 10) * Math.cos(angleRad)}
+                                y1={dims.CENTER + (dims.RADIUS - 10) * Math.sin(angleRad)}
                                 x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
                                 y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
-                                stroke={isMajor ? "#fff" : "rgba(255,255,255,0.3)"}
-                                strokeWidth={isMajor ? 1.5 : 1}
+                                stroke={"rgba(255,255,255,0.4)"}
+                                strokeWidth={1}
                             />
                         );
                     })}
