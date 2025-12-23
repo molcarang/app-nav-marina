@@ -7,6 +7,7 @@ import Svg, {
     G, Line,
     LinearGradient,
     Path, Polygon,
+    RadialGradient,
     Stop, Text as SvgText
 } from 'react-native-svg';
 import { GAUGE_THEME } from '../../styles/GaugeTheme';
@@ -94,6 +95,27 @@ const HeadingGauge = React.memo(({
                 <Defs>
                     <Defs>
                         {/* Gradientes con efecto de biselado */}
+                        {/* Gradientes para Aguja 3D (Estilo SOGGauge) */}
+
+                        <LinearGradient id="needleSideA" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <Stop offset="0%" stopColor="#ff4d4d" />
+                            <Stop offset="100%" stopColor="#b30000" />
+                        </LinearGradient>
+                        <LinearGradient id="needleSideB" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <Stop offset="0%" stopColor="#990000" />
+                            <Stop offset="100%" stopColor="#660000" />
+                        </LinearGradient>
+                        <LinearGradient id="hub3D" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <Stop offset="0%" stopColor="#888" />
+                            <Stop offset="100%" stopColor="#222" />
+                        </LinearGradient>
+                        <LinearGradient id="needleCompass" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <Stop offset="0%" stopColor="#ff4444" />
+                            <Stop offset="50%" stopColor="#ff0000" />
+                            <Stop offset="50.1%" stopColor="#cc0000" />
+                            <Stop offset="100%" stopColor="#990000" />
+                        </LinearGradient>
+
                         <LinearGradient id="needleRed" x1="0%" y1="0%" x2="100%" y2="0%">
                             <Stop offset="0%" stopColor="#ff4444" /><Stop offset="50%" stopColor="#ff0000" /><Stop offset="100%" stopColor="#990000" />
                         </LinearGradient>
@@ -135,12 +157,23 @@ const HeadingGauge = React.memo(({
                         <Stop offset="100%" stopColor="#ff0000" stopOpacity="0" />
                     </LinearGradient>
 
-                    {/* CRISTAL */}
-                    <LinearGradient id="glassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
-                        <Stop offset="40%" stopColor="#ffffff" stopOpacity="0.05" />
-                        <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                    </LinearGradient>
+
+
+                    <Defs>
+                        {/* Reflejo principal superior */}
+                        <LinearGradient id="glassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
+                            <Stop offset="40%" stopColor="#ffffff" stopOpacity="0.05" />
+                            <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                        </LinearGradient>
+
+                        {/* Destello de luz lateral (Flare) */}
+                        <RadialGradient id="flareGradient" cx="50%" cy="50%" rx="50%" ry="50%">
+                            <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+                            <Stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                        </RadialGradient>
+                    </Defs>
+
                 </Defs>
 
                 {/* --- CAPA 1: FONDO Y BISEL EXTERIOR --- */}
@@ -322,18 +355,89 @@ const HeadingGauge = React.memo(({
                     </G>
                 )}
 
-                {/* Puntero de Rumbo (Línea de Fe Roja) */}
+                {/* Puntero de Rumbo (Línea de Fe Roja) 
                 <G>
                     <Polygon
                         points={`${dims.CENTER - 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER + 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER},${dims.BEZEL_SIZE + 35}`}
                         fill="url(#needleRed)" stroke="#fff" strokeWidth="1"
                     />
+                </G>*/}
+
+             
+
+                {/* ... (aquí termina tu Capa 5 anterior) ... */}
+
+                {/* --- AGUJA DE COMPÁS PROFESIONAL 3D --- */}
+                <G pointerEvents="none">
+                    {/* PUNTA NORTE (ROJA 3D) */}
+                    {/* Lado Izquierdo (Luz) */}
+                    <Polygon
+                        points={`${dims.CENTER},${dims.CENTER - (COMPASS_SIZE * 0.25)} ${dims.CENTER - 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER}`}
+                        fill="url(#needleSideA)"
+                    />
+                    {/* Lado Derecho (Sombra) */}
+                    <Polygon
+                        points={`${dims.CENTER},${dims.CENTER - (COMPASS_SIZE * 0.25)} ${dims.CENTER + 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER}`}
+                        fill="url(#needleSideB)"
+                    />
+
+                    {/* PUNTA SUR (BLANCA/GRIS 3D PARA CONTRASTE) */}
+                    {/* Lado Izquierdo */}
+                    <Polygon
+                        points={`${dims.CENTER},${dims.CENTER + (COMPASS_SIZE * 0.25)} ${dims.CENTER - 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER}`}
+                        fill="#e0e0e0"
+                    />
+                    {/* Lado Derecho */}
+                    <Polygon
+                        points={`${dims.CENTER},${dims.CENTER + (COMPASS_SIZE * 0.25)} ${dims.CENTER + 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER}`}
+                        fill="#9e9e9e"
+                    />
+
+                    {/* Borde de acabado blanco fino alrededor de toda la aguja */}
+                    <Polygon
+                        points={`
+            ${dims.CENTER},${dims.CENTER - (COMPASS_SIZE * 0.25)}
+            ${dims.CENTER + 10},${dims.CENTER}
+            ${dims.CENTER},${dims.CENTER + (COMPASS_SIZE * 0.25)}
+            ${dims.CENTER - 10},${dims.CENTER}
+        `}
+                        fill="none"
+                        stroke="#fff"
+                        strokeWidth="0.5"
+                        opacity={0.6}
+                    />
+
+                    {/* HUB CENTRAL (El botón del centro del SogGauge) */}
+                    <G>
+                        <Circle cx={dims.CENTER + 1} cy={dims.CENTER + 1} r={8} fill="rgba(0,0,0,0.4)" />
+                        <Circle cx={dims.CENTER} cy={dims.CENTER} r={7} fill="url(#hub3D)" stroke="#444" strokeWidth="1" />
+                        <Circle cx={dims.CENTER - 2} cy={dims.CENTER - 2} r={2} fill="rgba(255,255,255,0.2)" />
+                    </G>
                 </G>
 
-                {/* --- CAPA FINAL: CRISTAL --- */}
-                <G pointerEvents="none">
-                    <Ellipse cx={dims.CENTER} cy={dims.CENTER - (dims.RADIUS * 0.4)} rx={dims.RADIUS * 0.85} ry={dims.RADIUS * 0.5} fill="url(#glassReflection)" />
-                </G>
+            {/* --- CAPA FINAL: CRISTAL IDENTICO AL SOGGAUGE --- */}
+<G pointerEvents="none">
+    {/* 1. Reflejo elíptico superior */}
+    <Ellipse 
+        cx={dims.CENTER} 
+        cy={dims.CENTER - (dims.RADIUS * 0.4)} 
+        rx={dims.RADIUS * 0.85} 
+        ry={dims.RADIUS * 0.5} 
+        fill="url(#glassReflection)" 
+    />
+
+    {/* 2. Destello de foco (Flare) en la esquina superior izquierda */}
+    <Ellipse
+        cx={dims.CENTER - (dims.RADIUS * 0.6)}
+        cy={dims.CENTER - (dims.RADIUS * 0.6)}
+        rx={COMPASS_SIZE * 0.08}
+        ry={COMPASS_SIZE * 0.03}
+        fill="url(#flareGradient)"
+        transform={`rotate(-45, ${dims.CENTER - (dims.RADIUS * 0.6)}, ${dims.CENTER - (dims.RADIUS * 0.6)})`}
+    />
+</G>
+
+
             </Svg>
 
             {/* Display Digital 
