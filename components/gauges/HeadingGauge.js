@@ -11,6 +11,7 @@ import Svg, {
 import { GAUGE_THEME } from '../../styles/GaugeTheme';
 import { describeArc, lerpAngle } from '../../utils/Utils';
 import { GaugeDefs } from './shared/GaugeDefs';
+import { computeCommonDims } from './shared/gaugeUtils';
 
 const HeadingGauge = React.memo(({
     size: COMPASS_SIZE = 400,
@@ -63,17 +64,14 @@ const HeadingGauge = React.memo(({
 
     // --- 2. DIMENSIONES Y CÁLCULOS ---
     const dims = useMemo(() => {
-        const CENTER = COMPASS_SIZE / 2;
-        const BEZEL_SIZE = COMPASS_SIZE * 0.06;
-        const RADIUS = CENTER - BEZEL_SIZE;
-        const INNER_RADIUS = RADIUS - (COMPASS_SIZE * 0.08);
+        const base = computeCommonDims(COMPASS_SIZE);
         return {
-            CENTER, RADIUS, BEZEL_SIZE, INNER_RADIUS,
+            ...base,
             // Ajustamos el radio del texto para que entre en el círculo central
-            TEXT_RAD: INNER_RADIUS - COMPASS_SIZE * 0.16,
+            TEXT_RAD: base.INNER_RADIUS - COMPASS_SIZE * 0.16,
             FONT_NUM: Math.round(COMPASS_SIZE * 0.035),
             FONT_CARD: Math.round(COMPASS_SIZE * 0.050),
-            RADIUS_ARCS: RADIUS - 13
+            RADIUS_ARCS: base.RADIUS - 13
         };
     }, [COMPASS_SIZE]);
 

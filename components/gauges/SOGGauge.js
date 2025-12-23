@@ -12,6 +12,7 @@ import Svg, {
 } from 'react-native-svg';
 import { GAUGE_THEME } from '../../styles/GaugeTheme';
 import { GaugeDefs } from './shared/GaugeDefs';
+import { computeCommonDims, polarToCartesian } from './shared/gaugeUtils';
 
 const SogGauge = React.memo(({
     size: COMPASS_SIZE = 400,
@@ -43,25 +44,17 @@ const SogGauge = React.memo(({
         };
     }, []);
 
-    const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
-        const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
-        return {
-            x: centerX + radius * Math.cos(angleInRadians),
-            y: centerY + radius * Math.sin(angleInRadians),
-        };
-    };
+    // polarToCartesian ahora importado desde helpers compartidos
 
     const dims = useMemo(() => {
-        const CENTER = COMPASS_SIZE / 2;
-        const BEZEL_SIZE = COMPASS_SIZE * 0.06;
-        const RADIUS = CENTER - BEZEL_SIZE;
-        // Posición del círculo rojo alineada con los ticks
-        const INNER_RADIUS = RADIUS - (COMPASS_SIZE * 0.08);
+        const base = computeCommonDims(COMPASS_SIZE);
         const START_ANGLE = 225;
         const TOTAL_SWEEP = 270;
         return {
-            CENTER, RADIUS, BEZEL_SIZE, INNER_RADIUS, START_ANGLE, TOTAL_SWEEP,
-            TEXT_RAD: RADIUS - COMPASS_SIZE * 0.12,
+            ...base,
+            START_ANGLE,
+            TOTAL_SWEEP,
+            TEXT_RAD: base.RADIUS - COMPASS_SIZE * 0.12,
             FONT_NUM: Math.round(COMPASS_SIZE * 0.045),
         };
     }, [COMPASS_SIZE]);
