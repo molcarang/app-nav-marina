@@ -16,6 +16,7 @@ import DataSquare from './components/gauges/DataSquare';
 import HeadingGauge from './components/gauges/HeadingGauge';
 import InfoPanel from './components/gauges/InfoPanel';
 import SogGauge from './components/gauges/SOGGauge.js';
+import NavigationMode from './components/NavigationMode';
 
 const SignalKConnector = () => {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -209,7 +210,15 @@ const SignalKConnector = () => {
                                 headingColor={theme.heading}
                             />
                         </View>
-
+                        <View style={[styles.row, { marginBottom: 20 }]}>
+                            <NavigationMode
+                                width={gaugeSize.width}
+                                height={gaugeSize.height ? gaugeSize.height * 0.1 : 100}
+                                isSail={processed.navigationMode === 'SAIL'}
+                                isNightMode={isNightMode}
+                            >
+                            </NavigationMode>
+                        </View>
                         <View style={styles.row}>
                             <View style={{ marginTop: 40 }}>
                                 <DataSquare
