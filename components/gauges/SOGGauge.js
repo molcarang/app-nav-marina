@@ -21,11 +21,12 @@ import { computeCommonDims, polarToCartesian } from './shared/gaugeUtils';
 const SogGauge = React.memo(({
     size,
     value = 0,
-    maxSpeed = 12
+    maxSpeed = 12,
+    isSail
 }) => {
     const { width: windowWidth, height: windowHeight } = require('react-native').useWindowDimensions();
     const COMPASS_SIZE = size || Math.min(windowWidth * 0.9, windowHeight * 0.45);
-
+    const GAUGE_BG_COLOR = isSail ? GAUGE_THEME.colors.sail : GAUGE_THEME.colors.engine;
     const [displaySog, setDisplaySog] = useState(parseFloat(value) || 0);
     const requestRef = useRef();
 
@@ -78,8 +79,8 @@ const SogGauge = React.memo(({
                     <GaugeDefs />
                     {/* GRADIENTE INVERSO: Invisible (0%) -> Sólido (100%) */}
                     <LinearGradient id="speedIntensityFade" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <Stop offset="0%" stopColor={GAUGE_THEME.colors.red} stopOpacity="0" />
-                        <Stop offset="100%" stopColor={GAUGE_THEME.colors.red} stopOpacity="1" />
+                        <Stop offset="0%" stopColor={GAUGE_BG_COLOR} stopOpacity="0" />
+                        <Stop offset="100%" stopColor={GAUGE_BG_COLOR} stopOpacity="1" />
                     </LinearGradient>
                 </Defs>
 
@@ -125,7 +126,7 @@ const SogGauge = React.memo(({
                             const pos = polarToCartesian(dims.CENTER, dims.CENTER, dims.TEXT_RAD, angle);
                             return (
                                 <G key={`n-${val}`}>
-                                    <Line x1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.cos(angleRad)} y1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.sin(angleRad)} x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)} y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)} stroke={GAUGE_THEME.colors.red} strokeWidth={2.5} />
+                                    <Line x1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.cos(angleRad)} y1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.sin(angleRad)} x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)} y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)} stroke={GAUGE_THEME.colors.engine} strokeWidth={2.5} />
                                     <SvgText x={pos.x} y={pos.y + (dims.FONT_NUM / 3)} textAnchor="middle" fontSize={dims.FONT_NUM} fill={GAUGE_THEME.colors.textPrimary} fontFamily="NauticalFont" fontWeight="bold">{val}</SvgText>
                                 </G>
                             );

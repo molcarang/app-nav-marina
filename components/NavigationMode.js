@@ -11,7 +11,7 @@ const NavigationMode = React.memo(({ mode = 'sail' }) => {
     const height = windowHeight * 0.05;
 
     const isSail = mode.toLowerCase() === 'sail';
-    const accentColor = isSail ? "#00E5FF" : GAUGE_THEME.colors.red;
+    const accentColor = isSail ? "#00E5FF" : GAUGE_THEME.colors.engine;
 
     return (
         // Usamos las variables directas para evitar undefined
@@ -41,8 +41,8 @@ const NavigationMode = React.memo(({ mode = 'sail' }) => {
             {/* --- CONTENIDO DE TEXTO --- */}
             <View style={styles.overlay}>
                 <View style={styles.centerInfo}>
-                    <Text style={[styles.modeName, { color: accentColor }]}>
-                        {isSail ? 'SAILING' : 'ENGINE'} MODE
+                    <Text style={[styles.modeName, { color: accentColor, fontSize: height * 0.4 }]}>
+                        {isSail ? 'SAIL' : 'ENGINE'} MODE
                     </Text>
                 </View>
             </View>

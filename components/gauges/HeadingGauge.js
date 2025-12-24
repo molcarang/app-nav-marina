@@ -155,7 +155,7 @@ const HeadingGauge = React.memo(({
                                     y1={dims.CENTER + (dims.RADIUS - tLen) * Math.sin(angleRad)}
                                     x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
                                     y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
-                                    stroke={isMajor ? GAUGE_THEME.colors.red : (isMid ? "#fff" : "rgba(255,255,255,0.4)")}
+                                    stroke={isMajor ? GAUGE_THEME.colors.engine : (isMid ? "#fff" : "rgba(255,255,255,0.4)")}
                                     strokeWidth={isMajor ? 3 : 1.5}
                                 />
 
@@ -179,7 +179,7 @@ const HeadingGauge = React.memo(({
                                                 <SvgText
                                                     x={dims.CENTER + cardinalRad * Math.cos(angleRad)}
                                                     y={dims.CENTER + cardinalRad * Math.sin(angleRad) + 5}
-                                                    fill={GAUGE_THEME.colors.red}
+                                                    fill={GAUGE_THEME.colors.engine}
                                                     fontSize={dims.FONT_CARD}
                                                     textAnchor="middle"
                                                     fontFamily="NauticalFont"

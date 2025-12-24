@@ -204,6 +204,7 @@ const SignalKConnector = () => {
                             <SogGauge
                                 size={gaugeSize}
                                 value={parseFloat(processed.sogKnots)}
+                                isSail={processed.navigationMode === 'SAIL'}
                                 // Usamos el maxSOG que ya calculas y guardas en el useEffect
                                 maxSpeed={maxSOG > 5 ? Math.ceil(maxSOG) : 10}
                                 isNightMode={isNightMode}
