@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
-import { Defs, Rect } from 'react-native-svg';
-import { Ellipse } from 'react-native-svg';
-import { GaugeDefs } from './shared/GaugeDefs';
 
 
 // --- CONFIGURACIÓN ESTÁTICA ---

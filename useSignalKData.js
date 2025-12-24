@@ -16,6 +16,7 @@ const INITIAL_DATA = {
     'environment.wind.speedTrue': 0, 
     'navigation.current.drift': 0, 
     'navigation.current.setTrue': 0,
+    'propulsion.0.rpm': 0,
     // Añade aquí cualquier otra ruta que necesites inicialmente
 };
 

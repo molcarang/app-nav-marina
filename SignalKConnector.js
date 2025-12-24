@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
-import { useEffect, useMemo, useState } from 'react'; // 👈 Importado useMemo
+import { useEffect, useMemo, useState } from 'react';
 import {
     ImageBackground, Modal, Platform, ScrollView, StyleSheet,
     Switch, Text, TouchableOpacity, useWindowDimensions, View
@@ -45,9 +45,10 @@ const SignalKConnector = () => {
         const twsMps = data['environment.wind.speedTrue'] ?? 0;
         const twdRad = data['environment.wind.directionTrue'] ?? 0;
         const twdDeg = radToDeg(twdRad);
-
         // 4. Profundidad
         const depth = data['navigation.depthBelowTransducer'] ?? 0;
+        // 5. Datos del motor para modo de navegación
+        const engineRpm = data['propulsion.0.revolutions'] ?? 0;
 
         return {
             driftKnots: rawDrift * 1.94384,
@@ -61,6 +62,7 @@ const SignalKConnector = () => {
             twaCog: !isNaN(twdDeg) ? normalizeAngle(headingDeg - twdDeg) : null, // TWA respecto a proa (signed, COG)
             twa: !isNaN(twdDeg) ? -normalizeAngle(headingDeg - twdDeg) : null, // TWA con signo (positivo = estribor, negativo = babor)
             sogKnots: mpsToKnots(data['navigation.speedOverGround'] ?? 0),
+            navigationMode: (engineRpm > 0) ? 'ENGINE' : 'SAIL',
             depthMeters: depth
         };
     }, [data]);
@@ -146,12 +148,12 @@ const SignalKConnector = () => {
 
                             <View style={styles.row}>
                                 <DataSquare label="TWS" value={processed.twsKnots} unit="KTS" showHistory showProgressBar maxValue={maxTWS} color={theme.bg} onPress={() => setMaxTWS(0)} />
-                                <DataSquare 
-                                label="SOG" 
-                                value={processed.sogKnots} unit="KTS" 
-                                showHistory showProgressBar 
-                                maxValue={maxSOG} color={theme.bg} 
-                                onPress={() => setMaxSOG(0)} />
+                                <DataSquare
+                                    label="SOG"
+                                    value={processed.sogKnots} unit="KTS"
+                                    showHistory showProgressBar
+                                    maxValue={maxSOG} color={theme.bg}
+                                    onPress={() => setMaxSOG(0)} />
                                 <DataSquare
                                     label={processed.twa > 0 ? "TWA (P)" : processed.twa < 0 ? "TWA (S)" : "TWA"}
                                     value={processed.twa?.toFixed(0) + '°'}
@@ -165,11 +167,11 @@ const SignalKConnector = () => {
 
                             <View style={styles.row}>
                                 <DataSquare label="COG" value={processed.cogSquare} unit="TRUE" textColor={theme.heading} color={theme.bg} />
-                                <DataSquare label="DEPTH" 
-                                value={processed.depthMeters.toFixed(1)} 
-                                unit="MTRS" 
-                                color={isDepthAlarmActive ? theme.alarm : theme.bg} 
-                                textColor={isDepthAlarmActive ? "#fff" : undefined} />
+                                <DataSquare label="DEPTH"
+                                    value={processed.depthMeters.toFixed(1)}
+                                    unit="MTRS"
+                                    color={isDepthAlarmActive ? theme.alarm : theme.bg}
+                                    textColor={isDepthAlarmActive ? "#fff" : undefined} />
                                 <DataSquare label="TWD" value={processed.twdDigital} unit="TRUE" textColor={theme.twd} color={theme.bg} />
                             </View>
                         </View>
