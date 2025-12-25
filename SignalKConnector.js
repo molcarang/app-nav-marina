@@ -8,15 +8,14 @@ import {
 } from 'react-native';
 
 // Utils y Hooks
-import { useSignalKData } from './useSignalKData';
-import { mpsToKnots, normalizeAngle, radToDeg } from './utils/Utils';
-
-// Componentes
+import ControlPanelBase from './components/ControlPanelBase';
 import DataSquare from './components/gauges/DataSquare';
 import HeadingGauge from './components/gauges/HeadingGauge';
 import InfoPanel from './components/gauges/InfoPanel';
 import SogGauge from './components/gauges/SOGGauge.js';
 import NavigationMode from './components/NavigationMode';
+import { useSignalKData } from './useSignalKData';
+import { mpsToKnots, normalizeAngle, radToDeg } from './utils/Utils';
 
 const SignalKConnector = () => {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -75,7 +74,6 @@ const SignalKConnector = () => {
     const isDepthAlarmActive = processed.depthMeters < 3.0 && processed.depthMeters > 0;
     const absTWA = Math.abs(processed.twaCog || 0);
     const isTwaInTarget = absTWA >= ajustesConsola.minAnguloCeñida && absTWA <= ajustesConsola.maxAnguloCeñida;
-
     const theme = {
         heading: '#dc1212ff',
         wind: isNightMode ? '#900' : '#ff9800',
@@ -200,7 +198,7 @@ const SignalKConnector = () => {
                             </View>
                         </View>
 
-                        <View style={[styles.row, { marginBottom: 20 }]}>
+                        <View style={[styles.row, { marginBottom: windowHeight * 0.025 }]}>
                             <SogGauge
                                 size={gaugeSize}
                                 value={parseFloat(processed.sogKnots)}
@@ -210,7 +208,7 @@ const SignalKConnector = () => {
                                 headingColor={theme.heading}
                             />
                         </View>
-                        <View style={[styles.row, { marginBottom: 20 }]}>
+                        <View style={[styles.row, { marginBottom: windowHeight * 0.025 }]}>
                             <NavigationMode
                                 width={gaugeSize.width}
                                 height={gaugeSize.height ? gaugeSize.height * 0.1 : 100}
@@ -219,6 +217,9 @@ const SignalKConnector = () => {
                             >
                             </NavigationMode>
                         </View>
+                        <ControlPanelBase
+                            mode={processed.navigationMode.toLowerCase()}>
+                        </ControlPanelBase>
                         <View style={styles.row}>
                             <View style={{ marginTop: 40 }}>
                                 <DataSquare
