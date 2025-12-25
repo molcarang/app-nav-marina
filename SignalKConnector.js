@@ -63,7 +63,7 @@ const SignalKConnector = () => {
             twaCog: !isNaN(twdDeg) ? normalizeAngle(headingDeg - twdDeg) : null, // TWA respecto a proa (signed, COG)
             twa: !isNaN(twdDeg) ? -normalizeAngle(headingDeg - twdDeg) : null, // TWA con signo (positivo = estribor, negativo = babor)
             sogKnots: mpsToKnots(data['navigation.speedOverGround'] ?? 0),
-            navigationMode: (engineRpm > 0) ? 'ENGINE' : 'SAIL',
+            navigationMode: (engineRpm > 0 ? 'ENGINE' : 'SAIL'),
             depthMeters: depth
         };
     }, [data]);
@@ -205,7 +205,6 @@ const SignalKConnector = () => {
                                 size={gaugeSize}
                                 value={parseFloat(processed.sogKnots)}
                                 isSail={processed.navigationMode === 'SAIL'}
-                                // Usamos el maxSOG que ya calculas y guardas en el useEffect
                                 maxSpeed={maxSOG > 5 ? Math.ceil(maxSOG) : 10}
                                 isNightMode={isNightMode}
                                 headingColor={theme.heading}
