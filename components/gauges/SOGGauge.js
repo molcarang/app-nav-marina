@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native'; // Importación limpia
 import Svg, {
     Circle,
     Defs,
@@ -24,9 +24,13 @@ const SogGauge = React.memo(({
     maxSpeed = 12,
     isSail
 }) => {
-    const { width: windowWidth, height: windowHeight } = require('react-native').useWindowDimensions();
+    const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const COMPASS_SIZE = size || Math.min(windowWidth * 0.9, windowHeight * 0.45);
-    const GAUGE_BG_COLOR = isSail ? GAUGE_THEME.colors.sail : GAUGE_THEME.colors.engine;
+
+    // DINAMISMO SEGÚN MODO
+    const ACCENT_COLOR = isSail ? GAUGE_THEME.colors.sail : GAUGE_THEME.colors.engine;
+    const metalId = isSail ? "blueMetal" : "redMetal";
+
     const [displaySog, setDisplaySog] = useState(parseFloat(value) || 0);
     const requestRef = useRef();
 
@@ -67,9 +71,6 @@ const SogGauge = React.memo(({
     };
 
     const needleRotation = speedToAngle(displaySog);
-
-    // --- LÓGICA DE TERCIOS ---
-    // El arco comienza a 1/3 de la velocidad máxima
     const startOfArcSpeed = 1;
 
     return (
@@ -77,10 +78,10 @@ const SogGauge = React.memo(({
             <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
                 <Defs>
                     <GaugeDefs />
-                    {/* GRADIENTE INVERSO: Invisible (0%) -> Sólido (100%) */}
+                    {/* GRADIENTE DE INTENSIDAD DINÁMICO */}
                     <LinearGradient id="speedIntensityFade" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <Stop offset="0%" stopColor={GAUGE_BG_COLOR} stopOpacity="0" />
-                        <Stop offset="100%" stopColor={GAUGE_BG_COLOR} stopOpacity="1" />
+                        <Stop offset="0%" stopColor={ACCENT_COLOR} stopOpacity="0" />
+                        <Stop offset="100%" stopColor={ACCENT_COLOR} stopOpacity="1" />
                     </LinearGradient>
                 </Defs>
 
@@ -91,7 +92,7 @@ const SogGauge = React.memo(({
                     <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill={GAUGE_THEME.colors.bg} />
                 </G>
 
-                {/* --- CAPA 2: ARCO DE INTENSIDAD CRECIENTE --- */}
+                {/* --- CAPA 2: ARCO DE INTENSIDAD --- */}
                 <G>
                     <Path
                         d={describeArc(
@@ -107,11 +108,20 @@ const SogGauge = React.memo(({
                     />
                 </G>
 
-                {/* --- CAPA 3: ANILLO ROJO 3D --- */}
+                {/* --- CAPA 3: ANILLO MECANIZADO DINÁMICO (Cian/Rojo) --- */}
                 <G>
-                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 35} fill="none" stroke="url(#redMetalOuter)" strokeWidth="5" />
-                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 40} fill="none" stroke="url(#redMetalInner)" strokeWidth="5" />
-                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 37.5} fill="none" stroke="url(#redMetalRidge)" strokeWidth="1" opacity={0.8} />
+                    <Circle
+                        cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 35}
+                        fill="none" stroke={`url(#${metalId}Outer)`} strokeWidth="5"
+                    />
+                    <Circle
+                        cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 40}
+                        fill="none" stroke={`url(#${metalId}Inner)`} strokeWidth="5"
+                    />
+                    <Circle
+                        cx={dims.CENTER} cy={dims.CENTER} r={dims.INNER_RADIUS - 37.5}
+                        fill="none" stroke={`url(#${metalId}Ridge)`} strokeWidth="1" opacity={0.8}
+                    />
                 </G>
 
                 {/* --- CAPA 4: ESCALA --- */}
@@ -126,8 +136,23 @@ const SogGauge = React.memo(({
                             const pos = polarToCartesian(dims.CENTER, dims.CENTER, dims.TEXT_RAD, angle);
                             return (
                                 <G key={`n-${val}`}>
-                                    <Line x1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.cos(angleRad)} y1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.sin(angleRad)} x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)} y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)} stroke={GAUGE_THEME.colors.engine} strokeWidth={2.5} />
-                                    <SvgText x={pos.x} y={pos.y + (dims.FONT_NUM / 3)} textAnchor="middle" fontSize={dims.FONT_NUM} fill={GAUGE_THEME.colors.textPrimary} fontFamily="NauticalFont" fontWeight="bold">{val}</SvgText>
+                                    {/* Tick principal con color de modo */}
+                                    <Line
+                                        x1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.cos(angleRad)}
+                                        y1={dims.CENTER + (dims.INNER_RADIUS + 2) * Math.sin(angleRad)}
+                                        x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)}
+                                        y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)}
+                                        stroke={ACCENT_COLOR}
+                                        strokeWidth={2.5}
+                                    />
+                                    <SvgText
+                                        x={pos.x} y={pos.y + (dims.FONT_NUM / 3)}
+                                        textAnchor="middle" fontSize={dims.FONT_NUM}
+                                        fill={GAUGE_THEME.colors.textPrimary}
+                                        fontFamily="NauticalFont" fontWeight="bold"
+                                    >
+                                        {val}
+                                    </SvgText>
                                 </G>
                             );
                         }
@@ -135,18 +160,98 @@ const SogGauge = React.memo(({
                         return <Line key={`m-${val}`} x1={dims.CENTER + (dims.RADIUS - 10) * Math.cos(angleRad)} y1={dims.CENTER + (dims.RADIUS - 10) * Math.sin(angleRad)} x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)} y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)} stroke={"rgba(255,255,255,0.4)"} strokeWidth={1} />;
                     })}
                 </G>
-
-                {/* --- CAPA 5: AGUJA --- */}
+                {/* --- CAPA 5: AGUJA CON EXTENSIÓN DE BRAZO CONTINUO --- */}
                 <G rotation={needleRotation - 90} origin={`${dims.CENTER}, ${dims.CENTER}`}>
-                    <Rect x={dims.CENTER - 20} y={dims.CENTER - 1.5} width={25} height={3} fill="#333" rx={1} />
-                    <Polygon points={`${dims.CENTER},${dims.CENTER - 4.5} ${dims.CENTER + dims.RADIUS - 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER}`} fill="url(#needleSideA)" />
-                    <Polygon points={`${dims.CENTER},${dims.CENTER} ${dims.CENTER + dims.RADIUS - 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER + 4.5}`} fill="url(#needleSideB)" />
+
+                    {/* 1. EXTENSIÓN TRASERA (Brazo rectangular continuo) */}
+                    {/* Usamos dos rectángulos finos pegados para mantener el efecto de luz/sombra de la aguja */}
+                    <Rect
+                        x={dims.CENTER - 30}
+                        y={dims.CENTER - 2.5}
+                        width={30}
+                        height={2.5}
+                        fill="url(#needleSideA)"
+                    />
+                    <Rect
+                        x={dims.CENTER - 30}
+                        y={dims.CENTER}
+                        width={30}
+                        height={2.5}
+                        fill="url(#needleSideB)"
+                    />
+
+                    {/* 2. CUERPO PRINCIPAL (Punta de la aguja) */}
+                    <Polygon
+                        points={`
+            ${dims.CENTER - 1},${dims.CENTER - 4.5} 
+            ${dims.CENTER + dims.RADIUS - 10},${dims.CENTER} 
+            ${dims.CENTER - 1},${dims.CENTER}
+        `}
+                        fill="url(#needleSideA)"
+                    />
+                    <Polygon
+                        points={`
+            ${dims.CENTER - 1},${dims.CENTER} 
+            ${dims.CENTER + dims.RADIUS - 10},${dims.CENTER} 
+            ${dims.CENTER - 1},${dims.CENTER + 4.5}
+        `}
+                        fill="url(#needleSideB)"
+                    />
+
+                    {/* 3. LÍNEA DE FILO (Opcional: unifica visualmente toda la pieza) */}
+                    <Line
+                        x1={dims.CENTER - 30} y1={dims.CENTER}
+                        x2={dims.CENTER + dims.RADIUS - 12} y2={dims.CENTER}
+                        stroke="rgba(255,255,255,0.2)"
+                        strokeWidth="0.5"
+                    />
                 </G>
 
-                {/* --- CAPA FINAL: CRISTAL --- */}
+                {/* --- CAPA FINAL: CRISTAL Y HUB MECANIZADO --- */}
                 <G pointerEvents="none">
-                    <Circle cx={dims.CENTER} cy={dims.CENTER} r={11} fill="url(#hub3D)" stroke="#444" strokeWidth="1" />
-                    <Ellipse cx={dims.CENTER} cy={dims.CENTER - (dims.RADIUS * 0.4)} rx={dims.RADIUS * 0.85} ry={dims.RADIUS * 0.5} fill="url(#glassReflection)" />
+                    {/* 1. EL FLARE (Reflejo del cristal) */}
+                    <Ellipse
+                        cx={dims.CENTER}
+                        cy={dims.CENTER - (dims.RADIUS * 0.4)}
+                        rx={dims.RADIUS * 0.85}
+                        ry={dims.RADIUS * 0.5}
+                        fill="url(#glassReflection)"
+                    />
+                    {/* 2. Destello de foco (Flare) en la esquina superior izquierda */}
+                    <Ellipse
+                        cx={dims.CENTER - (dims.RADIUS * 0.6)}
+                        cy={dims.CENTER - (dims.RADIUS * 0.6)}
+                        rx={COMPASS_SIZE * 0.08}
+                        ry={COMPASS_SIZE * 0.03}
+                        fill="url(#flareGradient)"
+                        transform={`rotate(-45, ${dims.CENTER - (dims.RADIUS * 0.6)}, ${dims.CENTER - (dims.RADIUS * 0.6)})`}
+                    />
+                    {/* 2. EL HUB (Tapón central con tu estilo 3D) */}
+                    <G pointerEvents="none">
+                        {/* Sombra proyectada del tapón (para que la aguja parezca estar debajo) */}
+                        <Circle
+                            cx={dims.CENTER + 1.5}
+                            cy={dims.CENTER + 1.5}
+                            r={COMPASS_SIZE * 0.035}
+                            fill="rgba(0,0,0,0.4)"
+                        />
+                        {/* Cuerpo del tapón */}
+                        <Circle
+                            cx={dims.CENTER}
+                            cy={dims.CENTER}
+                            r={COMPASS_SIZE * 0.032}
+                            fill="url(#hub3D)"
+                            stroke="#444"
+                            strokeWidth="1"
+                        />
+                        {/* Brillo del tapón */}
+                        <Circle
+                            cx={dims.CENTER - (COMPASS_SIZE * 0.01)}
+                            cy={dims.CENTER - (COMPASS_SIZE * 0.01)}
+                            r={COMPASS_SIZE * 0.008}
+                            fill="rgba(255,255,255,0.25)"
+                        />
+                    </G>
                 </G>
             </Svg>
         </View>

@@ -1,87 +1,87 @@
 import React from 'react';
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, Ellipse, G, Line, Rect } from 'react-native-svg';
 import { GAUGE_THEME } from '../styles/GaugeTheme';
+import { GaugeDefs } from './gauges/shared/GaugeDefs';
+import EngineIcon from './icons/EngineIcon';
+import SailIcon from './icons/SailIcon';
 
 const NavigationMode = React.memo(({ isSail }) => {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
     const isLandscape = windowWidth > windowHeight;
     const navWidth = isLandscape ? windowWidth * 0.7 : windowWidth * 0.9;
-    const navHeight = isLandscape ? windowHeight * 0.12 : windowHeight * 0.08;
+    const navHeight = isLandscape ? windowHeight * 0.12 : windowHeight * 0.065;
 
-    const accentColor = isSail ? GAUGE_THEME.colors.sail : GAUGE_THEME.colors.engine;
+    const sailColor = GAUGE_THEME.colors.sail;
+    const engineColor = GAUGE_THEME.colors.engine;
+    const inactiveColor = "rgba(255, 255, 255, 0.15)";
 
-    const calculatedFontSize = Math.round(navHeight * 0.3);
-    const fontSize = Math.min(Math.max(calculatedFontSize, 14), 40);
+    const fontSize = Math.min(Math.max(navHeight * 0.25, 11), 28);
+    const fontCaptionSize = fontSize * 1; // Un poco más grande para legibilidad
 
     return (
-        <View style={{ width: navWidth, height: navHeight, alignSelf: 'center', marginVertical: 10 }}>
+        <View style={{ width: navWidth, height: navHeight, justifyContent: 'center', alignItems: 'center' }}>
             <Svg width={navWidth} height={navHeight} viewBox={`0 0 ${navWidth} ${navHeight}`}>
                 <Defs>
-                    {/* Gradiente para emular el brillo del anillo interior del SOGGauge */}
-                    <LinearGradient id="innerRingGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor={accentColor} stopOpacity="0.8" />
-                        <Stop offset="50%" stopColor={accentColor} stopOpacity="1" />
-                        <Stop offset="100%" stopColor={accentColor} stopOpacity="0.6" />
-                    </LinearGradient>
-
-                    {/* Gradiente metálico exterior sutil para el bisel fino */}
-                    <LinearGradient id="thinBezel" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#888" />
-                        <Stop offset="100%" stopColor="#222" />
-                    </LinearGradient>
+                    <GaugeDefs />
                 </Defs>
 
-                {/* --- MARCO EXTERIOR (Bisel Mecanizado Fino) --- */}
-                <Rect
-                    x="1" y="1"
-                    width={navWidth - 2}
-                    height={navHeight - 2}
-                    rx={12}
-                    fill={GAUGE_THEME.colors.bg}
-                    stroke="url(#thinBezel)"
-                    strokeWidth="1"
-                />
+                {/* --- CAPA 1: MARCO METÁLICO --- */}
+                <G>
+                    <Rect x="1.5" y="1.5" width={navWidth - 3} height={navHeight - 3} rx={16} fill="none" stroke="url(#bezelOuter)" strokeWidth="3" />
+                    <Rect x="3" y="3" width={navWidth - 6} height={navHeight - 6} rx={14} fill={GAUGE_THEME.colors.bg} />
+                    <Rect x="4.5" y="4.5" width={navWidth - 9} height={navHeight - 9} rx={13} fill="none" stroke="url(#bezelInner)" strokeWidth="3" />
+                </G>
 
-                {/* --- EL ANILLO "SOGGAUGE STYLE" --- */}
-                {/* Este es el que emula el aro interior de color de tus instrumentos */}
-                <Rect
-                    x="3" y="3"
-                    width={navWidth - 6}
-                    height={navHeight - 6}
-                    rx={10}
-                    fill="none"
-                    stroke="url(#innerRingGradient)"
-                    strokeWidth="3" // Un poco más grueso para que destaque el color
-                />
-
-                {/* Brillo interior extra (opcional, para dar efecto 3D) */}
-                <Rect
-                    x="5" y="5"
-                    width={navWidth - 10}
-                    height={navHeight - 10}
-                    rx={9}
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="0.5"
-                    strokeOpacity="0.2"
-                />
+                {/* --- CAPA 2: CRISTAL Y REFLEJOS --- */}
+                <G pointerEvents="none">
+                    <Ellipse cx={navWidth / 2} cy={navHeight * 0.2} rx={navWidth * 0.4} ry={navHeight * 0.35} fill="url(#glassReflection)" opacity={0.5} />
+                    <Ellipse cx={navWidth * 0.15} cy={navHeight * 0.25} rx={navWidth * 0.1} ry={navHeight * 0.15} fill="url(#flareGradient)" transform={`rotate(-15, ${navWidth * 0.15}, ${navHeight * 0.25})`} opacity={0.7} />
+                    <Line x1={navWidth / 2} y1={12} x2={navWidth / 2} y2={navHeight - 12} stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+                </G>
             </Svg>
 
-            {/* --- CONTENIDO --- */}
+            {/* --- CAPA 3: INTERFAZ EN 3 COLUMNAS --- */}
             <View style={styles.overlay}>
-                <Text
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    style={[styles.modeName, {
-                        color: accentColor,
-                        fontSize: fontSize,
-                        width: '80%'
-                    }]}
-                >
-                    {isSail ? 'SAILING' : 'ENGINE'} MODE
-                </Text>
+                <View style={styles.mainContainer}>
+
+                    {/* COLUMNA IZQUIERDA: SAIL */}
+                    <View style={styles.columnSide}>
+                        <View style={[styles.modeGroup, isSail && styles.activeContainer]}>
+                            <View style={styles.labelRow}>
+                                <SailIcon color={isSail ? sailColor : inactiveColor} 
+                                size={fontSize * 1.4} style={{ marginRight: 6 }} />
+                                <View style={styles.textWrapper}>
+                                    <Text numberOfLines={1} adjustsFontSizeToFit 
+                                    style={[styles.modeText, { color: isSail ? sailColor : inactiveColor, fontSize: fontCaptionSize }]}>
+                                        SAIL
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={[styles.led, { backgroundColor: isSail ? sailColor : '#111', shadowColor: sailColor }]} />
+                        </View>
+                    </View>
+
+                    {/* COLUMNA CENTRAL: SEPARADOR (Espacio de seguridad) */}
+                    <View style={styles.columnCenter} />
+
+                    {/* COLUMNA DERECHA: ENGINE */}
+                    <View style={styles.columnSide}>
+                        <View style={[styles.modeGroup, !isSail && styles.activeContainer]}>
+                            <View style={styles.labelRow}>
+                                <EngineIcon color={!isSail ? engineColor : inactiveColor} size={fontSize * 1.4} style={{ marginRight: 6 }} />
+                                <View style={styles.textWrapper}>
+                                    <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.modeText, { color: !isSail ? engineColor : inactiveColor, fontSize: fontCaptionSize }]}>
+                                        ENGINE
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={[styles.led, { backgroundColor: !isSail ? engineColor : '#111', shadowColor: engineColor }]} />
+                        </View>
+                    </View>
+
+                </View>
             </View>
         </View>
     );
@@ -93,15 +93,52 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    modeName: {
-        fontWeight: 'bold',
+    mainContainer: {
+        flexDirection: 'row',
+        width: '90%',
+        height: '100%',
+    },
+    columnSide: {
+        flex: 4.5,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    columnCenter: {
+        flex: 1,
+    },
+    modeGroup: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: 0.3,
+        width: '100%',
+    },
+    labelRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+    },
+    textWrapper: {
+        flexShrink: 1,
+    },
+    activeContainer: {
+        opacity: 1,
+        transform: [{ scale: 1.05 }],
+    },
+    modeText: {
         fontFamily: 'NauticalFont',
-        letterSpacing: 3,
-        textAlign: 'center',
-        // Efecto de resplandor en el texto coordinado con el anillo
-        textShadowColor: 'rgba(0, 0, 0, 0.9)',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 3
+        fontWeight: 'bold',
+        letterSpacing: 1,
+    },
+    led: {
+        width: 16,
+        height: 2.5,
+        borderRadius: 2,
+        marginTop: 5,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.9,
+        shadowRadius: 5,
+        elevation: 5,
     }
 });
 
