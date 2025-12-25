@@ -26,19 +26,9 @@ const NavigationMode = React.memo(({ isSail }) => {
                 <Defs>
                     <GaugeDefs />
                 </Defs>
-
                 {/* --- CAPA 1: MARCO METÁLICO --- */}
                 <G>
-                    <Rect x="1.5" y="1.5" width={navWidth - 3} height={navHeight - 3} rx={16} fill="none" stroke="url(#bezelOuter)" strokeWidth="3" />
                     <Rect x="3" y="3" width={navWidth - 6} height={navHeight - 6} rx={14} fill={GAUGE_THEME.colors.bg} />
-                    <Rect x="4.5" y="4.5" width={navWidth - 9} height={navHeight - 9} rx={13} fill="none" stroke="url(#bezelInner)" strokeWidth="3" />
-                </G>
-
-                {/* --- CAPA 2: CRISTAL Y REFLEJOS --- */}
-                <G pointerEvents="none">
-                    <Ellipse cx={navWidth / 2} cy={navHeight * 0.2} rx={navWidth * 0.4} ry={navHeight * 0.35} fill="url(#glassReflection)" opacity={0.5} />
-                    <Ellipse cx={navWidth * 0.15} cy={navHeight * 0.25} rx={navWidth * 0.1} ry={navHeight * 0.15} fill="url(#flareGradient)" transform={`rotate(-15, ${navWidth * 0.15}, ${navHeight * 0.25})`} opacity={0.7} />
-                    <Line x1={navWidth / 2} y1={12} x2={navWidth / 2} y2={navHeight - 12} stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
                 </G>
             </Svg>
 
