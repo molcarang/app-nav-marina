@@ -14,8 +14,10 @@ import HeadingGauge from './components/gauges/HeadingGauge';
 import InfoPanel from './components/gauges/InfoPanel';
 import SogGauge from './components/gauges/SOGGauge.js';
 import NavigationMode from './components/NavigationMode';
+import SailDataOverlay from './components/SailDataOverlay.js';
 import { useSignalKData } from './useSignalKData';
 import { mpsToKnots, normalizeAngle, radToDeg } from './utils/Utils';
+import VMGNavigator from './components/VMGNavigator.js';
 
 const SignalKConnector = () => {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -29,6 +31,7 @@ const SignalKConnector = () => {
     const [ajustesConsola, setAjustesConsola] = useState({
         minAnguloCeñida: 20,
         maxAnguloCeñida: 60,
+        rudderLimit: 35,
     });
 
     // --- CÁLCULOS OPTIMIZADOS (useMemo) ---
@@ -36,7 +39,7 @@ const SignalKConnector = () => {
         // 1. Corriente (Set & Drift)
         const rawDrift = data['navigation.current.drift'] ?? data['performance.currentDrift'] ?? data['ocean.drift'] ?? 0;
         const rawSet = data['navigation.current.setTrue'] ?? data['performance.currentSetTrue'] ?? data['ocean.set'] ?? 0;
-
+        const rawRudderAngle = data['steering.rudderAngle'] ?? 0;
         // 2. Navegación (COG)
         const headingRad = data['navigation.headingTrue'] ?? 0;
         const headingDeg = radToDeg(headingRad);
@@ -45,9 +48,7 @@ const SignalKConnector = () => {
         const twsMps = data['environment.wind.speedTrue'] ?? 0;
         const twdRad = data['environment.wind.directionTrue'] ?? 0;
         const twdDeg = radToDeg(twdRad);
-        // 4. Profundidad
         const depth = data['navigation.depthBelowTransducer'] ?? 0;
-        // 5. Datos del motor para modo de navegación
         const engineRpm = data['propulsion.0.revolutions'] ?? 0;
 
         return {
@@ -62,8 +63,10 @@ const SignalKConnector = () => {
             twaCog: !isNaN(twdDeg) ? normalizeAngle(headingDeg - twdDeg) : null, // TWA respecto a proa (signed, COG)
             twa: !isNaN(twdDeg) ? -normalizeAngle(headingDeg - twdDeg) : null, // TWA con signo (positivo = estribor, negativo = babor)
             sogKnots: mpsToKnots(data['navigation.speedOverGround'] ?? 0),
-            navigationMode: (engineRpm > 0 ? 'ENGINE' : 'SAIL'),
-            depthMeters: depth
+            depthMeters: depth,
+            rudderAngle: Math.round(rawRudderAngle * (180 / Math.PI)),
+            engineRpm: engineRpm * 60,
+            navigationMode: ((engineRpm * 60) > 666661 ? 'ENGINE' : 'SAIL'),
         };
     }, [data]);
 
@@ -214,12 +217,32 @@ const SignalKConnector = () => {
                                 height={gaugeSize.height ? gaugeSize.height * 0.1 : 100}
                                 isSail={processed.navigationMode === 'SAIL'}
                                 isNightMode={isNightMode}
+
                             >
                             </NavigationMode>
                         </View>
-                        <ControlPanelBase
-                            mode={processed.navigationMode.toLowerCase()}>
-                        </ControlPanelBase>
+                        <View style={styles.row}>
+                            <ControlPanelBase>
+                                {processed.navigationMode === 'SAIL' ? (
+                                    <>
+                                        <SailDataOverlay
+                                            rudderAngle={processed.rudderAngle}
+                                            rudderLimit={ajustesConsola.rudderLimit}
+                                            heading={processed.cogDeg}
+                                            vmg={Math.abs(processed.sogKnots * Math.cos((processed.twaCog * Math.PI) / 180))}
+                                            targetVMG={maxSOG * Math.cos((ajustesConsola.minAnguloCeñida * Math.PI) / 180)}
+                                            size={140}
+                                        />
+                                    </>
+                                ) : (
+                                    <SailDataOverlay
+                                        rudderAngle={processed.rudderAngle}
+                                        rudderLimit={ajustesConsola.rudderLimit}
+                                        heading={processed.cogDeg}
+                                    />
+                                )}
+                            </ControlPanelBase>
+                        </View>
                         <View style={styles.row}>
                             <View style={{ marginTop: 40 }}>
                                 <DataSquare
@@ -250,29 +273,43 @@ const SignalKConnector = () => {
                         {/* Render de Sliders simplificado */}
                         {[
                             { label: 'Mínimo Ceñida', key: 'minAnguloCeñida', min: 10, max: 45, color: '#00ff00' },
-                            { label: 'Máximo Ceñida', key: 'maxAnguloCeñida', min: 50, max: 90, color: '#ff0000' }
+                            { label: 'Máximo Ceñida', key: 'maxAnguloCeñida', min: 50, max: 90, color: '#ff0000' },
+                            // NUEVO: Ajuste para el límite de alerta del timón
+                            { label: 'Alerta de Timón', key: 'rudderLimit', min: 20, max: 45, color: '#00ffff' }
                         ].map(s => (
                             <View key={s.key} style={styles.settingRowContainer}>
                                 <View style={styles.labelRow}>
                                     <Text style={styles.settingLabel}>{s.label}</Text>
-                                    <Text style={[styles.valueLabel, { color: s.color }]}>{ajustesConsola[s.key]}°</Text>
+                                    <Text style={[styles.valueLabel, { color: s.color }]}>
+                                        {ajustesConsola[s.key] || (s.key === 'rudderLimit' ? 35 : 0)}°
+                                    </Text>
                                 </View>
                                 <Slider
                                     style={styles.slider}
-                                    minimumValue={s.min} maximumValue={s.max} step={1}
-                                    value={ajustesConsola[s.key]}
+                                    minimumValue={s.min}
+                                    maximumValue={s.max}
+                                    step={1}
+                                    value={ajustesConsola[s.key] || (s.key === 'rudderLimit' ? 35 : 0)}
                                     onValueChange={(v) => setAjustesConsola({ ...ajustesConsola, [s.key]: Math.round(v) })}
                                     onSlidingComplete={(v) => guardarAjustePersistente(s.key, v)}
-                                    minimumTrackTintColor={s.color} thumbTintColor={s.color}
+                                    minimumTrackTintColor={s.color}
+                                    thumbTintColor={s.color}
+                                    maximumTrackTintColor="rgba(255,255,255,0.1)"
                                 />
                             </View>
                         ))}
 
                         <View style={styles.divider} />
+
                         <View style={styles.settingRow}>
                             <Text style={styles.settingLabel}>Modo Noche</Text>
-                            <Switch value={isNightMode} onValueChange={setIsNightMode} trackColor={{ false: "#333", true: "#dc1212" }} />
+                            <Switch
+                                value={isNightMode}
+                                onValueChange={setIsNightMode}
+                                trackColor={{ false: "#333", true: "#dc1212" }}
+                            />
                         </View>
+
                         <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
                             <Text style={styles.closeBtnText}>CERRAR</Text>
                         </TouchableOpacity>

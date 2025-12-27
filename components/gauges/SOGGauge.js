@@ -160,6 +160,22 @@ const SogGauge = React.memo(({
                         return <Line key={`m-${val}`} x1={dims.CENTER + (dims.RADIUS - 10) * Math.cos(angleRad)} y1={dims.CENTER + (dims.RADIUS - 10) * Math.sin(angleRad)} x2={dims.CENTER + dims.RADIUS * Math.cos(angleRad)} y2={dims.CENTER + dims.RADIUS * Math.sin(angleRad)} stroke={"rgba(255,255,255,0.4)"} strokeWidth={1} />;
                     })}
                 </G>
+
+                <SvgText
+                    x={dims.CENTER}
+                    y={dims.CENTER + (dims.RADIUS * 0.45)} // Posicionado en el tercio inferior
+                    textAnchor="middle"
+                    fontSize={dims.FONT_NUM * 0.8} // Un poco más pequeño que los números de la escala
+                    fill="rgba(255, 255, 255, 0.4)" // Color sutil para no distraer
+                    fontFamily="NauticalFont"
+                    fontWeight="bold"
+                    letterSpacing={2}
+                >
+                    KNOTS
+                </SvgText>
+
+
+
                 {/* --- CAPA 5: AGUJA CON EXTENSIÓN DE BRAZO CONTINUO --- */}
                 <G rotation={needleRotation - 90} origin={`${dims.CENTER}, ${dims.CENTER}`}>
 
