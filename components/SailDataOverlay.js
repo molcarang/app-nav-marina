@@ -13,7 +13,7 @@ const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG }) => 
         <>
             <RudderGauge
                 angle={rudderAngle}
-                size={size * 1.4}
+                size={size}
                 alertAngle={rudderLimit} // Ángulo de alerta personalizado para vela
             />
             <VMGNavigator

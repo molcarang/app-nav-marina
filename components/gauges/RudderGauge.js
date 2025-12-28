@@ -1,117 +1,103 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, G, Line, Path } from 'react-native-svg';
+import Svg, { Circle, Defs, G, Line, Path, LinearGradient, RadialGradient, Stop } from 'react-native-svg';
 import { GaugeDefs } from './shared/GaugeDefs';
+import { GAUGE_THEME } from '../../styles/GaugeTheme';
 
-const RudderGauge = ({ angle = 0, size , alertAngle }) => {
-    const width = size;
-    const height = size * 0.7;
-    const centerX = width / 2;
-    const centerY = height * 0.9;
-    const radius = size * 0.45;
-
-    const rotation = angle;
-    const baseWidth = 7;
-    const tipWidth = 1.2;
-
-    const sailBlue = "#00ffff";
-    const sailBlueDark = "#0088aa";
-
-    const limit = alertAngle + 5;
-    const startRad = (-limit - 90) * (Math.PI / 180);
-    const endRad = (limit - 90) * (Math.PI / 180);
-
-    const xStart = centerX + (radius + 5) * Math.cos(startRad);
-    const yStart = centerY + (radius + 5) * Math.sin(startRad);
-    const xEnd = centerX + (radius + 5) * Math.cos(endRad);
-    const yEnd = centerY + (radius + 5) * Math.sin(endRad);
-
-    const arcPath = `M ${xStart} ${yStart} A ${radius + 5} ${radius + 5} 0 0 1 ${xEnd} ${yEnd}`;
-
+const RudderGauge = ({ angle = 0, size = 180, alertAngle = 30 }) => {
+    const CENTER = size / 2;
+    const BEZEL_SIZE = size * 0.12;
+    const RADIUS = CENTER - BEZEL_SIZE;
+    
+    const rudderRadius = RADIUS - 15;
     const isAlertActive = Math.abs(angle) >= alertAngle;
 
+    // --- LÓGICA DE EXPANSIÓN VISUAL ---
+    // Aumentamos este factor para separar más los ticks (1.5 = 50% más de separación)
+    const EXPANSION_FACTOR = 1.6; 
+    const mapVisualAngle = (realAngle) => realAngle * EXPANSION_FACTOR;
+
+    const COLOR_PORT = "#FF3B30";
+    const COLOR_STBD = "#4CD964";
+    const COLOR_CENTER = "#ffffff";
+
+    // Arco de fondo expandido visualmente
+    const limit = (alertAngle + 5) * EXPANSION_FACTOR;
+    const startRad = (-limit - 90) * (Math.PI / 180);
+    const endRad = (limit - 90) * (Math.PI / 180);
+    const xStart = CENTER + (rudderRadius + 5) * Math.cos(startRad);
+    const yStart = CENTER + (rudderRadius + 5) * Math.sin(startRad);
+    const xEnd = CENTER + (rudderRadius + 5) * Math.cos(endRad);
+    const yEnd = CENTER + (rudderRadius + 5) * Math.sin(endRad);
+    const arcPath = `M ${xStart} ${yStart} A ${rudderRadius + 5} ${rudderRadius + 5} 0 0 1 ${xEnd} ${yEnd}`;
+
     return (
-        <View style={[styles.container, { width, height: height }]}>
-            <Svg width={width} height={height + 20} viewBox={`0 0 ${width} ${height + 20}`}>
+        <View style={[styles.container, { width: size, height: size }]}>
+            <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                 <Defs>
                     <GaugeDefs />
+                    <LinearGradient id="rudderGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="white" stopOpacity="0.15" />
+                        <Stop offset="50%" stopColor="white" stopOpacity="0" />
+                    </LinearGradient>
+                    <RadialGradient id="rudderFlare" cx="30%" cy="30%" rx="35%" ry="35%">
+                        <Stop offset="0%" stopColor="white" stopOpacity="0.4" />
+                        <Stop offset="100%" stopColor="transparent" />
+                    </RadialGradient>
                 </Defs>
 
-                {/* 1. ARCO DE FONDO ANCHO */}
-                <Path
-                    d={arcPath}
-                    fill="none"
-                    stroke="url(#bezelInner)"
-                    strokeWidth="24"
-                    strokeLinecap="round"
-                    opacity={0.4}
-                />
+                {/* 1. ANILLO EXTERIOR */}
+                <G>
+                    <Circle cx={CENTER} cy={CENTER} r={CENTER - (BEZEL_SIZE / 4)} fill="none" stroke="url(#bezelOuter)" strokeWidth={BEZEL_SIZE / 2} />
+                    <Circle cx={CENTER} cy={CENTER} r={RADIUS + (BEZEL_SIZE / 4)} fill="none" stroke="url(#bezelInner)" strokeWidth={BEZEL_SIZE / 2} />
+                    <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill={GAUGE_THEME.colors.bg} />
+                </G>
 
-                {/* 2. ESCALA DINÁMICA (Ticks de 5° y 15°) */}
-                {[-45, -40, -35, -30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45].map((tick) => {
-                    const isMainTick = tick % 15 === 0; // Ticks principales (0, 15, 30, 45)
-                    const tickRad = (tick - 90) * (Math.PI / 180);
-                    const isLit = Math.abs(angle - tick) < 3;
+                {/* 2. ARCO DE FONDO EXPANDIDO */}
+                <Path d={arcPath} fill="none" stroke="url(#bezelInner)" strokeWidth="20" strokeLinecap="round" opacity={0.2} />
 
-                    // Ticks principales son más largos, los de 5° son cortitos
-                    const tickSize = isMainTick ? 15 : 6;
-                    const tx1 = centerX + (radius - 5) * Math.cos(tickRad);
-                    const ty1 = centerY + (radius - 5) * Math.sin(tickRad);
-                    const tx2 = centerX + (radius + tickSize) * Math.cos(tickRad);
-                    const ty2 = centerY + (radius + tickSize) * Math.sin(tickRad);
+                {/* 3. ESCALA CON SEPARACIÓN ARTIFICIAL */}
+                {[-40, -30, -20, -10, 0, 10, 20, 30, 40].map((tick) => {
+                    // Calculamos la posición visual multiplicando por el factor
+                    const visualAngle = mapVisualAngle(tick);
+                    const tickRad = (visualAngle - 90) * (Math.PI / 180);
+                    
+                    const tx1 = CENTER + (rudderRadius - 2) * Math.cos(tickRad);
+                    const ty1 = CENTER + (rudderRadius - 2) * Math.sin(tickRad);
+                    const tx2 = CENTER + (rudderRadius + 12) * Math.cos(tickRad);
+                    const ty2 = CENTER + (rudderRadius + 12) * Math.sin(tickRad);
+                    
+                    let tickColor = tick === 0 ? COLOR_CENTER : (tick < 0 ? COLOR_PORT : COLOR_STBD);
 
                     return (
-                        <Line
-                            key={tick}
-                            x1={tx1} y1={ty1} x2={tx2} y2={ty2}
-                            stroke={isLit ? "#FFFFFF" : (tick === 0 ? sailBlue : sailBlueDark)}
-                            strokeWidth={isMainTick ? 2.5 : 1}
-                            opacity={isMainTick ? 0.6 : 0.4}
-                        />
+                        <G key={tick}>
+                            <Line x1={tx1} y1={ty1} x2={tx2} y2={ty2} stroke={tickColor} strokeWidth={tick === 0 ? 3 : 2} opacity={0.8} />
+                        </G>
                     );
                 })}
 
-                {/* 3. RESPLANDOR DE ALERTA */}
-                {isAlertActive && (
-                    <G opacity={0.4}>
-                        <Circle cx={centerX} cy={centerY} r={size * 0.12} fill="url(#bezelRidge)" opacity={0.2} />
-                        <Circle cx={centerX} cy={centerY} r={size * 0.08} fill="#FF0000" opacity={0.3} />
-                    </G>
-                )}
-
-                {/* 4. AGUJA TIPO SOGGAUGE */}
-                <G transform={`translate(${centerX}, ${centerY}) rotate(${rotation})`}>
-                    <Path
-                        d={`M ${-baseWidth} 0 L ${baseWidth} 0 L ${tipWidth} ${-radius} L ${-tipWidth} ${-radius} Z`}
-                        fill="black"
-                        opacity={0.4}
-                        transform="translate(2, 2)"
-                    />
-                    <Path d={`M ${-baseWidth} 0 L 0 ${-radius} L 0 0 Z`} fill="url(#needleSideA)" />
-                    <Path d={`M ${baseWidth} 0 L 0 ${-radius} L 0 0 Z`} fill="url(#needleSideB)" />
-                    <Line
-                        x1="0" y1="0" x2="0" y2={-radius}
-                        stroke="url(#bezelRidge)"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                    />
+                {/* 4. AGUJA (También expandida para coincidir con los ticks) */}
+                <G transform={`translate(${CENTER}, ${CENTER}) rotate(${angle * EXPANSION_FACTOR})`}>
+                    <Path d={`M -7 0 L 0 ${-rudderRadius} L 0 0 Z`} fill="url(#needleSideA)" />
+                    <Path d={`M 7 0 L 0 ${-rudderRadius} L 0 0 Z`} fill="url(#needleSideB)" />
+                    <Line x1="0" y1="0" x2="0" y2={-rudderRadius} stroke="url(#bezelRidge)" strokeWidth="1.2" />
                 </G>
 
-                {/* 5. TAPÓN CENTRAL */}
+                {/* 5. HUB CENTRAL */}
+                <G>
+                    <Circle cx={CENTER + 1} cy={CENTER + 1} r={size * 0.048} fill="rgba(0,0,0,0.5)" />
+                    <Circle cx={CENTER} cy={CENTER} r={size * 0.045} fill="url(#hub3D)" stroke="#444" strokeWidth="1" />
+                </G>
+
+                {/* 6. CRISTAL */}
                 <G pointerEvents="none">
-                    <Circle cx={centerX + 1.5} cy={centerY + 1.5} r={size * 0.048} fill="rgba(0,0,0,0.5)" />
-                    <Circle cx={centerX} cy={centerY} r={size * 0.045} fill="url(#hub3D)" stroke="#444" strokeWidth="1" />
-                    <Circle
-                        cx={centerX - (size * 0.015)}
-                        cy={centerY - (size * 0.015)}
-                        r={size * 0.012}
-                        fill="rgba(255,255,255,0.3)"
-                    />
+                    <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill="url(#rudderGlass)" />
+                    <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill="url(#rudderFlare)" />
                 </G>
             </Svg>
 
-            {/* 6. LECTURA DIGITAL */}
-            <View style={[styles.labelContainer, { top: height * 0.35 }]}>
+            {/* 7. LECTURA DIGITAL (Muestra el ángulo REAL, no el expandido) */}
+            <View style={[styles.labelContainer, { top: CENTER + (RADIUS * 0.05) }]}>
                 <Text style={[styles.angleText, isAlertActive && { color: '#FF4444' }]}>
                     {Math.abs(Math.round(angle))}°
                 </Text>
@@ -119,31 +105,15 @@ const RudderGauge = ({ angle = 0, size , alertAngle }) => {
                     {angle < -1 ? 'PORT' : angle > 1 ? 'STBD' : 'CENTER'}
                 </Text>
             </View>
-
-
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: { alignItems: 'center', justifyContent: 'center' },
-    labelContainer: { position: 'absolute', alignItems: 'center', width: '100%' },
-    angleText: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-        fontFamily: 'NauticalFont',
-        textShadowColor: 'rgba(0, 0, 0, 0.8)',
-        textShadowOffset: { width: 0, height: 2 },
-        textShadowRadius: 4
-    },
-    sideText: {
-        fontSize: 10,
-        color: 'rgba(255,255,255,0.6)',
-        letterSpacing: 2,
-        marginTop: -4,
-        fontWeight: '600'
-    }
+    labelContainer: { position: 'absolute', alignItems: 'center', width: '100%', zIndex: 50 },
+    angleText: { fontSize: 30, fontWeight: 'bold', color: '#FFFFFF', fontFamily: 'NauticalFont', textShadowColor: 'black', textShadowRadius: 6 },
+    sideText: { fontSize: 14, color: 'rgba(255,255,255,0.8)', letterSpacing: 2, marginTop: -4, fontWeight: 'bold' }
 });
 
 export default RudderGauge;
