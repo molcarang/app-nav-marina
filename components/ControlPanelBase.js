@@ -8,7 +8,7 @@ const ControlPanelBase = ({ children }) => {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const isLandscape = windowWidth > windowHeight;
     const panelWidth = isLandscape ? windowWidth * 0.7 : windowWidth * 0.9;
-    const panelHeight = isLandscape ? windowHeight * 0.23 : windowHeight * 0.20;
+    const panelHeight = isLandscape ? windowHeight * 0.23 : windowHeight * 0.35;
     return (
         <View style={{ width: panelWidth, height: panelHeight, justifyContent: 'center', 
         alignItems: 'center' }}>
@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
     contentOverlay: {
         ...StyleSheet.absoluteFillObject,
         justifyContent: 'center',
+        flexDirection: 'row',
     },
     row: {
         flexDirection: 'row',

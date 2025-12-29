@@ -1,35 +1,58 @@
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import RudderGauge from './gauges/RudderGauge';
 import VMGNavigator from './VMGNavigator';
-const DataField = ({ label, value, color, vmg, targetVMG, size }) => (
-    <View style={styles.dataField}>
-        <Text style={styles.fieldLabel}>{label}</Text>
-        <Text style={[styles.fieldValue, { color }]}>{value}</Text>
-    </View>
-);
+import WindShiftGauge from './WindShiftGauge';
 
-const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG }) => {
+const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, currentTWD, meanTWD }) => {
     return (
-        <>
-            <RudderGauge
-                angle={rudderAngle}
-                size={size}
-                alertAngle={rudderLimit} // Ángulo de alerta personalizado para vela
-            />
-            <VMGNavigator
-                vmg={vmg}
-                targetVMG={targetVMG}
-                size={size}
-            />
-        </>
+        /* Cambiamos el Fragmento por un View contenedor con flex */
+        <View style={styles.overlayContainer}>
+            
+            {/* PRIMERA FILA: Rudder y VMG */}
+            <View style={styles.row}>
+                <RudderGauge
+                    angle={rudderAngle}
+                    size={size}
+                    alertAngle={rudderLimit}
+                />
+                <VMGNavigator
+                    vmg={vmg}
+                    targetVMG={targetVMG}
+                    size={size}
+                />
+            </View>
+
+            {/* SEGUNDA FILA: WindShift */}
+            <View style={[styles.row, styles.secondRow]}>
+                <WindShiftGauge 
+                    currentTWD={currentTWD} 
+                    meanTWD={meanTWD} 
+                    size={size} 
+                />
+                {/* Aquí podrías añadir otro gauge en el futuro para equilibrar la fila */}
+            </View>
+            
+        </View>
     );
 };
 
-// Estilos consistentes con tu ControlPanelBase
 const styles = StyleSheet.create({
-    dataField: { alignItems: 'center', flex: 1 },
-    fieldLabel: { fontSize: 10, color: 'rgba(255,255,255,0.5)', marginBottom: 4, textTransform: 'uppercase' },
-    fieldValue: { fontSize: 22, fontWeight: 'bold' },
+    overlayContainer: {
+        width: '100%',
+        flexDirection: 'column', // Asegura que las filas se apilen verticalmente
+        alignItems: 'center',
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        justifyContent: 'space-around',
+        paddingVertical: 10, // Espacio interno para que no se peguen
+    },
+    secondRow: {
+        marginTop: 10, // Espacio extra entre la fila 1 y la 2
+    }
 });
 
 export default SailDataOverlay;
