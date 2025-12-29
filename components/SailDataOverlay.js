@@ -2,8 +2,10 @@ import { StyleSheet, View } from 'react-native';
 import RudderGauge from './gauges/RudderGauge';
 import VMGNavigator from './gauges/VMGNavigator';
 import WindShiftGauge from './gauges/WindShiftGauge';
+import { useWindTactic } from '../hooks/useWindTactic';
 
-const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, currentTWD, meanTWD }) => {
+const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, twd }) => {
+    const { meanTWD } = useWindTactic(twd, 5);
     return (
         /* Cambiamos el Fragmento por un View contenedor con flex */
         <View style={styles.overlayContainer}>
@@ -16,8 +18,8 @@ const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, curre
                     alertAngle={rudderLimit}
                 />
                 <VMGNavigator
-                    vmg={vmg}
-                    targetVMG={targetVMG}
+                    currentTWD={twd} 
+                    meanTWD={meanTWD} 
                     size={size}
                 />
             </View>
@@ -25,7 +27,7 @@ const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, curre
             {/* SEGUNDA FILA: WindShift */}
             <View style={[styles.row, styles.secondRow]}>
                 <WindShiftGauge
-                    currentTWD={currentTWD}
+                    currentTWD={twd}
                     meanTWD={meanTWD}
                     size={size}
                 />
