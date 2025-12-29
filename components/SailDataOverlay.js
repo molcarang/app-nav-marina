@@ -1,14 +1,13 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import RudderGauge from './gauges/RudderGauge';
-import VMGNavigator from './VMGNavigator';
-import WindShiftGauge from './WindShiftGauge';
+import VMGNavigator from './gauges/VMGNavigator';
+import WindShiftGauge from './gauges/WindShiftGauge';
 
 const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, currentTWD, meanTWD }) => {
     return (
         /* Cambiamos el Fragmento por un View contenedor con flex */
         <View style={styles.overlayContainer}>
-            
+
             {/* PRIMERA FILA: Rudder y VMG */}
             <View style={styles.row}>
                 <RudderGauge
@@ -25,14 +24,14 @@ const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, curre
 
             {/* SEGUNDA FILA: WindShift */}
             <View style={[styles.row, styles.secondRow]}>
-                <WindShiftGauge 
-                    currentTWD={currentTWD} 
-                    meanTWD={meanTWD} 
-                    size={size} 
+                <WindShiftGauge
+                    currentTWD={currentTWD}
+                    meanTWD={meanTWD}
+                    size={size}
                 />
                 {/* Aquí podrías añadir otro gauge en el futuro para equilibrar la fila */}
             </View>
-            
+
         </View>
     );
 };

@@ -9,7 +9,7 @@ import {
 
 // Utils y Hooks
 import ControlPanelBase from './components/ControlPanelBase';
-import DataSquare from './components/gauges/DataSquare';
+import DataSquare from './components/DataSquare.js';
 import HeadingGauge from './components/gauges/HeadingGauge';
 import InfoPanel from './components/gauges/InfoPanel';
 import SogGauge from './components/gauges/SOGGauge.js';
@@ -17,7 +17,6 @@ import NavigationMode from './components/NavigationMode';
 import SailDataOverlay from './components/SailDataOverlay.js';
 import { useSignalKData } from './useSignalKData';
 import { mpsToKnots, normalizeAngle, radToDeg } from './utils/Utils';
-import VMGNavigator from './components/VMGNavigator.js';
 
 const SignalKConnector = () => {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();

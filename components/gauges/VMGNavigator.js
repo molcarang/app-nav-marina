@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, Path, RadialGradient, Stop } from 'react-native-svg';
-import { GaugeDefs } from './gauges/shared/GaugeDefs';
+import { GaugeDefs } from './shared/GaugeDefs';
 
 const VMGNavigator = ({ vmg = 0, targetVMG = 6.5, size = 180 }) => {
     // --- CONFIGURACIÓN DE DIMENSIONES SEGÚN TU PATRÓN ---

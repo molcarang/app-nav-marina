@@ -1,14 +1,13 @@
-import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, G, Path, Line, Defs, LinearGradient, RadialGradient, Stop } from 'react-native-svg';
-import { describeArc } from '../utils/Utils';
-import { GAUGE_THEME } from '../styles/GaugeTheme';
-import { GaugeDefs } from './gauges/shared/GaugeDefs';
+import Svg, { Circle, Defs, G, Line, LinearGradient, Path, Stop } from 'react-native-svg';
+import { GAUGE_THEME } from '../../styles/GaugeTheme';
+import { describeArc } from '../../utils/Utils';
+import { GaugeDefs } from './shared/GaugeDefs';
 
 const WindShiftGauge = ({ currentTWD = 0, meanTWD = 0, size = 180 }) => {
     const CENTER = size / 2;
     const RADIUS = CENTER - (size * 0.12);
-    
+
     // Diferencia entre el viento actual y la media (el "shift")
     // Lo limitamos a +/- 20 grados para que la escala sea legible
     const shift = currentTWD - meanTWD;
@@ -40,7 +39,7 @@ const WindShiftGauge = ({ currentTWD = 0, meanTWD = 0, size = 180 }) => {
                         const angle = 270 + (tick * 4); // Escalamos visualmente x4
                         const rad = (angle - 90) * (Math.PI / 180);
                         return (
-                            <Line 
+                            <Line
                                 key={tick}
                                 x1={CENTER + (RADIUS - 5) * Math.cos(rad)}
                                 y1={CENTER + (RADIUS - 5) * Math.sin(rad)}
@@ -53,7 +52,7 @@ const WindShiftGauge = ({ currentTWD = 0, meanTWD = 0, size = 180 }) => {
                 </G>
 
                 {/* 3. ARCO DINÁMICO DEL SHIFT */}
-                <Path 
+                <Path
                     d={describeArc(CENTER, CENTER, RADIUS - 10, 270, 270 + (displayShift * 4))}
                     fill="none"
                     stroke={shiftColor}
