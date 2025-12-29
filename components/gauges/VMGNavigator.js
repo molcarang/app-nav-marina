@@ -1,28 +1,15 @@
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, G, LinearGradient, Path, RadialGradient, Stop } from 'react-native-svg';
-import { GaugeDefs } from './shared/GaugeDefs';
+import { Circle, Defs, G, LinearGradient, Path, Stop } from 'react-native-svg';
+import VesselGaugeFrame from './VesselGaugeFrame';
 
 const VMGNavigator = ({ vmg = 0, targetVMG = 6.5, size = 180 }) => {
-    // --- CONFIGURACIÓN DE DIMENSIONES SEGÚN TU PATRÓN ---
-    const BEZEL_SIZE = size * 0.12; // Proporción estándar de tus gauges
     const CENTER = size / 2;
-    const RADIUS = CENTER - BEZEL_SIZE;
-
-    const dims = {
-        CENTER,
-        BEZEL_SIZE,
-        RADIUS
-    };
-
-    const GAUGE_THEME = {
-        colors: {
-            bg: '#000000', // El fondo sólido que solicitaste en el patrón
-            sailBlue: "#00ffff"
-        }
-    };
-
+    const RADIUS = CENTER - (size * 0.12);
+    
+    // Configuración del arco de datos
     const strokeWidth = 10;
-    const dataRadius = dims.RADIUS - 15; // El arco de VMG por dentro del fondo
+    const dataRadius = RADIUS - 15; 
     const circumference = 2 * Math.PI * dataRadius;
 
     const performance = Math.min(vmg / targetVMG, 1.1);
@@ -30,60 +17,31 @@ const VMGNavigator = ({ vmg = 0, targetVMG = 6.5, size = 180 }) => {
 
     return (
         <View style={[styles.container, { width: size, height: size }]}>
-            <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            {/* 1. Usamos el Frame común (sin el Hub central para este caso) */}
+            <VesselGaugeFrame size={size} showHub={false}>
+                
+                {/* 2. Definiciones locales específicas del VMG */}
                 <Defs>
-                    <GaugeDefs />
-
                     <LinearGradient id="vmgProgGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                         <Stop offset="0%" stopColor="rgba(0, 255, 255, 0.1)" />
-                        <Stop offset="100%" stopColor={isTopPerformance ? "#FFFFFF" : GAUGE_THEME.colors.sailBlue} />
+                        <Stop offset="100%" stopColor={isTopPerformance ? "#FFFFFF" : "#00ffff"} />
                     </LinearGradient>
-
-                    {/* Efectos de cristal y flare para la capa final */}
-                    <LinearGradient id="gaugeGlass" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="white" stopOpacity="0.15" />
-                        <Stop offset="50%" stopColor="white" stopOpacity="0" />
-                    </LinearGradient>
-                    <RadialGradient id="sogFlare" cx="30%" cy="30%" rx="30%" ry="30%">
-                        <Stop offset="0%" stopColor="white" stopOpacity="0.4" />
-                        <Stop offset="100%" stopColor="white" stopOpacity="0" />
-                    </RadialGradient>
                 </Defs>
 
-                {/* 1. ANILLO SIGUIENDO TU PATRÓN EXACTO */}
-                <G>
-                    {/* Capa Exterior del Bisel */}
-                    <Circle
-                        cx={dims.CENTER} cy={dims.CENTER}
-                        r={dims.CENTER - (dims.BEZEL_SIZE / 4)}
-                        fill="none"
-                        stroke="url(#bezelOuter)"
-                        strokeWidth={dims.BEZEL_SIZE / 2}
-                    />
-                    {/* Capa Interior del Bisel */}
-                    <Circle
-                        cx={dims.CENTER} cy={dims.CENTER}
-                        r={dims.RADIUS + (dims.BEZEL_SIZE / 4)}
-                        fill="none"
-                        stroke="url(#bezelInner)"
-                        strokeWidth={dims.BEZEL_SIZE / 2}
-                    />
-
-                </G>
-
-                {/* 2. DATOS (ARCO VMG) */}
+                {/* 3. Fondo del arco (Track gris sutil) */}
                 <Path
-                    d={`M ${dims.CENTER + dataRadius * Math.cos(2.35)} ${dims.CENTER + dataRadius * Math.sin(2.35)} 
-                       A ${dataRadius} ${dataRadius} 0 1 1 ${dims.CENTER + dataRadius * Math.cos(0.78)} ${dims.CENTER + dataRadius * Math.sin(0.78)}`}
+                    d={`M ${CENTER + dataRadius * Math.cos(2.35)} ${CENTER + dataRadius * Math.sin(2.35)} 
+                       A ${dataRadius} ${dataRadius} 0 1 1 ${CENTER + dataRadius * Math.cos(0.78)} ${CENTER + dataRadius * Math.sin(0.78)}`}
                     fill="none"
                     stroke="rgba(255,255,255,0.05)"
                     strokeWidth={strokeWidth}
                     strokeLinecap="round"
                 />
 
+                {/* 4. Arco de Progreso VMG */}
                 <Circle
-                    cx={dims.CENTER}
-                    cy={dims.CENTER}
+                    cx={CENTER}
+                    cy={CENTER}
                     r={dataRadius}
                     fill="none"
                     stroke="url(#vmgProgGradient)"
@@ -91,15 +49,11 @@ const VMGNavigator = ({ vmg = 0, targetVMG = 6.5, size = 180 }) => {
                     strokeDasharray={`${circumference * 0.75} ${circumference}`}
                     strokeDashoffset={circumference * 0.75 - (performance * circumference * 0.75)}
                     strokeLinecap="round"
-                    transform={`rotate(135, ${dims.CENTER}, ${dims.CENTER})`}
+                    transform={`rotate(135, ${CENTER}, ${CENTER})`}
                 />
+            </VesselGaugeFrame>
 
-                {/* 3. CAPAS SUPERIORES (CRISTAL Y FLARE) */}
-                <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill="url(#gaugeGlass)" pointerEvents="none" />
-                <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill="url(#sogFlare)" pointerEvents="none" />
-            </Svg>
-
-            {/* Lectura central */}
+            {/* 5. LECTURA CENTRAL (Por encima de todo) */}
             <View style={styles.labelContainer}>
                 <Text style={styles.vmgTitle}>VMG</Text>
                 <Text style={[styles.vmgValue, isTopPerformance && styles.glowText]}>
@@ -107,7 +61,10 @@ const VMGNavigator = ({ vmg = 0, targetVMG = 6.5, size = 180 }) => {
                 </Text>
                 <Text style={styles.unit}>KTS</Text>
 
-                <View style={[styles.perfBadge, { backgroundColor: isTopPerformance ? GAUGE_THEME.colors.sailBlue : 'rgba(255,255,255,0.08)' }]}>
+                <View style={[
+                    styles.perfBadge, 
+                    { backgroundColor: isTopPerformance ? "#00ffff" : 'rgba(255,255,255,0.08)' }
+                ]}>
                     <Text style={[styles.perfText, { color: isTopPerformance ? '#000' : '#FFF' }]}>
                         {Math.round(performance * 100)}%
                     </Text>
@@ -119,7 +76,7 @@ const VMGNavigator = ({ vmg = 0, targetVMG = 6.5, size = 180 }) => {
 
 const styles = StyleSheet.create({
     container: { alignItems: 'center', justifyContent: 'center' },
-    labelContainer: { position: 'absolute', alignItems: 'center', zIndex: 10 },
+    labelContainer: { position: 'absolute', alignItems: 'center', zIndex: 50 },
     vmgTitle: { color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 },
     vmgValue: {
         color: '#FFF',
@@ -127,7 +84,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontFamily: 'NauticalFont',
         textShadowColor: 'rgba(0,0,0,0.8)',
-        textShadowRadius: 4
+        textShadowRadius: 6
     },
     unit: { color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: -4 },
     perfBadge: {
