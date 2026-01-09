@@ -1,3 +1,5 @@
+
+// --- LIBRERÍAS Y COMPONENTES ---
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
@@ -6,8 +8,6 @@ import {
     ImageBackground, Modal, Platform, ScrollView, StyleSheet,
     Switch, Text, TouchableOpacity, useWindowDimensions, View
 } from 'react-native';
-
-// Utils y Hooks
 import ControlPanelBase from './components/ControlPanelBase';
 import DataSquare from './components/DataSquare.js';
 import HeadingGauge from './components/gauges/HeadingGauge';
@@ -18,11 +18,16 @@ import SailDataOverlay from './components/SailDataOverlay.js';
 import { useSignalKData } from './useSignalKData';
 import { mpsToKnots, normalizeAngle, radToDeg } from './utils/Utils';
 
+
+/**
+ * SignalKConnector: Consola principal de navegación y telemetría
+ */
 const SignalKConnector = () => {
+    // --- Dimensiones de ventana y datos ---
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const data = useSignalKData();
 
-    // --- ESTADOS ---
+    // --- Estados de UI y configuración ---
     const [isModalVisible, setModalVisible] = useState(false);
     const [isNightMode, setIsNightMode] = useState(false);
     const [maxSOG, setMaxSOG] = useState(0);
@@ -33,22 +38,24 @@ const SignalKConnector = () => {
         rudderLimit: 35,
     });
 
-    // --- CÁLCULOS OPTIMIZADOS (useMemo) ---
+    // --- Cálculos optimizados (useMemo) ---
     const processed = useMemo(() => {
-        // 1. Corriente (Set & Drift)
+        
+        // Corriente (Set & Drift)
         const rawDrift = data['navigation.current.drift'] ?? data['performance.currentDrift'] ?? data['ocean.drift'] ?? 0;
         const rawSet = data['navigation.current.setTrue'] ?? data['performance.currentSetTrue'] ?? data['ocean.set'] ?? 0;
         const rawRudderAngle = data['steering.rudderAngle'] ?? 0;
-        // 2. Navegación (COG)
+        // Navegación (COG)
         const headingRad = data['navigation.headingTrue'] ?? 0;
         const headingDeg = radToDeg(headingRad);
-
-        // 3. Viento (TWS & TWD)
+        // Viento (TWS & TWD)
         const twsMps = data['environment.wind.speedTrue'] ?? 0;
         const twdRad = data['environment.wind.directionTrue'] ?? 0;
         const twdDeg = radToDeg(twdRad);
         const depth = data['navigation.depthBelowTransducer'] ?? 0;
         const engineRpm = data['propulsion.0.revolutions'] ?? 0;
+        const awaRad = data['environment.wind.angleApparent'] ?? 0;
+        const awaDeg = normalizeAngle(radToDeg(awaRad));
 
         return {
             driftKnots: rawDrift * 1.94384,
@@ -66,16 +73,19 @@ const SignalKConnector = () => {
             rudderAngle: Math.round(rawRudderAngle * (180 / Math.PI)),
             engineRpm: engineRpm * 60,
             navigationMode: ((engineRpm * 60) > 666661 ? 'ENGINE' : 'SAIL'),
+            awa: awaDeg,
         };
     }, [data]);
 
-    // --- LÓGICA DE INTERFAZ ---
+
+    // --- Lógica de interfaz y tema visual ---
     const columnWidth = (windowWidth * 0.94) / 3;
     const gaugeSize = Math.min(windowWidth * 0.90, windowHeight * 0.45);
     const rotationAngle = -processed.cogDeg;
     const isDepthAlarmActive = processed.depthMeters < 3.0 && processed.depthMeters > 0;
     const absTWA = Math.abs(processed.twaCog || 0);
     const isTwaInTarget = absTWA >= ajustesConsola.minAnguloCeñida && absTWA <= ajustesConsola.maxAnguloCeñida;
+    // Paleta de colores y tema
     const theme = {
         heading: '#dc1212ff',
         wind: isNightMode ? '#900' : '#ff9800',
@@ -85,12 +95,15 @@ const SignalKConnector = () => {
         statusDot: isTwaInTarget ? '#00FF00' : '#FF0000'
     };
 
-    // --- EFECTOS (Persistencia y Máximos) ---
+
+    // --- Efectos: persistencia y máximos ---
+    // Actualiza máximos de SOG y TWS
     useEffect(() => {
         if (parseFloat(processed.sogKnots) > maxSOG) setMaxSOG(parseFloat(processed.sogKnots));
         if (parseFloat(processed.twsKnots) > maxTWS) setMaxTWS(parseFloat(processed.twsKnots));
     }, [processed.sogKnots, processed.twsKnots]);
 
+    // Carga los ajustes persistentes al montar el componente
     useEffect(() => {
         const cargarAjustes = async () => {
             const guardados = await AsyncStorage.getItem('@ajustes_consola');
@@ -99,6 +112,9 @@ const SignalKConnector = () => {
         cargarAjustes();
     }, []);
 
+    /**
+     * Guarda un ajuste de consola de forma persistente en AsyncStorage
+     */
     const guardarAjustePersistente = async (clave, valor) => {
         const nuevos = { ...ajustesConsola, [clave]: Math.round(valor) };
         setAjustesConsola(nuevos);
@@ -319,7 +335,8 @@ const SignalKConnector = () => {
     );
 };
 
-// ... Estilos (se mantienen igual pero añadí unos necesarios para los sliders nuevos)
+
+// --- Estilos globales del componente ---
 const styles = StyleSheet.create({
     mainContainer: { flex: 1, backgroundColor: '#000' },
     screen: { alignItems: 'center', paddingTop: Platform.OS === 'ios' ? 50 : 20 },
@@ -344,4 +361,5 @@ const styles = StyleSheet.create({
     closeBtnText: { color: '#fff', fontWeight: 'bold' },
 });
 
+// Export principal del componente
 export default SignalKConnector;

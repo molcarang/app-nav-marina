@@ -19,6 +19,7 @@ const INITIAL_DATA = {
     'propulsion.0.rpm': 0,
     'steering.rudderAngle': 0,
     'propulsion.0.revolutions': 0,
+    'environment.wind.angleApparent': 0
 };
 
 /**
