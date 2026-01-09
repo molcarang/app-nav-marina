@@ -163,7 +163,7 @@ const HeadingGauge = React.memo(({
                     <G rotation={display.awa} origin={`${dims.CENTER}, ${dims.CENTER}`}>
                         <Line x1={dims.CENTER} y1={dims.CENTER} x2={dims.CENTER} y2={dims.BEZEL_SIZE + 35} stroke="#2196f3" strokeWidth="2" strokeDasharray="5, 3" opacity={0.8} />
                         <Polygon points={`${dims.CENTER - 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER + 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER},${dims.BEZEL_SIZE + 35}`} fill="url(#needleBlue)" stroke="#fff" strokeWidth="1" />
-                        <SvgText x={dims.CENTER} y={dims.BEZEL_SIZE + 22} fill="white" fontSize={dims.FONT_NUM} fontWeight="bold" textAnchor="middle" fontFamily="NauticalFont">A</SvgText>
+                        <SvgText x={dims.CENTER} y={dims.BEZEL_SIZE + 20} fill="white" fontSize={dims.FONT_NUM} fontWeight="bold" textAnchor="middle" fontFamily="NauticalFont">A</SvgText>
                     </G>
                 )}
 
@@ -172,7 +172,7 @@ const HeadingGauge = React.memo(({
                     <G rotation={display.twa} origin={`${dims.CENTER}, ${dims.CENTER}`}>
                         <Line x1={dims.CENTER} y1={dims.CENTER} x2={dims.CENTER} y2={dims.BEZEL_SIZE + 35} stroke="#ff9800" strokeWidth="2" strokeDasharray="5, 3" opacity={0.8} />
                         <Polygon points={`${dims.CENTER - 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER + 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER},${dims.BEZEL_SIZE + 35}`} fill="url(#needleOrange)" stroke="#fff" strokeWidth="1" />
-                        <SvgText x={dims.CENTER} y={dims.BEZEL_SIZE + 22} fill="white" 
+                        <SvgText x={dims.CENTER} y={dims.BEZEL_SIZE + 20} fill="white" 
                         fontSize={dims.FONT_NUM} fontWeight="bold" textAnchor="middle" fontFamily="NauticalFont">T</SvgText>
                     </G>
                 )}
