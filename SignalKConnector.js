@@ -55,7 +55,9 @@ const SignalKConnector = () => {
         const depth = data['navigation.depthBelowTransducer'] ?? 0;
         const engineRpm = data['propulsion.0.revolutions'] ?? 0;
         const awaRad = data['environment.wind.angleApparent'] ?? 0;
-        const awaDeg = normalizeAngle(radToDeg(awaRad));
+        const awaDeg = radToDeg(awaRad);
+        const awaFixed = Math.abs(normalizeAngle(awaDeg)).toFixed(0);
+        const awaSide = normalizeAngle(awaDeg) < 0 ? 'P' : 'S';
 
         return {
             driftKnots: rawDrift * 1.94384,
@@ -73,7 +75,9 @@ const SignalKConnector = () => {
             rudderAngle: Math.round(rawRudderAngle * (180 / Math.PI)),
             engineRpm: engineRpm * 60,
             navigationMode: ((engineRpm * 60) > 666661 ? 'ENGINE' : 'SAIL'),
-            awa: awaDeg,
+            awa: normalizeAngle(awaDeg),
+            awaFixed: awaFixed,
+            awaDigital: 'AWA (' + awaSide + ')'
         };
     }, [data]);
 
@@ -146,6 +150,7 @@ const SignalKConnector = () => {
                                     headingColor={theme.heading}
                                     rotationAngle={rotationAngle}
                                     value={processed.cogDigital}
+                                    awa={processed.awa}
                                     unit="°COG"
                                     twd={processed.twdDeg}
                                     twaCog={processed.twaCog}
@@ -189,7 +194,14 @@ const SignalKConnector = () => {
                                     unit="MTRS"
                                     color={isDepthAlarmActive ? theme.alarm : theme.bg}
                                     textColor={isDepthAlarmActive ? "#fff" : undefined} />
-                                <DataSquare label="TWD" value={processed.twdDigital} unit="TRUE" textColor={theme.twd} color={theme.bg} />
+
+                                <DataSquare 
+                                label={processed.awaDigital}
+                                value={processed.awaFixed} 
+                                unit="DEG" 
+                                textColor={theme.twd} 
+                                color={theme.bg} />
+
                             </View>
                         </View>
                     </ScrollView>

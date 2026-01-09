@@ -28,8 +28,7 @@ const HeadingGauge = React.memo(({
 }) => {
     const { width: windowWidth, height: windowHeight } = require('react-native').useWindowDimensions();
     const COMPASS_SIZE = size || Math.min(windowWidth * 0.9, windowHeight * 0.45);
-
-    const [display, setDisplay] = useState({
+        const [display, setDisplay] = useState({
         heading: parseFloat(value) || 0,
         twa: twaCog || 0,
         awa: awa || 0, // Recuperado
