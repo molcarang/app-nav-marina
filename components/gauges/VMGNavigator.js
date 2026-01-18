@@ -1,25 +1,24 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Circle, Defs, G, LinearGradient, Path, Stop } from 'react-native-svg';
+import { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import VesselGaugeFrame from './VesselGaugeFrame';
 
 const VMGNavigator = ({ vmg = 0, targetVMG = 6.5, size = 180 }) => {
     const CENTER = size / 2;
     const RADIUS = CENTER - (size * 0.12);
-    
+
     // Configuración del arco de datos
     const strokeWidth = 10;
-    const dataRadius = RADIUS - 15; 
+    const dataRadius = RADIUS - 15;
     const circumference = 2 * Math.PI * dataRadius;
 
-    const performance = Math.min(vmg / targetVMG, 1.1);
+    const performance = Math.min(vmg / targetVMG, 1);
     const isTopPerformance = performance >= 0.98;
 
     return (
         <View style={[styles.container, { width: size, height: size }]}>
             {/* 1. Usamos el Frame común (sin el Hub central para este caso) */}
             <VesselGaugeFrame size={size} showHub={false}>
-                
+
                 {/* 2. Definiciones locales específicas del VMG */}
                 <Defs>
                     <LinearGradient id="vmgProgGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -62,7 +61,7 @@ const VMGNavigator = ({ vmg = 0, targetVMG = 6.5, size = 180 }) => {
                 <Text style={styles.unit}>KTS</Text>
 
                 <View style={[
-                    styles.perfBadge, 
+                    styles.perfBadge,
                     { backgroundColor: isTopPerformance ? "#00ffff" : 'rgba(255,255,255,0.08)' }
                 ]}>
                     <Text style={[styles.perfText, { color: isTopPerformance ? '#000' : '#FFF' }]}>

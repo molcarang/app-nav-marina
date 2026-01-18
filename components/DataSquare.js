@@ -88,7 +88,7 @@ const DataSquare = ({
     };
 
     return (
-        <View style={[styles.container, { width: SQUARE_WIDTH, height: SQUARE_HEIGHT, backgroundColor: color }]}>
+        <View style={[styles.container, { width: SQUARE_WIDTH, height: SQUARE_HEIGHT, backgroundColor: color, borderWidth: 1, borderColor: labelUnitColor }]}>
             <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={handlePress}

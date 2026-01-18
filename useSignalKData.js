@@ -17,7 +17,9 @@ const INITIAL_DATA = {
     'navigation.current.setTrue': 0,
     'steering.rudderAngle': 0,
     'propulsion.0.revolutions': 0,
-    'environment.wind.angleApparent': 0
+    'environment.wind.angleApparent': 0,
+    'steering.autopilot.state': 'standby',
+    'vessels.self.navigation.attitude.roll': 0
 };
 
 

@@ -40,7 +40,7 @@ const SignalKConnector = () => {
 
     // --- Cálculos optimizados (useMemo) ---
     const processed = useMemo(() => {
-        
+
         // Corriente (Set & Drift)
         const rawDrift = data['navigation.current.drift'] ?? data['performance.currentDrift'] ?? data['ocean.drift'] ?? 0;
         const rawSet = data['navigation.current.setTrue'] ?? data['performance.currentSetTrue'] ?? data['ocean.set'] ?? 0;
@@ -58,7 +58,8 @@ const SignalKConnector = () => {
         const awaDeg = radToDeg(awaRad);
         const awaFixed = Math.abs(normalizeAngle(awaDeg)).toFixed(0);
         const awaSide = normalizeAngle(awaDeg) < 0 ? 'P' : 'S';
-
+        const apState = data['steering.autopilot.state'];
+        const vesselHeelRad = data['vessels.self.navigation.attitude.roll'] ?? 0;
         return {
             driftKnots: rawDrift * 1.94384,
             setDeg: radToDeg(rawSet),
@@ -77,9 +78,26 @@ const SignalKConnector = () => {
             navigationMode: ((engineRpm * 60) > 666661 ? 'ENGINE' : 'SAIL'),
             awa: normalizeAngle(awaDeg),
             awaFixed: awaFixed,
-            awaDigital: 'AWA (' + awaSide + ')'
+            awaDigital: 'AWA (' + awaSide + ')',
+            apState: apState,
+            vesselHeelDeg: radToDeg(vesselHeelRad)
         };
     }, [data]);
+
+
+    const apInfo = useMemo(() => {
+        const state = processed.apState; // Viene de Signal K
+        switch (state) {
+            case 'auto':
+                return { label: 'PILOT', value: 'AUTO', color: '#79f17bff' }; // Verde ceñida
+            case 'wind':
+                return { label: 'PILOT', value: 'WIND', color: '#2196f3' };   // Azul viento
+            case 'route':
+                return { label: 'PILOT', value: 'TRACK', color: '#bb86fc' };  // Púrpura navegación
+            default:
+                return { label: 'PILOT', value: 'STBY', color: '#ff4444' };   // Rojo standby
+        }
+    }, [processed.apState]);
 
 
     // --- Lógica de interfaz y tema visual ---
@@ -89,6 +107,8 @@ const SignalKConnector = () => {
     const isDepthAlarmActive = processed.depthMeters < 3.0 && processed.depthMeters > 0;
     const absTWA = Math.abs(processed.twaCog || 0);
     const isTwaInTarget = absTWA >= ajustesConsola.minAnguloCeñida && absTWA <= ajustesConsola.maxAnguloCeñida;
+    const apMode = processed.apState !== 'standby' ? processed.apState.toUpperCase() : 'MANUAL';
+    const apColor = processed.apState !== 'standby' ? '#79f17bff' : '#ff4444ff'; // Verde si está activo, Rojo si es manual
     // Paleta de colores y tema
     const theme = {
         heading: '#dc1212ff',
@@ -161,13 +181,11 @@ const SignalKConnector = () => {
                                     drift={processed.driftKnots}
                                 />
                             </View>
-
                             <View style={[styles.row, { marginBottom: 7 }]}>
                                 <InfoPanel dataArray={[{ label: 'MAX TWS', value: maxTWS, color: '#79f17bff' }]} color={theme.bg} width={columnWidth} />
                                 <InfoPanel dataArray={[{ label: 'MAX SOG', value: maxSOG, color: '#79f17bff' }]} color={theme.bg} width={columnWidth} />
-                                <View style={{ width: columnWidth }} />
+                                <InfoPanel dataArray={[{ label: apInfo.label, value: apInfo.value, color: apInfo.color }]} color={theme.bg} width={columnWidth} />
                             </View>
-
                             <View style={styles.row}>
                                 <DataSquare label="TWS" value={processed.twsKnots} unit="KTS" showHistory showProgressBar maxValue={maxTWS} color={theme.bg} onPress={() => setMaxTWS(0)} />
                                 <DataSquare
@@ -195,12 +213,12 @@ const SignalKConnector = () => {
                                     color={isDepthAlarmActive ? theme.alarm : theme.bg}
                                     textColor={isDepthAlarmActive ? "#fff" : undefined} />
 
-                                <DataSquare 
-                                label={processed.awaDigital}
-                                value={processed.awaFixed} 
-                                unit="DEG" 
-                                textColor={theme.twd} 
-                                color={theme.bg} />
+                                <DataSquare
+                                    label={processed.awaDigital}
+                                    value={processed.awaFixed}
+                                    unit="DEG"
+                                    textColor={theme.twd}
+                                    color={theme.bg} />
 
                             </View>
                         </View>
@@ -248,7 +266,7 @@ const SignalKConnector = () => {
                             >
                             </NavigationMode>
                         </View>
-                        <View style={styles.row}>
+                        <View style={styles.row} >
                             <ControlPanelBase>
                                 {processed.navigationMode === 'SAIL' ? (
                                     <>
@@ -258,7 +276,8 @@ const SignalKConnector = () => {
                                             heading={processed.cogDeg}
                                             vmg={Math.abs(processed.sogKnots * Math.cos((processed.twaCog * Math.PI) / 180))}
                                             targetVMG={maxSOG * Math.cos((ajustesConsola.minAnguloCeñida * Math.PI) / 180)}
-                                            size={140}
+                                            vesselHeelDeg={processed.vesselHeelDeg}
+                                            size={125}
                                         />
                                     </>
                                 ) : (

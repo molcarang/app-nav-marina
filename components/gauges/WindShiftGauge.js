@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { G, Line, Path } from 'react-native-svg';
 import { describeArc } from '../../utils/Utils';
@@ -16,11 +15,11 @@ const WindShiftGauge = ({ currentTWD = 0, meanTWD = 0, size = 180 }) => {
     return (
         <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
             <VesselGaugeFrame size={size} showHub={true}>
-                
+
                 {/* 1. ESCALA DE ROLES (Fijada en el fondo) */}
                 <G opacity={0.3}>
                     {[-20, -10, 0, 10, 20].map(tick => {
-                        const angle = 270 + (tick * 4); 
+                        const angle = 270 + (tick * 4);
                         const rad = (angle - 90) * (Math.PI / 180);
                         return (
                             <Line
