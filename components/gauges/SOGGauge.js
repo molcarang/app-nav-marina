@@ -278,4 +278,5 @@ const styles = StyleSheet.create({
     outerContainer: { alignItems: 'center', justifyContent: 'center' }
 });
 
+SogGauge.displayName = 'SogGauge';
 export default SogGauge;

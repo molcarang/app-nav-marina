@@ -221,4 +221,5 @@ const styles = StyleSheet.create({
     outerContainer: { alignItems: 'center', justifyContent: 'center' }
 });
 
+HeadingGauge.displayName = 'HeadingGauge';
 export default HeadingGauge;

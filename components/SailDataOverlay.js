@@ -1,10 +1,11 @@
 import { StyleSheet, View } from 'react-native';
+import { useWindTactic } from '../hooks/useWindTactic';
+import HeelGauge from './gauges/HeelGauge';
 import RudderGauge from './gauges/RudderGauge';
 import VMGNavigator from './gauges/VMGNavigator';
 import WindShiftGauge from './gauges/WindShiftGauge';
-import { useWindTactic } from '../hooks/useWindTactic';
 
-const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, twd }) => {
+const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, twd, vesselHeelDeg }) => {
     const { meanTWD } = useWindTactic(twd, 5);
     return (
         /* Cambiamos el Fragmento por un View contenedor con flex */
@@ -18,8 +19,10 @@ const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, twd }
                     alertAngle={rudderLimit}
                 />
                 <VMGNavigator
-                    currentTWD={twd} 
-                    meanTWD={meanTWD} 
+                    currentTWD={twd}
+                    vmg={vmg}
+                    targetVMG={targetVMG}
+                    meanTWD={meanTWD}
                     size={size}
                 />
             </View>
@@ -31,7 +34,11 @@ const SailDataOverlay = ({ rudderAngle, rudderLimit, size, vmg, targetVMG, twd }
                     meanTWD={meanTWD}
                     size={size}
                 />
-                {/* Aquí podrías añadir otro gauge en el futuro para equilibrar la fila */}
+                <HeelGauge
+                    heel={vesselHeelDeg}
+                    size={size}
+                    limit={20}
+                />
             </View>
 
         </View>
@@ -49,10 +56,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '100%',
         justifyContent: 'space-around',
-        paddingVertical: 10, // Espacio interno para que no se peguen
+        paddingVertical: 5, // Espacio interno para que no se peguen
     },
     secondRow: {
-        marginTop: 10, // Espacio extra entre la fila 1 y la 2
+        marginTop: 5, // Espacio extra entre la fila 1 y la 2
     }
 });
 
