@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
-import { Defs, Rect } from 'react-native-svg';
-import { Ellipse } from 'react-native-svg';
-import { GaugeDefs } from './shared/GaugeDefs';
 
 
 // --- CONFIGURACIÓN ESTÁTICA ---
@@ -91,7 +88,7 @@ const DataSquare = ({
     };
 
     return (
-        <View style={[styles.container, { width: SQUARE_WIDTH, height: SQUARE_HEIGHT, backgroundColor: color }]}>
+        <View style={[styles.container, { width: SQUARE_WIDTH, height: SQUARE_HEIGHT, backgroundColor: color, borderWidth: 1, borderColor: labelUnitColor }]}>
             <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={handlePress}

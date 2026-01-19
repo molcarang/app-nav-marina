@@ -3,7 +3,8 @@ export const GAUGE_THEME = {
     colors: {
         bg: 'rgba(40, 40, 40, 0.75)',
         border: '#ffffff',
-        red: '#dc1212ff',
+        engine: '#dc1212ff',
+        sail: '#00E5FF',
         centerHub: '#1a1a1a',
         textPrimary: '#ffffff',
     },

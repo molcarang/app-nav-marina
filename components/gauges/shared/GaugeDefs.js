@@ -19,6 +19,21 @@ export const GaugeDefs = () => (
             <Stop offset="0%" stopColor="#fff" stopOpacity="0.8" />
             <Stop offset="100%" stopColor="#666" stopOpacity="0" />
         </LinearGradient>
+        {/* Anillo azul mecanizado (Sail Mode) */}
+        <LinearGradient id="blueMetalOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#00E5FF" />   {/* Cian brillante */}
+            <Stop offset="100%" stopColor="#006064" /> {/* Cian oscuro/petróleo */}
+        </LinearGradient>
+
+        <LinearGradient id="blueMetalInner" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#00363a" />   {/* Sombra profunda */}
+            <Stop offset="100%" stopColor="#001214" /> {/* Casi negro azulado */}
+        </LinearGradient>
+
+        <LinearGradient id="blueMetalRidge" x1="100%" y1="100%" x2="0%" y2="0%">
+            <Stop offset="0%" stopColor="#E0F7FA" stopOpacity="0.8" /> {/* Brillo blanco/azul del filo */}
+            <Stop offset="100%" stopColor="#00E5FF" stopOpacity="0" />
+        </LinearGradient>
         {/* Anillo rojo mecanizado */}
         <LinearGradient id="redMetalOuter" x1="0%" y1="0%" x2="100%" y2="100%">
             <Stop offset="0%" stopColor="#ff4d4d" />

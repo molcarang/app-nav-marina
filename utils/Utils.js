@@ -32,6 +32,10 @@ export const lerpAngle = (start, end, factor) => {
     return start + diff * factor;
 };
 
+export const lerp = (start, end, t) => {
+    return start + (end - start) * t;
+};
+
 /**
  * Cálculos Geométricos para SVG
  */
