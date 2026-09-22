@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import Svg, { Defs, Ellipse, G, Line, Rect } from 'react-native-svg';
+import Svg, { Defs, G, Rect } from 'react-native-svg';
 import { GAUGE_THEME } from '../styles/GaugeTheme';
 import { GaugeDefs } from './gauges/shared/GaugeDefs';
 import EngineIcon from './icons/EngineIcon';
@@ -132,4 +132,5 @@ const styles = StyleSheet.create({
     }
 });
 
+NavigationMode.displayName = 'NavigationMode';
 export default NavigationMode;

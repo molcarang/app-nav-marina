@@ -2,6 +2,11 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Documentación del proyecto
+
+- [Arquitectura y explicación de las partes del proyecto](ARQUITECTURA.md).
+- [Paths de Signal K y configuración del simulador](SIGNALK-SIMULADOR.md).
+
 ## Get started
 
 1. Install dependencies

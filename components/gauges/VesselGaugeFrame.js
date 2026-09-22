@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, RadialGradient, Stop } from 'react-native-svg';
 import { GaugeDefs }  from './shared/GaugeDefs';
 import { GAUGE_THEME } from '../../styles/GaugeTheme';

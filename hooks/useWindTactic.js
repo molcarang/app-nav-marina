@@ -37,7 +37,7 @@ export const useWindTactic = (currentTWD, bufferMinutes = 5) => {
         // Normalizar a 0-360
         setMeanTWD((avgDeg + 360) % 360);
 
-    }, [currentTWD]);
+    }, [currentTWD, MAX_SAMPLES]);
 
     return { meanTWD };
 };

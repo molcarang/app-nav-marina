@@ -60,7 +60,7 @@ const DataSquare = ({
             duration: 800,
             useNativeDriver: false,
         }).start();
-    }, [numericValue, maxValue]);
+    }, [numericValue, maxValue, animatedHeight]);
 
     useEffect(() => {
         if (showHistory && numericValue >= 0) {
