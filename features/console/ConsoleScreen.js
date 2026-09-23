@@ -3,7 +3,9 @@ import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSignalKData } from '../../services/signalk/useSignalKData';
 import ConsoleSettingsModal from './components/ConsoleSettingsModal';
 import { useConsoleSettings } from './hooks/useConsoleSettings';
+import { useDepthAlarmSound } from './hooks/useDepthAlarmSound';
 import { useSessionMaxima } from './hooks/useSessionMaxima';
+import { useInstrumentHistory } from './hooks/useInstrumentHistory';
 import { deriveNavigationData } from './model/navigationData';
 import NavigationPage from './screens/NavigationPage';
 import LandscapeNavigationPage from './screens/LandscapeNavigationPage';
@@ -14,9 +16,20 @@ import { getConsoleTheme } from './styles/consoleTheme';
 export default function ConsoleScreen() {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const { settings, isLoaded, updateSetting, saveSetting } = useConsoleSettings();
-    const data = useSignalKData(settings.signalKAddress, isLoaded);
+    const { history: twsHistory, clearHistory: clearTwsHistory, recordReading } = useInstrumentHistory(
+        'tws', settings.signalKAddress, isLoaded, settings.historyHours,
+    );
+    const { history: sogHistory, clearHistory: clearSogHistory, recordReading: recordSogReading } = useInstrumentHistory(
+        'sog', settings.signalKAddress, isLoaded, settings.sogHistoryHours,
+    );
+    const data = useSignalKData(settings.signalKAddress, isLoaded, recordReading, recordSogReading);
     const navigation = useMemo(() => deriveNavigationData(data), [data]);
+    const depthSoundActive = isLoaded && data.isConnected && settings.depthAlarmSound
+        && navigation.depthMeters > 0 && navigation.depthMeters < settings.depthAlarmMeters;
+    const { testSound: testDepthSound, silenceForMinute, remainingSeconds } = useDepthAlarmSound(depthSoundActive);
     const { maxSOG, maxTWS, resetSOG, resetTWS } = useSessionMaxima(navigation.sogKnots, navigation.twsKnots);
+    const resetTwsWithHistory = () => { resetTWS(); clearTwsHistory(); };
+    const resetSogWithHistory = () => { resetSOG(); clearSogHistory(); };
     const [isSettingsOpen, setSettingsOpen] = useState(false);
     const [isNightMode, setNightMode] = useState(false);
     const theme = getConsoleTheme(isNightMode, navigation.twaCog, settings);
@@ -24,7 +37,9 @@ export default function ConsoleScreen() {
     const isLandscape = windowWidth > windowHeight;
     const pageProps = {
         navigation, settings, maxSOG, isConnected: data.isConnected,
-        isNightMode, theme, windowWidth, gaugeSize,
+        isNightMode, theme, windowWidth, gaugeSize, twsHistory, sogHistory,
+        onSilenceDepth: depthSoundActive && remainingSeconds === 0 ? silenceForMinute : undefined,
+        depthSoundMuted: depthSoundActive && remainingSeconds > 0,
     };
     return (
         <View style={styles.mainContainer}>
@@ -33,8 +48,8 @@ export default function ConsoleScreen() {
                     {...pageProps}
                     maxTWS={maxTWS}
                     onOpenSettings={() => setSettingsOpen(true)}
-                    onResetSOG={resetSOG}
-                    onResetTWS={resetTWS}
+                    onResetSOG={resetSogWithHistory}
+                    onResetTWS={resetTwsWithHistory}
                 />
             ) : (
             <ScrollView
@@ -47,8 +62,8 @@ export default function ConsoleScreen() {
                     {...pageProps}
                     maxTWS={maxTWS}
                     onOpenSettings={() => setSettingsOpen(true)}
-                    onResetSOG={resetSOG}
-                    onResetTWS={resetTWS}
+                    onResetSOG={resetSogWithHistory}
+                    onResetTWS={resetTwsWithHistory}
                 />
                 {/* Telemetría desactivada temporalmente.
                 <TelemetryPage
@@ -64,6 +79,7 @@ export default function ConsoleScreen() {
                 isNightMode={isNightMode}
                 onChange={updateSetting}
                 onSave={saveSetting}
+                onTestDepthSound={testDepthSound}
                 onNightModeChange={setNightMode}
                 onClose={() => setSettingsOpen(false)}
             />

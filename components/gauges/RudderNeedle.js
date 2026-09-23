@@ -17,14 +17,14 @@ export default function RudderNeedle({ angle, limit = 35, isNightMode = false })
 
     return (
         <G>
-            <Text x={165} y={35} textAnchor="middle" fontFamily="NauticalFont" fontSize={17} fill={foreground}>RUDDER</Text>
+            <Text x={165} y={(35 - 20) / 1.3} textAnchor="middle" fontFamily="NauticalFont" fontSize={17} fill={foreground}>RUDDER</Text>
             <Path d={describeArc(165, 100, 83, 180, 245)} stroke={port} strokeWidth={5} fill="none" />
             <Path d={describeArc(165, 100, 83, 115, 180)} stroke={starboard} strokeWidth={5} fill="none" />
             {ticks.map(tick => {
                 const degrees = 180 - tick / range * 65;
                 const inner = polarToCartesian(165, 100, 77, degrees);
                 const outer = polarToCartesian(165, 100, 89, degrees);
-                const label = polarToCartesian(165, 100, 104, degrees);
+                const label = polarToCartesian(165, 100, tick === 0 ? 104 : 116, degrees);
                 return (
                     <G key={tick}>
                         <Line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke={foreground} strokeWidth={1.5} />

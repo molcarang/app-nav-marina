@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react';
 import { Modal, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { normalizeServerAddress } from '../../../services/signalk/serverAddress.js';
 import { styles } from '../styles/settingsStyles';
+import HistoryRetentionSetting from './HistoryRetentionSetting';
 /** Presenta ajustes; el hook se ocupa de guardarlos. */
-export default function ConsoleSettingsModal({ visible, settings, isNightMode, onChange, onSave, onNightModeChange, onClose }) {
+export default function ConsoleSettingsModal({ visible, settings, isNightMode, onChange, onSave, onNightModeChange, onClose, onTestDepthSound }) {
     const [address, setAddress] = useState(settings.signalKAddress);
     const [status, setStatus] = useState('');
     const [saving, setSaving] = useState(false);
@@ -54,10 +55,14 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
                         {!!status && <Text accessibilityLiveRegion="polite" style={styles.serverHint}>{status}</Text>}
                     </View>
 
+                    <HistoryRetentionSetting hours={settings.historyHours} visible={visible} onSave={onSave} />
+                    <HistoryRetentionSetting metric="SOG" settingKey="sogHistoryHours" hours={settings.sogHistoryHours} visible={visible} onSave={onSave} />
+
                     {[
             { label: 'Mínimo Ceñida', key: 'minAnguloCeñida', min: 10, max: 45, color: '#00ff00' },
             { label: 'Máximo Ceñida', key: 'maxAnguloCeñida', min: 50, max: 90, color: '#ff0000' },
-            { label: 'Alerta de Timón', key: 'rudderLimit', min: 20, max: 45, color: '#00ffff' }
+            { label: 'Alerta de Timón', key: 'rudderLimit', min: 20, max: 45, color: '#00ffff' },
+            { label: 'Alarma de profundidad', key: 'depthAlarmMeters', min: 0.5, max: 30, step: 0.1, unit: ' m', color: '#dc1212' }
         ].map(s => (<View
             key={s.key}
             style={styles.settingRowContainer}
@@ -65,15 +70,15 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
             <View style={styles.labelRow}>
                 <Text style={styles.settingLabel}>{s.label}</Text>
                 <Text style={[styles.valueLabel, { color: s.color }]}>
-                    {settings[s.key] || (s.key === 'rudderLimit' ? 35 : 0)}°
+                    {s.key === 'depthAlarmMeters' ? settings[s.key].toFixed(1) : settings[s.key]}{s.unit ?? '°'}
                 </Text>
             </View>
             <Slider
                 style={styles.slider}
                 minimumValue={s.min}
                 maximumValue={s.max}
-                step={1}
-                value={settings[s.key] || (s.key === 'rudderLimit' ? 35 : 0)}
+                step={s.step ?? 1}
+                value={settings[s.key]}
                 onValueChange={(v) => onChange(s.key, v)}
                 onSlidingComplete={(v) => onSave(s.key, v)}
                 minimumTrackTintColor={s.color}
@@ -83,6 +88,17 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
         </View>))}
 
                     <View style={styles.divider}/>
+                    <View style={styles.settingRowContainer}>
+                        <View style={styles.settingRow}>
+                            <Text style={styles.settingLabel}>Sonido de alarma de profundidad</Text>
+                            <Switch value={settings.depthAlarmSound} onValueChange={value => onSave('depthAlarmSound', value)}
+                                trackColor={{ false: '#333', true: '#dc1212' }} />
+                        </View>
+                        <Text style={styles.serverHint}>Aviso repetido mientras la profundidad esté por debajo del límite. En web, toca la pantalla para habilitar el audio.</Text>
+                        <TouchableOpacity onPress={onTestDepthSound} style={styles.serverSave}>
+                            <Text style={styles.closeBtnText}>PROBAR SONIDO</Text>
+                        </TouchableOpacity>
+                    </View>
 
                     <View style={styles.settingRow}>
                         <Text style={styles.settingLabel}>Modo Noche</Text>

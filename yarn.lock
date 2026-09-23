@@ -1007,6 +1007,15 @@
     dotenv-expand "~11.0.6"
     getenv "^2.0.0"
 
+"@expo/env@~2.4.3":
+  version "2.4.3"
+  resolved "https://registry.npmjs.org/@expo/env/-/env-2.4.3.tgz"
+  integrity sha512-M1NXeZCA1mkMkYOyIe7PlyRX0/jqFtMoJgyblnlq/vpCRfmueFT7RnGSQG8uEFDF5WHOFGijAQ3fogPh3/n5Ng==
+  dependencies:
+    chalk "^4.0.0"
+    debug "^4.3.4"
+    getenv "^2.0.0"
+
 "@expo/fingerprint@0.15.4":
   version "0.15.4"
   resolved "https://registry.npmjs.org/@expo/fingerprint/-/fingerprint-0.15.4.tgz"
@@ -1022,6 +1031,19 @@
     minimatch "^9.0.0"
     p-limit "^3.1.0"
     resolve-from "^5.0.0"
+    semver "^7.6.0"
+
+"@expo/image-utils@^0.11.5":
+  version "0.11.5"
+  resolved "https://registry.npmjs.org/@expo/image-utils/-/image-utils-0.11.5.tgz"
+  integrity sha512-KPQBTpmpAfy/Vu9y4wPW808/qtZxjYmyJg8cm2QCPAupp+qEWA3b5zmk0ulOwQ9OgeHxuCPgUqWgkwHFo7UsrQ==
+  dependencies:
+    "@expo/require-utils" "^57.0.5"
+    "@expo/spawn-async" "^1.8.0"
+    chalk "^4.0.0"
+    getenv "^2.0.0"
+    jimp-compact "0.16.1"
+    parse-png "^2.1.0"
     semver "^7.6.0"
 
 "@expo/image-utils@^0.8.8":
@@ -1150,6 +1172,15 @@
     semver "^7.6.0"
     xml2js "0.6.0"
 
+"@expo/require-utils@^57.0.5":
+  version "57.0.5"
+  resolved "https://registry.npmjs.org/@expo/require-utils/-/require-utils-57.0.5.tgz"
+  integrity sha512-kTAXj9lDFEIPMsbAOGCGbjBbMF0oi7CqkYM79KOX0DDD9wSwXmlKL1z2h8OwsrBf7mbOo2DjlRvZu4BEjrIxGw==
+  dependencies:
+    "@babel/code-frame" "^7.20.0"
+    "@babel/core" "^7.25.2"
+    "@babel/plugin-transform-modules-commonjs" "^7.24.8"
+
 "@expo/schema-utils@^0.1.8":
   version "0.1.8"
   resolved "https://registry.npmjs.org/@expo/schema-utils/-/schema-utils-0.1.8.tgz"
@@ -1160,12 +1191,12 @@
   resolved "https://registry.npmjs.org/@expo/sdk-runtime-versions/-/sdk-runtime-versions-1.0.0.tgz"
   integrity sha512-Doz2bfiPndXYFPMRwPyGa1k5QaKDVpY806UJj570epIiMzWaYyCtobasyfC++qfIXVb5Ocy7r3tP9d62hAQ7IQ==
 
-"@expo/spawn-async@^1.7.2":
-  version "1.7.2"
-  resolved "https://registry.npmjs.org/@expo/spawn-async/-/spawn-async-1.7.2.tgz"
-  integrity sha512-QdWi16+CHB9JYP7gma19OVVg0BFkvU8zNj9GjWorYI8Iv8FUxjOCcYRuAmX4s/h91e4e7BPsskc8cSrZYho9Ew==
+"@expo/spawn-async@^1.7.2", "@expo/spawn-async@^1.8.0":
+  version "1.8.0"
+  resolved "https://registry.npmjs.org/@expo/spawn-async/-/spawn-async-1.8.0.tgz"
+  integrity sha512-eb9xxd/LbuEGSdua4NumCu/McVB9EM+F/JxB9pWgnERw4HQ9XyTNH1KapG6oqLWR8TuRK2LQfzJlmNi94CVobw==
   dependencies:
-    cross-spawn "^7.0.3"
+    cross-spawn "^7.0.6"
 
 "@expo/sudo-prompt@^9.3.1":
   version "9.3.2"
@@ -2766,7 +2797,7 @@ cross-fetch@^3.1.5:
   dependencies:
     node-fetch "^2.7.0"
 
-cross-spawn@^7.0.3, cross-spawn@^7.0.6:
+cross-spawn@^7.0.6:
   version "7.0.6"
   resolved "https://registry.npmjs.org/cross-spawn/-/cross-spawn-7.0.6.tgz"
   integrity sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==
@@ -3415,6 +3446,14 @@ exec-async@^2.2.0:
   resolved "https://registry.npmjs.org/exec-async/-/exec-async-2.2.0.tgz"
   integrity sha512-87OpwcEiMia/DeiKFzaQNBNFeN3XkkpYIh9FyOqq5mS2oKv3CBE67PXoEKcr6nodWdXNogTiQ0jE2NGuoffXPw==
 
+expo-asset@*:
+  version "57.0.18"
+  resolved "https://registry.npmjs.org/expo-asset/-/expo-asset-57.0.18.tgz"
+  integrity sha512-zDIQkUr0NM2S7YRj98Zohf/OBuM1q0o4ctxLz1C1oe4/33lHNLjp+2v3qUtBWVwn0zKka8UGADmS8M+83Wi6pw==
+  dependencies:
+    "@expo/image-utils" "^0.11.5"
+    expo-constants "~57.0.19"
+
 expo-asset@~12.0.12:
   version "12.0.12"
   resolved "https://registry.npmjs.org/expo-asset/-/expo-asset-12.0.12.tgz"
@@ -3423,6 +3462,11 @@ expo-asset@~12.0.12:
     "@expo/image-utils" "^0.8.8"
     expo-constants "~18.0.12"
 
+expo-audio@~1.1.1:
+  version "1.1.1"
+  resolved "https://registry.npmjs.org/expo-audio/-/expo-audio-1.1.1.tgz"
+  integrity sha512-CPCpJ+0AEHdzWROc0f00Zh6e+irLSl2ALos/LPvxEeIcJw1APfBa4DuHPkL4CQCWsVe7EnUjFpdwpqsEUWcP0g==
+
 expo-constants@^18.0.12, expo-constants@~18.0.12:
   version "18.0.12"
   resolved "https://registry.npmjs.org/expo-constants/-/expo-constants-18.0.12.tgz"
@@ -3430,6 +3474,13 @@ expo-constants@^18.0.12, expo-constants@~18.0.12:
   dependencies:
     "@expo/config" "~12.0.12"
     "@expo/env" "~2.0.8"
+
+expo-constants@~57.0.19:
+  version "57.0.19"
+  resolved "https://registry.npmjs.org/expo-constants/-/expo-constants-57.0.19.tgz"
+  integrity sha512-3eK1kZRwCdMizQLlM/PPlPwjaPnB5qKvdRDMBMnB1ZxmvWJBf9TB4uEO4DMMfIPaFUxYFs29dsR5fPr1gh3FTQ==
+  dependencies:
+    "@expo/env" "~2.4.3"
 
 expo-file-system@~19.0.21:
   version "19.0.21"
@@ -6508,7 +6559,7 @@ typed-array-length@^1.0.7:
     possible-typed-array-names "^1.0.0"
     reflect.getprototypeof "^1.0.6"
 
-typescript@>=4.8.4, "typescript@>=4.8.4 <6.0.0", typescript@~5.9.2:
+"typescript@^5.0.0 || ^5.0.0-0 || ^6.0.0 || ^7.0.0", typescript@>=4.8.4, "typescript@>=4.8.4 <6.0.0", typescript@~5.9.2:
   version "5.9.3"
   resolved "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz"
   integrity sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==

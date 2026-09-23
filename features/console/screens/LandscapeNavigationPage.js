@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import HeadingGauge from '../../../components/gauges/HeadingGauge';
-import HeelPanel from '../../../components/gauges/HeelPanel';
+import HeelPanel, { HEEL_PANEL_ASPECT_RATIO } from '../../../components/gauges/HeelPanel';
 import ConnectionHeader from '../components/ConnectionHeader';
 import NavigationControls from '../components/NavigationControls';
 import ConsoleBackground from '../components/ConsoleBackground';
+import GpsPositionPanel, { GPS_PANEL_HEIGHT } from '../components/GpsPositionPanel';
 
 /** Dos mitades: compás a la izquierda y controles a la derecha. */
 export default function LandscapeNavigationPage(props) {
@@ -26,7 +27,7 @@ export default function LandscapeNavigationPage(props) {
     const heelWidth = Math.max(1, controlsWidth - 9);
     // Sin la fila de modos, las tarjetas aprovechan el espacio libre sobre la escora.
     // Se reservan márgenes, resumen superior y espacio inferior; en pantallas bajas hay scroll.
-    const cardHeight = Math.max(80, Math.min(itemWidth * 0.9, (area.height - controlsTop - heelWidth * 0.425 - 104) / 2));
+    const cardHeight = Math.max(80, Math.min(itemWidth * 0.9, (area.height - controlsTop - heelWidth * HEEL_PANEL_ASPECT_RATIO - GPS_PANEL_HEIGHT - 112) / 2));
 
     return (
         <View style={[localStyles.screen, { backgroundColor: isNightMode ? '#050000' : '#0a0a0a' }]}>
@@ -82,6 +83,10 @@ export default function LandscapeNavigationPage(props) {
                                     width={heelWidth}
                                     isNightMode={isNightMode}
                                 />
+                                <GpsPositionPanel width={heelWidth} position={navigation.position}
+                                    heading={navigation.cogDeg}
+                                    receivedAt={navigation.positionReceivedAt} isConnected={isConnected}
+                                    isNightMode={isNightMode} backgroundColor={props.theme.bg} />
                             </View>
                         )}
                     </ScrollView>

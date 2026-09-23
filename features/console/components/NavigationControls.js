@@ -6,11 +6,11 @@ import { getAutopilotInfo } from '../model/autopilot';
 import { styles } from '../styles/consoleStyles';
 
 /** Controles compartidos por ambas orientaciones; el contenedor define las dimensiones opcionales. */
-export default function NavigationControls({ navigation, settings, maxSOG, maxTWS, isNightMode, theme, windowWidth, onResetSOG, onResetTWS, itemWidth, cardHeight, landscape = false }) {
+export default function NavigationControls({ navigation, settings, maxSOG, maxTWS, isNightMode, theme, windowWidth, onResetSOG, onResetTWS, itemWidth, cardHeight, landscape = false, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted }) {
     const columnWidth = itemWidth ?? windowWidth * 0.94 / 3;
     const indicatorHeight = 32;
     const apInfo = getAutopilotInfo(navigation.apState);
-    const isDepthAlarmActive = navigation.depthMeters > 0 && navigation.depthMeters < 3;
+    const isDepthAlarmActive = navigation.depthMeters > 0 && navigation.depthMeters < settings.depthAlarmMeters;
     const modePanel = (
                 <NavigationModeLabels
                     itemWidth={itemWidth}
@@ -56,25 +56,33 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                         width={itemWidth}
                         height={cardHeight}
                         label="TWS"
+                        historySamples={twsHistory}
+                        historyHours={settings.historyHours}
+                        showHistoryPopup
+                        isNightMode={isNightMode}
                         value={navigation.twsKnots}
                         unit="KTS"
                         showHistory
                         showProgressBar
                         maxValue={maxTWS}
                         color={theme.bg}
-                        onPress={onResetTWS}
+                        onReset={onResetTWS}
                     />
                     <DataSquare
                         width={itemWidth}
                         height={cardHeight}
                         label="SOG"
+                        historySamples={sogHistory}
+                        historyHours={settings.sogHistoryHours}
+                        showHistoryPopup
+                        isNightMode={isNightMode}
                         value={navigation.sogKnots}
                         unit="KTS"
                         showHistory
                         showProgressBar
                         maxValue={maxSOG}
                         color={theme.bg}
-                        onPress={onResetSOG}
+                        onReset={onResetSOG}
                     />
                     <DataSquare
                         width={itemWidth}
@@ -103,6 +111,8 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                         width={itemWidth}
                         height={cardHeight}
                         label="DEPTH"
+                        onPress={onSilenceDepth}
+                        soundMuted={depthSoundMuted}
                         value={navigation.depthMeters.toFixed(1)}
                         unit="MTRS"
                         color={isDepthAlarmActive ? theme.alarm : theme.bg}

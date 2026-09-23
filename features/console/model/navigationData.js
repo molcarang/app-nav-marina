@@ -1,7 +1,17 @@
 import { mpsToKnots, normalizeAngle, radToDeg } from '../../../utils/Utils.js';
 import { SIGNALK_PATHS } from '../../../services/signalk/paths.js';
+import { isValidPosition } from './gpsPosition.js';
 /** Convierte datos crudos para la consola; conserva las fórmulas existentes. */
 export function deriveNavigationData(data) {
+    const realPosition = data[SIGNALK_PATHS.position];
+    const simulatedPosition = {
+        latitude: data[SIGNALK_PATHS.simulatedLatitude],
+        longitude: data[SIGNALK_PATHS.simulatedLongitude],
+    };
+    const hasRealPosition = isValidPosition(realPosition);
+    const position = hasRealPosition ? realPosition : isValidPosition(simulatedPosition) ? simulatedPosition : null;
+    const simulatedReceivedAt = Number.isFinite(data.simulatedLatitudeReceivedAt) && Number.isFinite(data.simulatedLongitudeReceivedAt)
+        ? Math.min(data.simulatedLatitudeReceivedAt, data.simulatedLongitudeReceivedAt) : null;
     // Corriente (Set & Drift)
     const rawDrift = data['navigation.current.drift'] ?? data['performance.currentDrift'] ?? data['ocean.drift'] ?? 0;
     const rawSet = data['navigation.current.setTrue'] ?? data['performance.currentSetTrue'] ?? data['ocean.set'] ?? 0;
@@ -22,6 +32,8 @@ export function deriveNavigationData(data) {
     const apState = data['steering.autopilot.state'];
     const vesselHeelRad = data['vessels.self.navigation.attitude.roll'] ?? 0;
     return {
+        position,
+        positionReceivedAt: hasRealPosition ? data.positionReceivedAt ?? null : position ? simulatedReceivedAt : null,
         driftKnots: rawDrift * 1.94384,
         setDeg: radToDeg(rawSet),
         cogDeg: headingDeg, // Para compatibilidad con componentes existentes

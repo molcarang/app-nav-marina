@@ -78,6 +78,20 @@
         "maxValue": 0.261799,
         "dataPeriod": 60,
         "outputPeriod": 0.5
+      },
+      {
+        "path": "simulation.gps.latitude",
+        "minValue": 39.4699,
+        "maxValue": 39.4699,
+        "dataPeriod": 60,
+        "outputPeriod": 1
+      },
+      {
+        "path": "simulation.gps.longitude",
+        "minValue": -0.3763,
+        "maxValue": -0.3763,
+        "dataPeriod": 60,
+        "outputPeriod": 1
       }
     ]
   }

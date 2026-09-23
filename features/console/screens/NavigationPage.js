@@ -5,7 +5,7 @@ import ConsolePage from '../components/ConsolePage';
 import ConnectionHeader from '../components/ConnectionHeader';
 import { styles } from '../styles/consoleStyles';
 /** Primera página: rumbo, viento, profundidad y máximos. */
-export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, isConnected, isNightMode, theme, windowWidth, gaugeSize, onOpenSettings, onResetSOG, onResetTWS }) {
+export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, isConnected, isNightMode, theme, windowWidth, gaugeSize, onOpenSettings, onResetSOG, onResetTWS, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted }) {
     return (
         <ConsolePage
             width={windowWidth}
@@ -38,6 +38,10 @@ export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, i
                     />
                 </View>
                 <NavigationControls
+                    onSilenceDepth={onSilenceDepth}
+                    depthSoundMuted={depthSoundMuted}
+                    twsHistory={twsHistory}
+                    sogHistory={sogHistory}
                     navigation={navigation}
                     settings={settings}
                     maxSOG={maxSOG}

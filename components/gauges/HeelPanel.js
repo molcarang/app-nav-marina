@@ -5,6 +5,8 @@ import SteelBall from './SteelBall';
 import SternSailboat from './SternSailboat';
 import { describeArc, polarToCartesian } from '../../utils/Utils';
 
+export const HEEL_PANEL_ASPECT_RATIO = 300 / 800;
+
 /** Escora en grados. La escala se limita a ±30°, la cifra conserva el valor real. */
 export default function HeelPanel({ heel, width, isNightMode = false, rudderAngle, rudderLimit, backgroundColor }) {
     const valid = Number.isFinite(heel);
@@ -29,17 +31,18 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
 
     return (
         <View
-            style={{ width, marginTop: 8, marginBottom: 8 }}
+            style={{ width, marginTop: 3, marginBottom: 13 }}
             accessible
             accessibilityLabel={`${valid ? `Escora ${displayedAngle} grados, ${centered ? 'centrado' : angle < 0 ? 'babor' : 'estribor'}` : 'Escora sin datos'}. Timón ${Number.isFinite(rudderAngle) ? `${Math.round(rudderAngle)} grados` : 'sin datos'}`}
         >
-            <Svg width={width} height={width * 0.425} viewBox="0 0 800 340">
-                <Rect x={2} y={2} width={796} height={336} rx={18} fill={backgroundColor ?? (isNightMode ? 'rgba(30, 0, 0, 0.8)' : 'rgba(45, 45, 45, 0.75)')} stroke={muted} strokeWidth={2} />
-                <G transform="translate(-14, 20) scale(1.3)">
+            <Svg width={width} height={width * HEEL_PANEL_ASPECT_RATIO} viewBox="0 0 800 300">
+                <Rect x={2} y={2} width={796} height={296} rx={18} fill={backgroundColor ?? (isNightMode ? 'rgba(30, 0, 0, 0.8)' : 'rgba(45, 45, 45, 0.75)')} stroke={muted} strokeWidth={2} />
+                <G transform="translate(11.24, 17.6) scale(1.144)">
                     <RudderNeedle angle={rudderAngle} limit={rudderLimit} isNightMode={isNightMode} />
                 </G>
-                <Line x1={400} y1={20} x2={400} y2={320} stroke={muted} strokeWidth={1} opacity={0.4} />
+                <Line x1={400} y1={20} x2={400} y2={280} stroke={muted} strokeWidth={1} opacity={0.4} />
 
+                <G transform="translate(72, 0) scale(0.88)">
                 {/* La línea de agua permanece horizontal; solo gira el barco. */}
                 <G transform="translate(200, 0)">
                 <Line x1={325} y1={195} x2={475} y2={195} stroke={muted} strokeWidth={1} />
@@ -49,10 +52,15 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
                     </G>
                 </G>
                 </G>
-                <Text x={720} y={128} textAnchor="middle" fill={foreground} fontSize={44} fontFamily="NauticalFont">
-                    {valid ? `${displayedAngle}°` : '---'}
-                </Text>
-                <Text x={720} y={159} textAnchor="middle" fill={accent} fontSize={12} fontFamily="NauticalFont" letterSpacing={1}>{side}</Text>
+                <Text x={600} y={35} textAnchor="middle" fill={foreground} fontSize={22.1} fontFamily="NauticalFont">HEEL</Text>
+                {valid && !centered && (
+                    <G>
+                        <Text x={angle < 0 ? 480 : 720} y={128} textAnchor="middle" fill={accent} fontSize={44} fontFamily="NauticalFont">
+                            {`${displayedAngle}°`}
+                        </Text>
+                        <Text x={angle < 0 ? 480 : 720} y={159} textAnchor="middle" fill={accent} fontSize={12} fontFamily="NauticalFont" letterSpacing={1}>{side}</Text>
+                    </G>
+                )}
 
                 {/* Pared posterior del tubo: capas transparentes sugieren el grosor del cristal. */}
                 <G fill="none" strokeLinecap="round">
@@ -65,12 +73,12 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
                 </G>
 
                 {/* Marcas cada 2° y valores numéricos cada 10°. */}
-                <Path d={describeArc(600, 40, channelRadius + 11, 180, 220)} fill="none" stroke={portColor} strokeWidth={2} />
-                <Path d={describeArc(600, 40, channelRadius + 11, 140, 180)} fill="none" stroke={starboardColor} strokeWidth={2} />
+                <Path d={describeArc(600, 40, channelRadius + 11, 180, 220)} fill="none" stroke={portColor} strokeWidth={8} />
+                <Path d={describeArc(600, 40, channelRadius + 11, 140, 180)} fill="none" stroke={starboardColor} strokeWidth={8} />
                 {Array.from({ length: 31 }, (_, index) => index * 2 - 30).map(degrees => {
                     const major = degrees % 10 === 0;
                     const scaleColor = degrees === 0 ? foreground : degrees < 0 ? portColor : starboardColor;
-                    const start = polarToCartesian(600, 40, channelRadius + (degrees === 0 ? -11 : major ? -6 : 3), scaleAngle(degrees));
+                    const start = polarToCartesian(600, 40, channelRadius + (degrees === 0 ? -15 : major ? -10 : -1), scaleAngle(degrees));
                     const end = polarToCartesian(600, 40, channelRadius + 11, scaleAngle(degrees));
                     const label = polarToCartesian(600, 40, 251, scaleAngle(degrees));
                     return (
@@ -93,6 +101,7 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
                 </G>
                 <Text x={428} y={316} fill={portColor} fontSize={16} fontFamily="NauticalFont" letterSpacing={2}>PORT</Text>
                 <Text x={772} y={316} textAnchor="end" fill={starboardColor} fontSize={16} fontFamily="NauticalFont" letterSpacing={2}>STBD</Text>
+                </G>
             </Svg>
         </View>
     );

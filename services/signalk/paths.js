@@ -4,6 +4,9 @@
  * simulator define ejemplos numéricos; después ejecuta npm run simulator:generate.
  */
 export const SIGNALK_FIELDS = {
+    position: { path: 'navigation.position', initialValue: null },
+    simulatedLatitude: { path: 'simulation.gps.latitude', initialValue: null, simulator: { minValue: 39.4699, maxValue: 39.4699, dataPeriod: 60, outputPeriod: 1 } },
+    simulatedLongitude: { path: 'simulation.gps.longitude', initialValue: null, simulator: { minValue: -0.3763, maxValue: -0.3763, dataPeriod: 60, outputPeriod: 1 } },
     apparentWindSpeed: { path: 'environment.wind.speedApparent', initialValue: 0, simulator: { minValue: 2.572222, maxValue: 15.433333, dataPeriod: 60, outputPeriod: 0.5 } },
     windDirection: { "path": "environment.wind.directionTrue", "initialValue": 0, "simulator": { "minValue": 1.396263, "maxValue": 1.745329, "dataPeriod": 60, "outputPeriod": 0.5 } },
     windSpeed: { "path": "environment.wind.speedTrue", "initialValue": 0, "simulator": { "minValue": 5.144444, "maxValue": 10.288889, "dataPeriod": 60, "outputPeriod": 0.5 } },
