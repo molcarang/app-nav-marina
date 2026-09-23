@@ -1,9 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { styles } from '../styles/consoleStyles';
-export default function ConnectionHeader({ isConnected, isNightMode, onOpenSettings }) {
+export default function ConnectionHeader({ isConnected, isNightMode, onOpenSettings, style }) {
     return (
-        <View style={styles.headerRow}>
+        <View style={[styles.headerRow, style]}>
             <Text style={[styles.statusText, { color: isNightMode ? '#400' : '#666' }]}>
                 {isConnected ? '🟢 CONNECTED' : '🔴 NOT CONNECTED'}
             </Text>

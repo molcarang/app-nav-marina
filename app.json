@@ -3,7 +3,7 @@
     "name": "app-nav-marina",
     "slug": "app-nav-marina",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "appnavmarina",
     "userInterfaceStyle": "automatic",

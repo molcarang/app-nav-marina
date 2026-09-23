@@ -4,6 +4,8 @@ Guía de la estructura reorganizada el 22/09/2026. La aplicación es una consola
 
 ## 1. Por dónde empezar a leer
 
+La consola tiene dos distribuciones según la orientación: `NavigationPage` conserva la vista vertical y `LandscapeNavigationPage` coloca el compás en la mitad izquierda y los controles en la derecha. Ambas utilizan `NavigationControls` para compartir los indicadores, sus valores y sus acciones. `ConsoleScreen` selecciona la distribución según las dimensiones; `app.json` permite ambas orientaciones. En horizontal los tamaños se calculan con el espacio real del contenedor y la columna derecha admite desplazamiento si falta altura.
+
 1. [app/index.js](app/index.js): carga la fuente y monta la consola.
 2. [ConsoleScreen.js](features/console/ConsoleScreen.js): coordina datos, ajustes y páginas.
 3. [NavigationPage.js](features/console/screens/NavigationPage.js): primera página, navegación.
@@ -40,7 +42,8 @@ features/console/                 Funcionalidad de la consola náutica
     consoleTheme.js               Colores y estado visual de ceñida
     settingsStyles.js             Estilos del modal
 services/signalk/
-  config.js                       Host, URL y catálogo de paths iniciales
+  config.js                       Host y URL de conexión
+  paths.js                        Catálogo común, valores iniciales y simulación
   useSignalKData.js                WebSocket y estado de lecturas
 components/                       Instrumentos y piezas reutilizables
   gauges/                         Indicadores SVG
@@ -92,7 +95,7 @@ Los componentes `themed-text`, `themed-view`, `parallax-scroll-view`, `hello-wav
 
 ## 5. Transporte y catálogo Signal K
 
-[config.js](services/signalk/config.js) reúne `SIGNALK_IP`, `SOCKET_URL` e `INITIAL_DATA`. La URL actual es `ws://openplotter.local:3000/signalk/v1/stream`.
+[config.js](services/signalk/config.js) define `SIGNALK_IP` y `SOCKET_URL`. [paths.js](services/signalk/paths.js) centraliza las rutas y genera `INITIAL_DATA`. La URL actual es `ws://openplotter.local:3000/signalk/v1/stream`.
 
 `INITIAL_DATA` contiene 12 paths y el estado local `isConnected`. Las lecturas numéricas comienzan a cero y el piloto en `standby`. El hook se suscribe al contexto `vessels.self`, formato delta, solicitando un periodo de 500 ms.
 
@@ -184,7 +187,8 @@ Limitaciones funcionales previas que permanecen:
 
 | Necesidad | Lugar |
 | --- | --- |
-| Servidor o paths | services/signalk/config.js |
+| Servidor | services/signalk/config.js |
+| Paths y ejemplos | services/signalk/paths.js |
 | Recepción o reconexión | services/signalk/useSignalKData.js |
 | Cálculo náutico | features/console/model/navigationData.js |
 | Página principal | features/console/screens/NavigationPage.js |
@@ -216,3 +220,11 @@ Los comandos de plataforma son alternativas. Las pruebas utilizan `node:test` y 
 Se comprueban conversiones, signos, cruce del norte, rendimiento, ajustes, piloto y cobertura del simulador. También se compararon temporalmente 100 escenarios con los cálculos anteriores. El lint y la exportación web verifican el código y el empaquetado; no sustituyen una prueba visual en dispositivo ni una conexión al servidor real.
 
 El script `reset-project` pertenece a la plantilla y mueve o elimina carpetas de código. No sirve para reiniciar normalmente la consola.
+
+## Catálogo común de paths
+
+La fuente única de rutas de la app es [services/signalk/paths.js](services/signalk/paths.js). Cada entrada de `SIGNALK_FIELDS` tiene un nombre lógico, `path`, `initialValue` y, si es numérica, valores de simulación. La suscripción y los cálculos usan este catálogo. Las alternativas históricas de corriente también están centralizadas, pero siguen sin suscribirse.
+
+Para corregir una ruta escalar, cambia solo su `path` y reinicia la app. Después ejecuta `npm run simulator:generate` para actualizar el ejemplo local `simulator.json`; su copia en el servidor debe actualizarse por separado. Este comando sustituye el ejemplo local con los valores del catálogo. Las tablas de esta guía son una referencia manual y deben revisarse si cambian las rutas.
+
+Si el nuevo path entrega un objeto, como `navigation.attitude`, cambiar el nombre no basta: hay que adaptar la extracción de `roll` y su valor inicial. La centralización no cambia automáticamente el tipo del dato ni corrige las rutas existentes.

@@ -18,12 +18,15 @@ const DataSquare = ({
     showProgressBar = false,
     showHistory = false,
     maxValue = 0,
-    onPress
+    onPress,
+    width,
+    height
 }) => {
     // 1. DIMENSIONES REACTIVAS
     const { width: windowWidth } = useWindowDimensions();
-    const SQUARE_WIDTH = (windowWidth * 0.9) / 3;
-    const SQUARE_HEIGHT = SQUARE_WIDTH * 0.9;
+    const SQUARE_WIDTH = width ?? (windowWidth * 0.9) / 3;
+    const SQUARE_HEIGHT = height ?? SQUARE_WIDTH * 0.9;
+    const fontBasis = height == null ? SQUARE_WIDTH : Math.min(SQUARE_WIDTH, SQUARE_HEIGHT / 0.9);
 
     // Dimensiones internas para el gráfico
     const chartW = SQUARE_WIDTH * 0.75;
@@ -133,19 +136,19 @@ const DataSquare = ({
 
                 {/* CONTENIDO: ETIQUETA + DOT */}
                 <View style={styles.labelWrapper}>
-                    <Text style={[styles.label, { color: labelUnitColor, fontSize: SQUARE_WIDTH * 0.13 }]}>
+                    <Text style={[styles.label, { color: labelUnitColor, fontSize: fontBasis * 0.13 }]}>
                         {label}
                     </Text>
                     {showStatusDot && <View style={[styles.statusDot, { backgroundColor: statusDotColor }]} />}
                 </View>
 
                 {/* VALOR PRINCIPAL (Escalado dinámico) */}
-                <Text style={[styles.value, { fontSize: SQUARE_WIDTH * 0.28 }]}>
+                <Text style={[styles.value, { fontSize: fontBasis * 0.28 }]}>
                     {value}
                 </Text>
 
                 {/* UNIDAD */}
-                <Text style={[styles.unit, { color: labelUnitColor, fontSize: SQUARE_WIDTH * 0.13 }]}>
+                <Text style={[styles.unit, { color: labelUnitColor, fontSize: fontBasis * 0.13 }]}>
                     {unit}
                 </Text>
             </TouchableOpacity>

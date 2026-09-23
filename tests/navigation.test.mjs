@@ -1,3 +1,4 @@
+import { SIGNALK_PATHS } from '../services/signalk/paths.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { deriveNavigationData, derivePerformance } from '../features/console/model/navigationData.js';
@@ -18,14 +19,14 @@ test('estado inicial: barco parado y piloto en espera', () => {
 test('convierte unidades y conserva los signos de viento y escora', () => {
     const navigation = deriveNavigationData({
         ...INITIAL_DATA,
-        'navigation.speedOverGround': 3.086667,
-        'environment.wind.speedTrue': 7.716667,
-        'navigation.headingTrue': Math.PI / 4,
-        'environment.wind.directionTrue': Math.PI / 2,
-        'environment.wind.angleApparent': -Math.PI / 6,
-        'steering.rudderAngle': Math.PI / 18,
-        'propulsion.0.revolutions': 30,
-        'vessels.self.navigation.attitude.roll': -Math.PI / 12,
+        [SIGNALK_PATHS.speedOverGround]: 3.086667,
+        [SIGNALK_PATHS.windSpeed]: 7.716667,
+        [SIGNALK_PATHS.heading]: Math.PI / 4,
+        [SIGNALK_PATHS.windDirection]: Math.PI / 2,
+        [SIGNALK_PATHS.apparentWindAngle]: -Math.PI / 6,
+        [SIGNALK_PATHS.rudderAngle]: Math.PI / 18,
+        [SIGNALK_PATHS.engineRevolutions]: 30,
+        [SIGNALK_PATHS.heel]: -Math.PI / 12,
     });
     assert.equal(navigation.sogKnots, '6.0');
     assert.equal(navigation.twsKnots, '15.0');
@@ -41,8 +42,8 @@ test('convierte unidades y conserva los signos de viento y escora', () => {
 test('normaliza el ángulo relativo al cruzar el norte', () => {
     const navigation = deriveNavigationData({
         ...INITIAL_DATA,
-        'navigation.headingTrue': 359 * Math.PI / 180,
-        'environment.wind.directionTrue': Math.PI / 180,
+        [SIGNALK_PATHS.heading]: 359 * Math.PI / 180,
+        [SIGNALK_PATHS.windDirection]: Math.PI / 180,
     });
     assert.ok(Math.abs(navigation.twaCog + 2) < 0.001);
 });

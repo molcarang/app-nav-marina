@@ -1,4 +1,5 @@
 import { mpsToKnots, normalizeAngle, radToDeg } from '../../../utils/Utils.js';
+import { SIGNALK_PATHS } from '../../../services/signalk/paths.js';
 /** Convierte datos crudos para la consola; conserva las fórmulas existentes. */
 export function deriveNavigationData(data) {
     // Corriente (Set & Drift)
@@ -27,6 +28,7 @@ export function deriveNavigationData(data) {
         cogDigital: headingDeg.toFixed(1),
         cogSquare: headingDeg.toFixed(0) + '°',
         twsKnots: mpsToKnots(twsMps),
+        awsKnots: Number(mpsToKnots(data[SIGNALK_PATHS.apparentWindSpeed] ?? 0)),
         twdDeg: twdDeg,
         twdDigital: !isNaN(twdDeg) ? Math.abs(normalizeAngle(twdDeg)).toFixed(0) + '°' : '---',
         twaCog: !isNaN(twdDeg) ? normalizeAngle(headingDeg - twdDeg) : null, // TWA respecto a proa (signed, COG)
