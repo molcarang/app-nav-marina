@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { formatCoordinate, isValidPosition } from '../model/gpsPosition.js';
 import HorizontalCompass from '../../../components/gauges/HorizontalCompass';
+import GpsMapBackground from './GpsMapBackground';
 
 export const GPS_PANEL_HEIGHT = 84;
 
@@ -18,6 +19,7 @@ export default function GpsPositionPanel({ width, position, receivedAt, isConnec
     return (
         <View style={[styles.panel, { width, height: GPS_PANEL_HEIGHT, backgroundColor,
             borderColor: isNightMode ? '#795353' : '#777' }]}>
+            <GpsMapBackground isNightMode={isNightMode} />
             <View style={styles.coordinates}>
                 {[{ label: 'LAT', value: valid ? formatCoordinate(position.latitude, true) : '—' },
                     { label: 'LON', value: valid ? formatCoordinate(position.longitude, false) : '—' }].map(item => (
@@ -37,9 +39,10 @@ export default function GpsPositionPanel({ width, position, receivedAt, isConnec
 }
 
 const styles = StyleSheet.create({
-    panel: { borderRadius: 15, borderWidth: 1, flexDirection: 'row', marginBottom: 8 },
+    panel: { borderRadius: 15, borderWidth: 1, flexDirection: 'row', marginBottom: 8, overflow: 'hidden' },
     status: { fontFamily: 'NauticalFont', fontSize: 8, marginTop: 4 },
-    coordinates: { width: '50%', justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 8, gap: 6 },
+    coordinates: { width: '50%', justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 8, gap: 6,
+        overflow: 'hidden', borderTopLeftRadius: 14, borderBottomLeftRadius: 14 },
     coordinate: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     label: { fontFamily: 'NauticalFont', fontSize: 9 },
     value: { fontFamily: 'NauticalFont', fontSize: 14, flex: 1, textAlign: 'right' },

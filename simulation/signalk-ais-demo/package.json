@@ -1,0 +1,10 @@
+{
+  "name": "signalk-ais-demo",
+  "version": "1.0.0",
+  "description": "Cuatro contactos AIS simulados para pruebas locales",
+  "main": "index.js",
+  "keywords": [
+    "signalk-node-server-plugin"
+  ],
+  "license": "UNLICENSED"
+}

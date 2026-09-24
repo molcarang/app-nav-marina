@@ -1,3 +1,4 @@
+import { useTranslation } from '../../../localization/LanguageProvider';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import EngineIcon from '../../../components/icons/EngineIcon';
@@ -7,6 +8,7 @@ import RudderIndicator from './RudderIndicator';
 
 /** Panel de modos alineado con los tres indicadores inferiores. */
 export default function NavigationModeLabels({ mode, windowWidth, isNightMode, height = 35, rudderAngle, rudderLimit, itemWidth, offsetY = -10 }) {
+    const { t } = useTranslation();
     const width = itemWidth ?? windowWidth * 0.9 / 3;
     const [rowWidth, setRowWidth] = useState(0);
     // Misma distribución que los tres InfoPanel: ancho, margen de 3 y space-evenly.
@@ -28,19 +30,19 @@ export default function NavigationModeLabels({ mode, windowWidth, isNightMode, h
                     },
                 ]}
             />
-            <View style={[styles.label, { width }]} accessibilityLabel={`Modo vela${mode === 'SAIL' ? ' activo' : ' inactivo'}`}>
+            <View style={[styles.label, { width }]} accessibilityLabel={t('modeState', { mode: t('sail'), state: t(mode === 'SAIL' ? 'active' : 'inactive') })}>
                 <SailIcon size={20} color={sailColor} />
                 <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.text, labelStyle, { color: sailColor }]}>
-                    SAIL
+                    {t('sail')}
                 </Text>
             </View>
             <View style={[styles.spacer, { width }]}>
                 <RudderIndicator angle={rudderAngle} alertAngle={rudderLimit} width={width} isNightMode={isNightMode} />
             </View>
-            <View style={[styles.label, { width }]} accessibilityLabel={`Modo motor${mode === 'ENGINE' ? ' activo' : ' inactivo'}`}>
+            <View style={[styles.label, { width }]} accessibilityLabel={t('modeState', { mode: t('engine'), state: t(mode === 'ENGINE' ? 'active' : 'inactive') })}>
                 <EngineIcon size={20} color={engineColor} />
                 <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.text, labelStyle, { color: engineColor }]}>
-                    ENGINE
+                    {t('engine')}
                 </Text>
             </View>
         </View>

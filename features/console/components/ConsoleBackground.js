@@ -1,14 +1,20 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Defs, G, LinearGradient, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 /** Azul profundo y curvas batimétricas decorativas, atenuadas en modo nocturno. */
 export default function ConsoleBackground({ isNightMode }) {
     const id = `console-${useId().replace(/:/g, '')}`;
+    const [size, setSize] = useState({ width: 0, height: 0 });
+    const updateSize = ({ nativeEvent: { layout } }) => {
+        setSize(previous => previous.width === layout.width && previous.height === layout.height
+            ? previous
+            : { width: layout.width, height: layout.height });
+    };
 
     return (
-        <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-            <Svg width="100%" height="100%">
+        <View pointerEvents="none" style={StyleSheet.absoluteFillObject} onLayout={updateSize}>
+            <Svg width={size.width} height={size.height}>
                 <Defs>
                     <LinearGradient id={`${id}-base`} x1="0%" y1="0%" x2="100%" y2="100%">
                         <Stop offset="0%" stopColor={isNightMode ? '#110b0b' : '#102b3c'} />
@@ -31,7 +37,8 @@ export default function ConsoleBackground({ isNightMode }) {
                 <Rect width="100%" height="100%" fill={`url(#${id}-light)`} />
                 <Rect width="100%" height="100%" fill={`url(#${id}-weave)`} opacity={isNightMode ? 0.3 : 0.7} />
             </Svg>
-            <Svg style={StyleSheet.absoluteFillObject} width="100%" height="100%" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+            {/* Ajusta las curvas a todo el panel sin recortarlas al cambiar de orientación. */}
+            <Svg style={StyleSheet.absoluteFillObject} width={size.width} height={size.height} viewBox="0 0 1200 800" preserveAspectRatio="none">
                 <G fill="none" stroke={isNightMode ? '#713333' : '#70b8bf'} strokeWidth={1} opacity={isNightMode ? 0.035 : 0.075}>
                     <Path d="M-100 480 C140 300 270 630 510 470 S880 180 1300 330" />
                     <Path d="M-100 510 C150 320 285 665 525 505 S900 205 1300 365" />

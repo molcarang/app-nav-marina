@@ -17,7 +17,7 @@ export const SIGNALK_FIELDS = {
     currentSet: { "path": "navigation.current.setTrue", "initialValue": 0, "simulator": { "minValue": 1.919862, "maxValue": 2.268928, "dataPeriod": 60, "outputPeriod": 0.5 } },
     rudderAngle: { "path": "steering.rudderAngle", "initialValue": 0, "simulator": { "minValue": -0.174533, "maxValue": 0.174533, "dataPeriod": 60, "outputPeriod": 0.5 } },
     engineRevolutions: { "path": "propulsion.0.revolutions", "initialValue": 0, "simulator": { "minValue": 0, "maxValue": 0, "dataPeriod": 60, "outputPeriod": 0.5 } },
-    apparentWindAngle: { "path": "environment..angleApparent", "initialValue": 0, "simulator": { "minValue": 0.349066, "maxValue": 0.698132, "dataPeriod": 60, "outputPeriod": 0.5 } },
+    apparentWindAngle: { "path": "environment.wind.angleApparent", "initialValue": 0, "simulator": { "minValue": 0.349066, "maxValue": 0.698132, "dataPeriod": 60, "outputPeriod": 0.5 } },
     autopilotState: { "path": "steering.autopilot.state", "initialValue": "standby" },
     heel: { "path": "vessels.self.navigation.attitude.roll", "initialValue": 0, "simulator": { "minValue": -0.261799, "maxValue": 0.261799, "dataPeriod": 60, "outputPeriod": 0.5 } },
 };

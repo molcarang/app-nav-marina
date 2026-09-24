@@ -25,7 +25,7 @@ export function deriveNavigationData(data) {
     const twdDeg = radToDeg(twdRad);
     const depth = data['navigation.depthBelowTransducer'] ?? 0;
     const engineRpm = data['propulsion.0.revolutions'] ?? 0;
-    const awaRad = data['environment.wind.angleApparent'] ?? 0;
+    const awaRad = data[SIGNALK_PATHS.apparentWindAngle] ?? 0;
     const awaDeg = radToDeg(awaRad);
     const awaFixed = Math.abs(normalizeAngle(awaDeg)).toFixed(0);
     const awaSide = normalizeAngle(awaDeg) < 0 ? 'P' : 'S';

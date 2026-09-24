@@ -1,9 +1,13 @@
+import { useTranslation } from '../../localization/LanguageProvider';
+import { getLanguageLocale } from '../../localization/translate';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import NightDimmer from '../NightDimmer';
 import Svg, { G, Line, Path, Text as SvgText } from 'react-native-svg';
 import { getHistoryChart } from './historyPath';
 import { historyWindowMs, getHistoryExtrema } from '../../features/console/model/twsHistory.js';
 
 export default function HistoryChartModal({ visible, onClose, history, label, unit, value, maxValue, isNightMode, historyHours = 2 }) {
+    const { t, language } = useTranslation();
     const { width, height } = useWindowDimensions();
     const accent = isNightMode ? '#bc7777' : '#79f17b';
     const foreground = isNightMode ? '#c49797' : '#eaf2f8';
@@ -17,7 +21,7 @@ export default function HistoryChartModal({ visible, onClose, history, label, un
     const minimum = extrema.min?.value.toFixed(1) ?? '—';
     const maximum = extrema.max?.value.toFixed(1) ?? '—';
     const sampleTime = sample => Number.isFinite(sample?.time)
-        ? new Date(sample.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
+        ? new Date(sample.time).toLocaleTimeString(getLanguageLocale(language), { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
     const quarterHourMs = 15 * 60 * 1000;
     const firstQuarter = new Date(windowStart);
     firstQuarter.setMinutes(Math.floor(firstQuarter.getMinutes() / 15) * 15, 0, 0);
@@ -27,10 +31,10 @@ export default function HistoryChartModal({ visible, onClose, history, label, un
         timeSeparators.push({ time, x: (time - windowStart) / windowMs * plotWidth });
     }
     const chart = getHistoryChart(history, plotWidth, plotHeight, range, now, historyHours);
-    const timeLabel = time => new Date(time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const timeLabel = time => new Date(time).toLocaleTimeString(getLanguageLocale(language), { hour: '2-digit', minute: '2-digit' });
 
     return (
-        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        <Modal visible={visible} transparent statusBarTranslucent navigationBarTranslucent animationType="fade" onRequestClose={onClose}>
             <View style={styles.overlay}>
                 <View accessibilityViewIsModal style={[styles.panel, {
                     width: Math.min(900, width * 0.94), maxHeight: height * 0.9,
@@ -38,11 +42,11 @@ export default function HistoryChartModal({ visible, onClose, history, label, un
                     borderColor: isNightMode ? '#684444' : '#4b6a7c',
                 }]}>
                     <ScrollView keyboardShouldPersistTaps="handled">
-                        <Text accessibilityRole="header" style={[styles.title, { color: foreground }]}>{label} · HISTORIAL</Text>
+                        <Text accessibilityRole="header" style={[styles.title, { color: foreground }]}>{t('historyHeading', { metric: label })}</Text>
                         <Text style={[styles.reading, { color: accent }]}>{value} {unit}</Text>
                         <View style={styles.extremaRow}>
-                            {[{ title: 'MÁX', value: maximum, time: sampleTime(extrema.max), color: isNightMode ? '#c49797' : '#ffd070' },
-                                { title: 'MÍN', value: minimum, time: sampleTime(extrema.min), color: isNightMode ? '#b38b8b' : '#80d7ed' }].map(item => (
+                            {[{ title: t('maximum'), value: maximum, time: sampleTime(extrema.max), color: isNightMode ? '#c49797' : '#ffd070' },
+                                { title: t('minimum'), value: minimum, time: sampleTime(extrema.min), color: isNightMode ? '#b38b8b' : '#80d7ed' }].map(item => (
                                 <View key={item.title} style={[styles.extremaBadge, { borderColor: item.color }]}>
                                     <Text style={[styles.extremaLabel, { color: item.color }]}>{item.title}</Text>
                                     <Text style={[styles.extremaValue, { color: foreground }]}>{item.value} {unit}</Text>
@@ -52,7 +56,7 @@ export default function HistoryChartModal({ visible, onClose, history, label, un
                         </View>
                         {history.length > 1 ? (
                             <Svg width="100%" height={Math.max(150, Math.min(330, height * 0.48))} viewBox="0 0 640 280"
-                                accessible accessibilityLabel={`Historial de ${label}, ${history.length} valores, escala hasta ${range.toFixed(1)} ${unit}`}>
+                                accessible accessibilityLabel={t('historyDescription', { metric: label, count: history.length, range: range.toFixed(1), unit })}>
                                 <G transform="translate(65, 16)">
                                     {timeSeparators.map(({ time, x }) => (
                                         <Line key={time} x1={x} y1={0} x2={x} y2={plotHeight}
@@ -74,12 +78,13 @@ export default function HistoryChartModal({ visible, onClose, history, label, un
                                     ))}
                                 </G>
                             </Svg>
-                        ) : <Text style={[styles.empty, { color: foreground }]}>Esperando más lecturas para dibujar el gráfico.</Text>}
+                        ) : <Text style={[styles.empty, { color: foreground }]}>{t('historyWaiting')}</Text>}
                         <TouchableOpacity accessibilityRole="button" onPress={onClose} style={styles.close}>
-                            <Text style={styles.closeText}>CERRAR</Text>
+                            <Text style={styles.closeText}>{t('close')}</Text>
                         </TouchableOpacity>
                     </ScrollView>
                 </View>
+                <NightDimmer />
             </View>
         </Modal>
     );

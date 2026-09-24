@@ -3,6 +3,7 @@ import { DEFAULT_SIGNALK_ADDRESS } from '../../../services/signalk/serverAddress
 import { DEFAULT_HISTORY_HOURS } from './twsHistory.js';
 export const SETTINGS_STORAGE_KEY = '@ajustes_consola';
 export const DEFAULT_SETTINGS = {
+    language: 'es',
     historyHours: DEFAULT_HISTORY_HOURS,
     sogHistoryHours: DEFAULT_HISTORY_HOURS,
     signalKAddress: DEFAULT_SIGNALK_ADDRESS,
@@ -10,5 +11,7 @@ export const DEFAULT_SETTINGS = {
     maxAnguloCeñida: 60,
     rudderLimit: 35,
     depthAlarmMeters: 3,
+    depthAlarmEnabled: true,
     depthAlarmSound: true,
+    nightIntensity: 30,
 };

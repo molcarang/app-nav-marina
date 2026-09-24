@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import HeadingGauge from '../../../components/gauges/HeadingGauge';
 import HeelPanel, { HEEL_PANEL_ASPECT_RATIO } from '../../../components/gauges/HeelPanel';
 import ConnectionHeader from '../components/ConnectionHeader';
+import AisToggleButton from '../components/AisToggleButton';
 import NavigationControls from '../components/NavigationControls';
 import ConsoleBackground from '../components/ConsoleBackground';
 import GpsPositionPanel, { GPS_PANEL_HEIGHT } from '../components/GpsPositionPanel';
@@ -11,6 +12,8 @@ import GpsPositionPanel, { GPS_PANEL_HEIGHT } from '../components/GpsPositionPan
 export default function LandscapeNavigationPage(props) {
     const { navigation, settings, isConnected, isNightMode, onOpenSettings } = props;
     const [area, setArea] = useState({ width: 0, height: 0 });
+    const [controlsHeight, setControlsHeight] = useState(0);
+    const [scrollOffset, setScrollOffset] = useState(0);
     // Se mide el espacio real, después de cabecera, márgenes y áreas del sistema.
     const columnWidth = area.width / 2;
     const previousGaugeSize = Math.max(1, Math.min(
@@ -22,8 +25,14 @@ export default function LandscapeNavigationPage(props) {
     const gaugeColumnWidth = Math.max(columnWidth, gaugeSize + 4);
     // Compensa el margen superior de 3 puntos de los InfoPanel.
     const controlsTop = Math.max(0, (area.height - gaugeSize) / 2 - 3);
+    // El panel GPS es el último elemento y tiene 8 px de margen inferior.
+    const aisBottom = controlsHeight > 0
+        ? Math.max(8, Math.min(area.height - 44, area.height - (controlsTop + controlsHeight - 8 - scrollOffset)))
+        : 8;
     const controlsWidth = Math.max(1, area.width - gaugeColumnWidth) * 0.96;
     const itemWidth = Math.max(1, (controlsWidth - 24) / 3);
+    // El piloto termina tras el espacio exterior de la fila y su margen de 3 px.
+    const pilotRightInset = (area.width - gaugeColumnWidth - controlsWidth) / 2 + 4.5;
     const heelWidth = Math.max(1, controlsWidth - 9);
     // Sin la fila de modos, las tarjetas aprovechan el espacio libre sobre la escora.
     // Se reservan márgenes, resumen superior y espacio inferior; en pantallas bajas hay scroll.
@@ -39,7 +48,8 @@ export default function LandscapeNavigationPage(props) {
                     isConnected={isConnected}
                     isNightMode={isNightMode}
                     onOpenSettings={onOpenSettings}
-                    style={{ marginBottom: 4, width: '96%' }}
+                    settingsWidth={area.width > 0 ? itemWidth : undefined}
+                    style={{ marginBottom: 4, width: '100%', paddingLeft: '2%', paddingRight: Math.max(0, pilotRightInset) }}
                 />
                 <View
                     style={localStyles.columns}
@@ -48,6 +58,9 @@ export default function LandscapeNavigationPage(props) {
                     <View style={[localStyles.compass, { width: gaugeColumnWidth }]}>
                         {area.width > 0 && (
                             <HeadingGauge
+                                showAis={props.aisVisible}
+                                aisTargets={props.aisTargets} position={navigation.position}
+                                positionReceivedAt={navigation.positionReceivedAt} isConnected={isConnected}
                                 size={gaugeSize}
                                 value={navigation.cogDigital}
                                 awa={navigation.awa}
@@ -62,13 +75,20 @@ export default function LandscapeNavigationPage(props) {
                                 drift={navigation.driftKnots}
                             />
                         )}
+                        <View style={{ position: 'absolute', left: 8, bottom: aisBottom }}>
+                            <AisToggleButton visible={props.aisVisible} onPress={props.onToggleAis} />
+                        </View>
                     </View>
+                    <View style={[localStyles.controls, { width: Math.max(0, area.width - gaugeColumnWidth) }]}>
                     <ScrollView
-                        style={[localStyles.controls, { width: Math.max(0, area.width - gaugeColumnWidth) }]}
+                        style={{ flex: 1 }}
+                        onScroll={({ nativeEvent }) => setScrollOffset(nativeEvent.contentOffset.y)}
+                        scrollEventThrottle={16}
                         contentContainerStyle={[localStyles.controlsContent, { paddingTop: controlsTop }]}
                     >
                         {area.width > 0 && (
-                            <View style={{ width: controlsWidth, alignItems: 'center' }}>
+                            <View style={{ width: controlsWidth, alignItems: 'center' }}
+                                onLayout={({ nativeEvent }) => setControlsHeight(nativeEvent.layout.height)}>
                                 <NavigationControls
                                     {...props}
                                     landscape
@@ -90,6 +110,7 @@ export default function LandscapeNavigationPage(props) {
                             </View>
                         )}
                     </ScrollView>
+                    </View>
                 </View>
             </View>
         </View>

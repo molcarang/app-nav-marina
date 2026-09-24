@@ -1,3 +1,4 @@
+import { useTranslation } from '../localization/LanguageProvider';
 import React from 'react';
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Svg, { Defs, G, Rect } from 'react-native-svg';
@@ -7,6 +8,7 @@ import EngineIcon from './icons/EngineIcon';
 import SailIcon from './icons/SailIcon';
 
 const NavigationMode = React.memo(({ isSail }) => {
+    const { t } = useTranslation();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
     const isLandscape = windowWidth > windowHeight;
@@ -45,7 +47,7 @@ const NavigationMode = React.memo(({ isSail }) => {
                                 <View style={styles.textWrapper}>
                                     <Text numberOfLines={1} adjustsFontSizeToFit 
                                     style={[styles.modeText, { color: isSail ? sailColor : inactiveColor, fontSize: fontCaptionSize }]}>
-                                        SAIL
+                                        {t('sail')}
                                     </Text>
                                 </View>
                             </View>
@@ -63,7 +65,7 @@ const NavigationMode = React.memo(({ isSail }) => {
                                 <EngineIcon color={!isSail ? engineColor : inactiveColor} size={fontSize * 1.4} style={{ marginRight: 6 }} />
                                 <View style={styles.textWrapper}>
                                     <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.modeText, { color: !isSail ? engineColor : inactiveColor, fontSize: fontCaptionSize }]}>
-                                        ENGINE
+                                        {t('engine')}
                                     </Text>
                                 </View>
                             </View>

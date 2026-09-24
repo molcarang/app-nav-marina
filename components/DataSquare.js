@@ -1,3 +1,4 @@
+import { useTranslation } from '../localization/LanguageProvider';
 import { useEffect, useRef, useState } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { Animated, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
@@ -31,6 +32,7 @@ const DataSquare = ({
     width,
     height
 }) => {
+    const { t } = useTranslation();
     // 1. DIMENSIONES REACTIVAS
     const { width: windowWidth } = useWindowDimensions();
     const SQUARE_WIDTH = width ?? (windowWidth * 0.9) / 3;
@@ -117,9 +119,9 @@ const DataSquare = ({
                 delayLongPress={3000}
                 disabled={!onReset && !showHistoryPopup && !onPress}
                 accessibilityRole={onReset || showHistoryPopup || onPress ? 'button' : undefined}
-                accessibilityLabel={onPress ? `${label}, ${value} ${unit}. ${soundMuted ? 'Alarma silenciada temporalmente' : 'Silenciar alarma un minuto'}` : undefined}
-                accessibilityHint={showHistoryPopup ? 'Dos toques rápidos abren el historial. Mantén pulsado 3 segundos para reiniciar.' : onReset ? 'Mantén pulsado durante 3 segundos para reiniciar el máximo y el historial.' : undefined}
-                accessibilityActions={showHistoryPopup ? [{ name: 'showHistory', label: 'Abrir historial' }] : undefined}
+                accessibilityLabel={onPress ? `${label}, ${value} ${unit}. ${t(soundMuted ? 'muted' : 'muteMinute')}` : undefined}
+                accessibilityHint={showHistoryPopup ? t('historyGesture') : onReset ? t('resetGesture') : undefined}
+                accessibilityActions={showHistoryPopup ? [{ name: 'showHistory', label: t('openHistory') }] : undefined}
                 onAccessibilityAction={event => { if (event.nativeEvent.actionName === 'showHistory') setHistoryOpen(true); }}
                 style={styles.touchable}
             >
@@ -217,7 +219,7 @@ const styles = StyleSheet.create({
     value: {
         fontFamily: FONT_FAMILY,
         color: '#ffffff',
-        fontWeight: 'bold',
+        fontWeight: 'normal',
     },
     unit: {
         fontFamily: FONT_FAMILY,

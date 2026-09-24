@@ -1,3 +1,4 @@
+import { useTranslation } from '../../localization/LanguageProvider';
 import { useEffect, useId, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { ClipPath, Defs, G, Line, LinearGradient, Rect, Stop, Text } from 'react-native-svg';
@@ -5,6 +6,7 @@ import { cardinalHeading, compassTicks, normalizeHeading } from './shared/compas
 
 /** Cinta de rumbo: la escala se desplaza bajo una marca central fija. */
 export default function HorizontalCompass({ heading, isConnected, isNightMode }) {
+    const { t } = useTranslation();
     const clipId = `compass-ribbon-${useId().replace(/:/g, '')}`;
     const glassId = `${clipId}-glass`;
     const frameId = `${clipId}-frame`;
@@ -44,7 +46,7 @@ export default function HorizontalCompass({ heading, isConnected, isNightMode })
     const accent = isNightMode ? '#328b66' : '#45d39a';
     const rounded = Math.round(degrees) % 360;
     return (
-        <View style={styles.container} accessible accessibilityLabel={valid ? `Rumbo ${rounded} grados, ${cardinalHeading(degrees)}` : 'Rumbo sin datos'}>
+        <View style={styles.container} accessible accessibilityLabel={valid ? t('headingDescription', { angle: rounded, cardinal: cardinalHeading(degrees).replace('W', t('west')) }) : t('headingNoData')}>
             <Svg width="100%" height="100%" viewBox="0 0 320 110">
                 <Defs>
                     <LinearGradient id={shadeId} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -70,14 +72,14 @@ export default function HorizontalCompass({ heading, isConnected, isNightMode })
                 </Defs>
                 {/* Barra de cristal: fondo hundido, bisel y reflejo sobre la escala. */}
                 <Rect x={5} y={10} width={310} height={92} rx={9} fill="#000000" fillOpacity={0.4} />
-                <Rect x={5} y={8} width={310} height={92} rx={9} fill="#000000" fillOpacity={0.24} stroke={`url(#${frameId})`} strokeWidth={1.2} />
+                <Rect x={5} y={8} width={310} height={92} rx={9} fill={isNightMode ? '#060f1c' : '#0a2038'} stroke={`url(#${frameId})`} strokeWidth={1.2} />
                 {valid && <G clipPath={`url(#${clipId})`}>
                     {compassTicks(wheelHeading).map(tick => {
                         const major = tick.angle % 30 === 0;
                         return <G key={tick.angle} opacity={tick.opacity} transform={`translate(${tick.x}, 0) scale(${tick.scale}, 1) translate(${-tick.x}, 0)`}>
                             {major && <Text x={tick.x} y={32} textAnchor="middle" fill={accent} fontFamily="NauticalFont" fontSize={16}>{tick.angle}</Text>}
                             <Line x1={tick.x} y1={major ? 39 : 48} x2={tick.x} y2={65} stroke={foreground} strokeWidth={major ? 2 : 1.3} />
-                            {tick.angle % 45 === 0 && <Text x={tick.x} y={82} textAnchor="middle" fill={foreground} fontFamily="NauticalFont" fontSize={14}>{cardinalHeading(tick.angle)}</Text>}
+                            {tick.angle % 45 === 0 && <Text x={tick.x} y={82} textAnchor="middle" fill={foreground} fontFamily="NauticalFont" fontSize={14}>{cardinalHeading(tick.angle).replace('W', t('west'))}</Text>}
                         </G>;
                     })}
                 </G>}

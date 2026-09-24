@@ -1,0 +1,105 @@
+{
+  "configuration": {
+    "items": [
+      {
+        "path": "environment.wind.directionTrue",
+        "minValue": 1.396263,
+        "maxValue": 1.745329,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "environment.wind.speedTrue",
+        "minValue": 5.144444,
+        "maxValue": 20,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "navigation.speedOverGround",
+        "minValue": 2.057778,
+        "maxValue": 4.115556,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "navigation.headingTrue",
+        "minValue": 0.698132,
+        "maxValue": 1,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "navigation.depthBelowTransducer",
+        "minValue": 8,
+        "maxValue": 16,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "navigation.current.drift",
+        "minValue": 0.257222,
+        "maxValue": 0.771667,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "navigation.current.setTrue",
+        "minValue": 1.919862,
+        "maxValue": 2.268928,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "steering.rudderAngle",
+        "minValue": -0.5,
+        "maxValue": 0.5,
+        "dataPeriod": 59,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "propulsion.0.revolutions",
+        "minValue": 0,
+        "maxValue": 0,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "environment.wind.angleApparent",
+        "minValue": 0.349066,
+        "maxValue": 0.698132,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "vessels.self.navigation.attitude.roll",
+        "minValue": -0.261799,
+        "maxValue": 0.261799,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "propulsion.0.revolutions",
+        "minValue": 30,
+        "maxValue": 100,
+        "dataPeriod": 60,
+        "outputPeriod": 0.5
+      },
+      {
+        "path": "simulation.gps.latitude",
+        "minValue": 28.73688887633891,
+        "maxValue": 28.73688887633891,
+        "dataPeriod": 60,
+        "outputPeriod": 1
+      },
+      {
+        "path": "simulation.gps.longitude",
+        "minValue": -13.8627767277691,
+        "maxValue": -13.8627767277691,
+        "dataPeriod": 60,
+        "outputPeriod": 1
+      }
+    ]
+  },
+  "enabled": true
+}

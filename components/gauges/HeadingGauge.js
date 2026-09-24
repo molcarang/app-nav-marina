@@ -1,6 +1,7 @@
+import { useTranslation } from '../../localization/LanguageProvider';
 // --- LIBRERÍAS Y COMPONENTES ---
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Svg, {
     Circle,
     Defs,
@@ -14,9 +15,19 @@ import { describeArc, lerpAngle } from '../../utils/Utils';
 import { GaugeDefs } from './shared/GaugeDefs';
 import { computeCommonDims } from './shared/gaugeUtils';
 import SteelBall from './SteelBall';
+import GaugeSailboat from './GaugeSailboat';
+import AisRangeRings from './AisRangeRings';
+import AisTargets from './AisTargets';
+import AisVesselPopup from './AisVesselPopup';
+import AisTouchOverlay from './AisTouchOverlay';
 
 const HeadingGauge = React.memo(({
     size,
+    showAis = true,
+    aisTargets,
+    position,
+    positionReceivedAt,
+    isConnected,
     value = 0,
     minLayline = 20,
     maxLayline = 60,
@@ -29,6 +40,7 @@ const HeadingGauge = React.memo(({
     set = 0,
     drift = 0
 }) => {
+    const { t } = useTranslation();
     const { width: windowWidth, height: windowHeight } = require('react-native').useWindowDimensions();
     const COMPASS_SIZE = size || Math.min(windowWidth * 0.9, windowHeight * 0.45);
         const [display, setDisplay] = useState({
@@ -39,6 +51,15 @@ const HeadingGauge = React.memo(({
         currentFlow: 0
     });
     const requestRef = useRef();
+    const [selectedVessel, setSelectedVessel] = useState(null);
+    useEffect(() => {
+        if (!selectedVessel) return;
+        const timeout = setTimeout(() => setSelectedVessel(null), 3000);
+        return () => clearTimeout(timeout);
+    }, [selectedVessel]);
+    useEffect(() => {
+        if (!showAis || !isConnected) setSelectedVessel(null);
+    }, [showAis, isConnected]);
 
     useEffect(() => {
         let mounted = true;
@@ -128,6 +149,8 @@ const HeadingGauge = React.memo(({
                     <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill={GAUGE_THEME.colors.bg} />
                 </G>
 
+                {showAis && <AisRangeRings center={dims.CENTER} radius={currentMaxRadius * 0.9} size={COMPASS_SIZE} />}
+
                 {/* --- CAPA 2: ELEMENTOS ESTÁTICOS (BARCO Y LAYLINES) --- */}
                 <G>
                     <Path
@@ -139,17 +162,7 @@ const HeadingGauge = React.memo(({
                         fill="none" stroke="#ff0000" strokeWidth={COMPASS_SIZE * 0.07} strokeLinecap="butt" opacity={0.5}
                     />
 
-                    <G opacity={isNightMode ? 0.3 : 0.4}>
-                        <Path
-                            d={`M ${dims.CENTER} ${dims.CENTER - COMPASS_SIZE * 0.22} C ${dims.CENTER + COMPASS_SIZE * 0.08} ${dims.CENTER - COMPASS_SIZE * 0.10}, ${dims.CENTER + COMPASS_SIZE * 0.075} ${dims.CENTER + COMPASS_SIZE * 0.15}, ${dims.CENTER + COMPASS_SIZE * 0.07} ${dims.CENTER + COMPASS_SIZE * 0.21} L ${dims.CENTER - COMPASS_SIZE * 0.07} ${dims.CENTER + COMPASS_SIZE * 0.21} C ${dims.CENTER - COMPASS_SIZE * 0.075} ${dims.CENTER + COMPASS_SIZE * 0.15}, ${dims.CENTER - COMPASS_SIZE * 0.08} ${dims.CENTER - COMPASS_SIZE * 0.10}, ${dims.CENTER} ${dims.CENTER - COMPASS_SIZE * 0.22} Z`}
-                            fill="none" stroke="#fff" strokeWidth="2"
-                        />
-                        <Line
-                            x1={dims.CENTER} y1={dims.CENTER - COMPASS_SIZE * 0.22}
-                            x2={dims.CENTER} y2={dims.CENTER + COMPASS_SIZE * 0.21}
-                            stroke="#fff" strokeDasharray="3, 5" opacity={0.5}
-                        />
-                    </G>
+                    <GaugeSailboat center={dims.CENTER} size={COMPASS_SIZE} isNightMode={isNightMode} showAis={showAis} />
                 </G>
 
                 {/* --- CAPA 3: DIAL ROTATIVO --- */}
@@ -180,7 +193,7 @@ const HeadingGauge = React.memo(({
                                         </G>
                                         {(deg % 90 === 0) && (
                                             <G rotation={-rotationAngle} origin={`${dims.CENTER + cardinalRad * Math.cos(angleRad)}, ${dims.CENTER + cardinalRad * Math.sin(angleRad)}`}>
-                                                <SvgText x={dims.CENTER + cardinalRad * Math.cos(angleRad)} y={dims.CENTER + cardinalRad * Math.sin(angleRad) + 5} fill={GAUGE_THEME.colors.engine} fontSize={dims.FONT_CARD} textAnchor="middle" fontFamily="NauticalFont">{deg === 0 ? 'N' : deg === 90 ? 'E' : deg === 180 ? 'S' : deg === 270 ? 'O' : ''}</SvgText>
+                                                <SvgText x={dims.CENTER + cardinalRad * Math.cos(angleRad)} y={dims.CENTER + cardinalRad * Math.sin(angleRad) + 5} fill={GAUGE_THEME.colors.engine} fontSize={dims.FONT_CARD} textAnchor="middle" fontFamily="NauticalFont">{deg === 0 ? 'N' : deg === 90 ? 'E' : deg === 180 ? 'S' : deg === 270 ? t('west') : ''}</SvgText>
                                             </G>
                                         )}
                                     </G>
@@ -207,7 +220,7 @@ const HeadingGauge = React.memo(({
                         <Line x1={dims.CENTER} y1={dims.CENTER} x2={dims.CENTER} y2={windTipY} stroke="#ff9800" strokeWidth="2" strokeDasharray="5, 3" opacity={0.8} />
                         <Polygon points={trueMarker.points} fill="url(#needleOrange)" stroke="#fff" strokeWidth="1" />
                         <SvgText x={dims.CENTER} y={trueMarker.labelY} fill="white"
-                        fontSize={trueMarker.fontSize} fontWeight="bold" textAnchor="middle" fontFamily="NauticalFont">T</SvgText>
+                        fontSize={trueMarker.fontSize} fontWeight="bold" textAnchor="middle" fontFamily="NauticalFont">{t('trueWindInitial')}</SvgText>
                     </G>
                 )}
 
@@ -257,12 +270,17 @@ const HeadingGauge = React.memo(({
                             <SvgText
                                 x={dims.CENTER} y={dims.CENTER - currentLabelRadius + COMPASS_SIZE * 0.008}
                                 fill="#ffffff"
-                                fontSize={COMPASS_SIZE * 0.025} fontWeight="bold"
+                                fontSize={COMPASS_SIZE * 0.025} fontWeight="normal"
                                 textAnchor="middle" fontFamily="NauticalFont"
                             >{drift.toFixed(1)} kn</SvgText>
                         </G>
                     </G>
                 )}
+                {showAis && <AisTargets targets={aisTargets} position={position} heading={display.heading}
+                    animationPhase={display.currentFlow}
+                    onSelect={Platform.OS === 'web' ? setSelectedVessel : undefined}
+                    center={dims.CENTER} radius={currentMaxRadius * 0.9} size={COMPASS_SIZE}
+                    positionReceivedAt={positionReceivedAt} connected={isConnected} />}
                 <SteelBall cx={dims.CENTER} cy={dims.CENTER} isNightMode={isNightMode} />
 
                 {/* --- CRISTAL --- */}
@@ -272,6 +290,11 @@ const HeadingGauge = React.memo(({
                 </G>
 
             </Svg>
+            {showAis && Platform.OS !== 'web' && <AisTouchOverlay targets={aisTargets}
+                position={position} heading={display.heading} center={dims.CENTER}
+                radius={currentMaxRadius * 0.9} size={COMPASS_SIZE}
+                positionReceivedAt={positionReceivedAt} connected={isConnected} onSelect={setSelectedVessel} />}
+            <AisVesselPopup vessel={showAis && isConnected ? selectedVessel : null} onClose={() => setSelectedVessel(null)} />
         </View>
     );
 });

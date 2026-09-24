@@ -1,8 +1,10 @@
+import { useTranslation } from '../../localization/LanguageProvider';
 import { StyleSheet, Text, View } from 'react-native';
 import { G, Line, Path } from 'react-native-svg';
 import VesselGaugeFrame from './VesselGaugeFrame';
 
 const RudderGauge = ({ angle = 0, size = 180, alertAngle = 30 }) => {
+    const { t } = useTranslation();
     const CENTER = size / 2;
     const RADIUS = CENTER - (size * 0.12);
     const rudderRadius = RADIUS - 15;
@@ -57,7 +59,7 @@ const RudderGauge = ({ angle = 0, size = 180, alertAngle = 30 }) => {
                     {Math.abs(Math.round(angle))}°
                 </Text>
                 <Text style={styles.sideText}>
-                    {angle < -1 ? 'PORT' : angle > 1 ? 'STBD' : 'CENTER'}
+                    {t(angle < -1 ? 'port' : angle > 1 ? 'starboard' : 'centered')}
                 </Text>
             </View>
         </View>

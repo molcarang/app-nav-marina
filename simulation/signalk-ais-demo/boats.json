@@ -1,0 +1,42 @@
+[
+  {
+    "mmsi": "224123450",
+    "name": "CORRALEJO EXPRESS",
+    "position": {
+      "latitude": 28.751031,
+      "longitude": -13.846648
+    },
+    "speedOverGround": 9.52,
+    "courseOverGroundTrue": 2.094
+  },
+  {
+    "mmsi": "225888111",
+    "name": "ISLA DE LOBOS",
+    "position": {
+      "latitude": 28.75855,
+      "longitude": -13.93065
+    },
+    "speedOverGround": 1.59,
+    "courseOverGroundTrue": 0.262
+  },
+  {
+    "mmsi": "244987654",
+    "name": "PLAYA BLANCA UNO",
+    "position": {
+      "latitude": 28.695222,
+      "longitude": -13.862777
+    },
+    "speedOverGround": 2.68,
+    "courseOverGroundTrue": 5.934
+  },
+  {
+    "mmsi": "311000999",
+    "name": "ATLANTIC CRUISER",
+    "position": {
+      "latitude": 28.730062,
+      "longitude": -13.77378
+    },
+    "speedOverGround": 6.17,
+    "courseOverGroundTrue": 3.665
+  }
+]

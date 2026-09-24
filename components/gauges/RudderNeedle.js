@@ -1,9 +1,11 @@
+import { useTranslation } from '../../localization/LanguageProvider';
 import { G, Line, Path, Polygon, Text } from 'react-native-svg';
 import SteelBall from './SteelBall';
 import { describeArc, polarToCartesian } from '../../utils/Utils';
 
 /** Instrumento SVG para el espacio izquierdo del panel de escora. Recibe grados. */
 export default function RudderNeedle({ angle, limit = 35, isNightMode = false }) {
+    const { t } = useTranslation();
     const valid = Number.isFinite(angle);
     const alertLimit = Number.isFinite(limit) && limit > 0 ? limit : 35;
     const range = alertLimit + 5;
@@ -17,7 +19,7 @@ export default function RudderNeedle({ angle, limit = 35, isNightMode = false })
 
     return (
         <G>
-            <Text x={165} y={(35 - 20) / 1.3} textAnchor="middle" fontFamily="NauticalFont" fontSize={17} fill={foreground}>RUDDER</Text>
+            <Text x={165} y={(35 - 20) / 1.3} textAnchor="middle" fontFamily="NauticalFont" fontSize={17} fill={foreground}>{t('rudderLabel')}</Text>
             <Path d={describeArc(165, 100, 83, 180, 245)} stroke={port} strokeWidth={5} fill="none" />
             <Path d={describeArc(165, 100, 83, 115, 180)} stroke={starboard} strokeWidth={5} fill="none" />
             {ticks.map(tick => {

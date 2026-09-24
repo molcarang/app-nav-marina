@@ -1,3 +1,4 @@
+import { useTranslation } from '../../../localization/LanguageProvider';
 import { View } from 'react-native';
 import DataSquare from '../../../components/DataSquare';
 import InfoPanel from '../../../components/gauges/InfoPanel';
@@ -7,10 +8,11 @@ import { styles } from '../styles/consoleStyles';
 
 /** Controles compartidos por ambas orientaciones; el contenedor define las dimensiones opcionales. */
 export default function NavigationControls({ navigation, settings, maxSOG, maxTWS, isNightMode, theme, windowWidth, onResetSOG, onResetTWS, itemWidth, cardHeight, landscape = false, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted }) {
+    const { t } = useTranslation();
     const columnWidth = itemWidth ?? windowWidth * 0.94 / 3;
     const indicatorHeight = 32;
     const apInfo = getAutopilotInfo(navigation.apState);
-    const isDepthAlarmActive = navigation.depthMeters > 0 && navigation.depthMeters < settings.depthAlarmMeters;
+    const isDepthAlarmActive = settings.depthAlarmEnabled && navigation.depthMeters > 0 && navigation.depthMeters < settings.depthAlarmMeters;
     const modePanel = (
                 <NavigationModeLabels
                     itemWidth={itemWidth}
@@ -25,27 +27,27 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
     );
     return <>
                 {!landscape && modePanel}
-                <View style={[styles.row, { marginBottom: 7 }]}>
+                <View style={[styles.row, { marginTop: -10, marginBottom: 7 }]}>
                     <InfoPanel
                         panelWidth={itemWidth}
-                        height={indicatorHeight}
-                        dataArray={[{ label: 'MAX TWS', value: maxTWS, color: '#79f17bff' }]}
+                        height={indicatorHeight + 10}
+                        dataArray={[{ label: `${t('maximum')} TWS`, value: maxTWS, color: '#79f17bff' }]}
                         isNightMode={isNightMode}
                         color={theme.bg}
                         width={columnWidth}
                     />
                     <InfoPanel
                         panelWidth={itemWidth}
-                        height={indicatorHeight}
-                        dataArray={[{ label: 'MAX SOG', value: maxSOG, color: '#79f17bff' }]}
+                        height={indicatorHeight + 10}
+                        dataArray={[{ label: `${t('maximum')} SOG`, value: maxSOG, color: '#79f17bff' }]}
                         isNightMode={isNightMode}
                         color={theme.bg}
                         width={columnWidth}
                     />
                     <InfoPanel
                         panelWidth={itemWidth}
-                        height={indicatorHeight}
-                        dataArray={[{ label: apInfo.label, value: apInfo.value, color: apInfo.color }]}
+                        height={indicatorHeight + 10}
+                        dataArray={[{ label: t('pilotLabel'), value: t({ AUTO: 'pilotAuto', WIND: 'pilotWind', TRACK: 'pilotTrack', STBY: 'pilotStandby' }[apInfo.value]), color: apInfo.color }]}
                         isNightMode={isNightMode}
                         color={theme.bg}
                         width={columnWidth}
@@ -87,7 +89,7 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                     <DataSquare
                         width={itemWidth}
                         height={cardHeight}
-                        label={navigation.twa > 0 ? "TWA (P)" : navigation.twa < 0 ? "TWA (S)" : "TWA"}
+                        label={navigation.twa > 0 ? `TWA (${t('portInitial')})` : navigation.twa < 0 ? `TWA (${t('starboardInitial')})` : "TWA"}
                         value={navigation.twa?.toFixed(0) + '°'}
                         unit="DEG"
                         textColor={theme.wind}
@@ -110,9 +112,9 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                     <DataSquare
                         width={itemWidth}
                         height={cardHeight}
-                        label="DEPTH"
+                        label={t('depthLabel')}
                         onPress={onSilenceDepth}
-                        soundMuted={depthSoundMuted}
+                        soundMuted={depthSoundMuted || !settings.depthAlarmEnabled || !settings.depthAlarmSound}
                         value={navigation.depthMeters.toFixed(1)}
                         unit="MTRS"
                         color={isDepthAlarmActive ? theme.alarm : theme.bg}
@@ -122,7 +124,7 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                     <DataSquare
                         width={itemWidth}
                         height={cardHeight}
-                        label={navigation.awaDigital}
+                        label={navigation.awaDigital.replace('(P)', `(${t('portInitial')})`).replace('(S)', `(${t('starboardInitial')})`)}
                         value={navigation.awaFixed}
                         unit="DEG"
                         textColor={theme.twd}

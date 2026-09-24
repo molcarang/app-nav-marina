@@ -1,19 +1,22 @@
+import { useTranslation } from '../../localization/LanguageProvider';
 import { View } from 'react-native';
 import Svg, { G, Line, Path, Rect, Text } from 'react-native-svg';
 import RudderNeedle from './RudderNeedle';
 import SteelBall from './SteelBall';
 import SternSailboat from './SternSailboat';
+import NauticalPanelBackground from './NauticalPanelBackground';
 import { describeArc, polarToCartesian } from '../../utils/Utils';
 
 export const HEEL_PANEL_ASPECT_RATIO = 300 / 800;
 
 /** Escora en grados. La escala se limita a ±30°, la cifra conserva el valor real. */
 export default function HeelPanel({ heel, width, isNightMode = false, rudderAngle, rudderLimit, backgroundColor }) {
+    const { t } = useTranslation();
     const valid = Number.isFinite(heel);
     const angle = valid ? heel : 0;
     const displayedAngle = Math.round(Math.abs(angle));
     const centered = valid && displayedAngle === 0;
-    const side = !valid ? 'NO DATA' : centered ? 'CENTERED' : angle < 0 ? 'PORT' : 'STBD';
+    const side = t(!valid ? 'noData' : centered ? 'centered' : angle < 0 ? 'port' : 'starboard');
     const foreground = isNightMode ? '#c49797' : '#f3f6fa';
     const muted = isNightMode ? '#795353' : '#777777';
     const portColor = isNightMode ? '#a83232' : '#dc1212';
@@ -33,14 +36,15 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
         <View
             style={{ width, marginTop: 3, marginBottom: 13 }}
             accessible
-            accessibilityLabel={`${valid ? `Escora ${displayedAngle} grados, ${centered ? 'centrado' : angle < 0 ? 'babor' : 'estribor'}` : 'Escora sin datos'}. Timón ${Number.isFinite(rudderAngle) ? `${Math.round(rudderAngle)} grados` : 'sin datos'}`}
+            accessibilityLabel={t('heelDescription', { angle: valid ? displayedAngle : t('noData'), side, rudder: Number.isFinite(rudderAngle) ? `${Math.round(rudderAngle)}°` : t('noData') })}
         >
             <Svg width={width} height={width * HEEL_PANEL_ASPECT_RATIO} viewBox="0 0 800 300">
                 <Rect x={2} y={2} width={796} height={296} rx={18} fill={backgroundColor ?? (isNightMode ? 'rgba(30, 0, 0, 0.8)' : 'rgba(45, 45, 45, 0.75)')} stroke={muted} strokeWidth={2} />
+                <NauticalPanelBackground isNightMode={isNightMode} />
                 <G transform="translate(11.24, 17.6) scale(1.144)">
                     <RudderNeedle angle={rudderAngle} limit={rudderLimit} isNightMode={isNightMode} />
                 </G>
-                <Line x1={400} y1={20} x2={400} y2={280} stroke={muted} strokeWidth={1} opacity={0.4} />
+                <Line x1={400} y1={20} x2={400} y2={280} stroke={muted} strokeWidth={3} opacity={0.4} />
 
                 <G transform="translate(72, 0) scale(0.88)">
                 {/* La línea de agua permanece horizontal; solo gira el barco. */}
@@ -52,7 +56,7 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
                     </G>
                 </G>
                 </G>
-                <Text x={600} y={35} textAnchor="middle" fill={foreground} fontSize={22.1} fontFamily="NauticalFont">HEEL</Text>
+                <Text x={600} y={35} textAnchor="middle" fill={foreground} fontSize={22.1} fontFamily="NauticalFont">{t('heelLabel')}</Text>
                 {valid && !centered && (
                     <G>
                         <Text x={angle < 0 ? 480 : 720} y={128} textAnchor="middle" fill={accent} fontSize={44} fontFamily="NauticalFont">
@@ -99,8 +103,8 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
                     <Path d={describeArc(600, 40, channelRadius + 10, 146, 174)} strokeWidth={1.5} opacity={0.3} />
                     <Path d={describeArc(600, 40, channelRadius + 10, 193, 214)} strokeWidth={1.5} opacity={0.2} />
                 </G>
-                <Text x={428} y={316} fill={portColor} fontSize={16} fontFamily="NauticalFont" letterSpacing={2}>PORT</Text>
-                <Text x={772} y={316} textAnchor="end" fill={starboardColor} fontSize={16} fontFamily="NauticalFont" letterSpacing={2}>STBD</Text>
+                <Text x={428} y={316} fill={portColor} fontSize={16} fontFamily="NauticalFont" letterSpacing={2}>{t('port')}</Text>
+                <Text x={772} y={316} textAnchor="end" fill={starboardColor} fontSize={16} fontFamily="NauticalFont" letterSpacing={2}>{t('starboard')}</Text>
                 </G>
             </Svg>
         </View>

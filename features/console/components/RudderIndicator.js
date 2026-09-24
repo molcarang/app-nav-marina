@@ -1,3 +1,4 @@
+import { useTranslation } from '../../../localization/LanguageProvider';
 import { useId } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
@@ -5,6 +6,7 @@ import { GAUGE_THEME } from '../../../styles/GaugeTheme';
 
 /** Timón en grados: negativo a babor, positivo a estribor. */
 export default function RudderIndicator({ angle, alertAngle = 35, width, isNightMode }) {
+    const { t } = useTranslation();
     const metalId = `rudder-metal-${useId().replace(/:/g, '')}`;
     const valid = Number.isFinite(angle);
     const limit = Number.isFinite(alertAngle) && alertAngle > 0 ? alertAngle : 35;
@@ -26,10 +28,10 @@ export default function RudderIndicator({ angle, alertAngle = 35, width, isNight
         <View
             style={[styles.container, { width }]}
             accessible
-            accessibilityLabel={`Timón ${valid ? `${value}${isAlert ? ', alerta' : ''}` : 'sin datos'}`}
+            accessibilityLabel={t('rudderDescription', { value: valid ? value : t('noData'), state: isAlert ? t('alert') : '' })}
         >
             <Text numberOfLines={1} adjustsFontSizeToFit style={styles.text}>
-                <Text style={{ color, textDecorationLine: isAlert ? 'underline' : 'none' }}>{valid && angle === 0 ? 'CENTERED' : value}</Text>
+                <Text style={{ color, textDecorationLine: isAlert ? 'underline' : 'none' }}>{valid && angle === 0 ? t('centered') : value}</Text>
             </Text>
             {width >= 140 && (
                 <View style={styles.scale}>
