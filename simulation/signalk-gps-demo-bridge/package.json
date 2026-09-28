@@ -1,0 +1,8 @@
+{
+  "name": "signalk-gps-demo-bridge",
+  "version": "1.0.0",
+  "description": "Convierte las coordenadas GPS simuladas a navigation.position",
+  "main": "index.js",
+  "keywords": ["signalk-node-server-plugin"],
+  "license": "UNLICENSED"
+}

@@ -3,10 +3,13 @@ import { StyleSheet, Text, View } from 'react-native';
 import { formatCoordinate, isValidPosition } from '../model/gpsPosition.js';
 import HorizontalCompass from '../../../components/gauges/HorizontalCompass';
 import GpsMapBackground from './GpsMapBackground';
+import { useControlScale, useResponsiveStyles } from '../../../hooks/useControlScale';
 
 export const GPS_PANEL_HEIGHT = 84;
 
 export default function GpsPositionPanel({ width, position, receivedAt, isConnected, isNightMode, backgroundColor, heading }) {
+    const styles = useResponsiveStyles(baseStyles);
+    const controlScale = useControlScale();
     const [now, setNow] = useState(Date.now);
     useEffect(() => {
         const timer = setInterval(() => setNow(Date.now()), 5000);
@@ -17,7 +20,7 @@ export default function GpsPositionPanel({ width, position, receivedAt, isConnec
     const foreground = isNightMode ? '#c49797' : '#f3f6fa';
     const accent = isNightMode ? '#9d7777' : '#8fcbdc';
     return (
-        <View style={[styles.panel, { width, height: GPS_PANEL_HEIGHT, backgroundColor,
+        <View style={[styles.panel, { width, height: GPS_PANEL_HEIGHT * controlScale, backgroundColor,
             borderColor: isNightMode ? '#795353' : '#777' }]}>
             <GpsMapBackground isNightMode={isNightMode} />
             <View style={styles.coordinates}>
@@ -38,13 +41,13 @@ export default function GpsPositionPanel({ width, position, receivedAt, isConnec
     );
 }
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
     panel: { borderRadius: 15, borderWidth: 1, flexDirection: 'row', marginBottom: 8, overflow: 'hidden' },
     status: { fontFamily: 'NauticalFont', fontSize: 8, marginTop: 4 },
     coordinates: { width: '50%', justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 8, gap: 6,
         overflow: 'hidden', borderTopLeftRadius: 14, borderBottomLeftRadius: 14 },
     coordinate: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    label: { fontFamily: 'NauticalFont', fontSize: 9 },
+    label: { fontFamily: 'NauticalFont', fontSize: 14 },
     value: { fontFamily: 'NauticalFont', fontSize: 14, flex: 1, textAlign: 'right' },
     divider: { position: 'absolute', left: '50%', top: 8, bottom: 8, width: 1, opacity: 0.4 },
     rightArea: { width: '50%' },

@@ -26,6 +26,7 @@ const DataSquare = ({
     onPress,
     soundMuted = false,
     showHistoryPopup = false,
+    showHistoryAverage = false,
     historySamples,
     historyHours = 2,
     isNightMode = false,
@@ -171,7 +172,8 @@ const DataSquare = ({
                 </View>
 
                 {/* VALOR PRINCIPAL (Escalado dinámico) */}
-                <Text style={[styles.value, { fontSize: fontBasis * 0.28 }]}>
+                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}
+                    style={[styles.value, { fontSize: fontBasis * 0.25, maxWidth: '100%', textAlign: 'center' }]}>
                     {value}
                 </Text>
 
@@ -182,7 +184,7 @@ const DataSquare = ({
             </TouchableOpacity>
             {showHistoryPopup && historyOpen && (
                 <HistoryChartModal visible onClose={() => setHistoryOpen(false)} history={history}
-                    label={label} unit={unit} value={value} maxValue={maxValue} isNightMode={isNightMode} historyHours={historyHours} />
+                    label={label} unit={unit} value={value} maxValue={maxValue} isNightMode={isNightMode} historyHours={historyHours} showAverage={showHistoryAverage} />
             )}
         </View>
     );

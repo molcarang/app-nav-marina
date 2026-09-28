@@ -3,7 +3,7 @@ import { Circle, G, Polygon } from 'react-native-svg';
 import { Platform } from 'react-native';
 import { projectAisPosition } from './shared/aisProjection';
 
-export default function AisTargets({ targets = {}, position, heading, center, radius, size, positionReceivedAt, connected, animationPhase = 0, onSelect }) {
+export default function AisTargets({ targets = {}, position, heading, center, radius, size, positionReceivedAt, connected, rangeNm = 6, animationPhase = 0, onSelect }) {
     const { t } = useTranslation();
     const now = Date.now();
     if (!connected || !Number.isFinite(positionReceivedAt) || now - positionReceivedAt >= 30000) return null;
@@ -11,7 +11,7 @@ export default function AisTargets({ targets = {}, position, heading, center, ra
     return <G>
         {Object.entries(targets).map(([id, target]) => {
             if (!Number.isFinite(target.positionReceivedAt) || now - target.positionReceivedAt >= 300000) return null;
-            const point = projectAisPosition(position, target['navigation.position'], heading, radius);
+            const point = projectAisPosition(position, target['navigation.position'], heading, radius, rangeNm);
             if (!point) return null;
             // Un ciclo cada 1,5 s dentro de 4 NM; cada 0,75 s dentro de 2 NM.
             const phase = (animationPhase * (point.distanceNm < 2 ? 2 : 1)) % 1;

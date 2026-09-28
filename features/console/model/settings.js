@@ -4,6 +4,7 @@ import { DEFAULT_HISTORY_HOURS } from './twsHistory.js';
 export const SETTINGS_STORAGE_KEY = '@ajustes_consola';
 export const DEFAULT_SETTINGS = {
     language: 'es',
+    aisRangeNm: 6,
     historyHours: DEFAULT_HISTORY_HOURS,
     sogHistoryHours: DEFAULT_HISTORY_HOURS,
     signalKAddress: DEFAULT_SIGNALK_ADDRESS,

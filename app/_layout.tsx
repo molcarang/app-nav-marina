@@ -8,6 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAndroidFullscreen } from '@/hooks/useAndroidFullscreen';
 import StartupErrorBoundary from '@/components/StartupErrorBoundary';
 
 SplashScreen.preventAutoHideAsync().catch(console.warn);
@@ -20,6 +21,7 @@ export default function RootLayout() {
     NauticalFont: require('../assets/fonts/Venus_Rising_Rg.otf'),
   });
   const [fontTimeout, setFontTimeout] = useState(false);
+  useAndroidFullscreen(Boolean(fontsLoaded || fontError || fontTimeout));
   useEffect(() => {
     const timer = setTimeout(() => setFontTimeout(true), 15000);
     return () => clearTimeout(timer);

@@ -1,5 +1,5 @@
 import { useTranslation } from '../../localization/LanguageProvider';
-import { G, Line, Path, Polygon, Text } from 'react-native-svg';
+import { Circle, G, Line, Path, Polygon, Text } from 'react-native-svg';
 import SteelBall from './SteelBall';
 import { describeArc, polarToCartesian } from '../../utils/Utils';
 
@@ -12,7 +12,7 @@ export default function RudderNeedle({ angle, limit = 35, isNightMode = false })
     const rotation = valid ? -Math.max(-1, Math.min(1, angle / range)) * 65 : 0;
     const foreground = isNightMode ? '#c49797' : '#f3f6fa';
     const port = isNightMode ? '#a83232' : '#dc1212';
-    const starboard = isNightMode ? '#287a38' : 'rgba(0, 255, 0, 0.5)';
+    const starboard = isNightMode ? '#287a38' : 'rgba(0, 255, 0, 0.8)';
     const alert = valid && Math.abs(angle) >= alertLimit;
     const ticks = [-range, 0, range];
     for (let tick = 10; tick < range; tick += 10) ticks.push(-tick, tick);
@@ -20,12 +20,14 @@ export default function RudderNeedle({ angle, limit = 35, isNightMode = false })
     return (
         <G>
             <Text x={165} y={(35 - 20) / 1.3} textAnchor="middle" fontFamily="NauticalFont" fontSize={17} fill={foreground}>{t('rudderLabel')}</Text>
-            <Path d={describeArc(165, 100, 83, 180, 245)} stroke={port} strokeWidth={5} fill="none" />
-            <Path d={describeArc(165, 100, 83, 115, 180)} stroke={starboard} strokeWidth={5} fill="none" />
+            {/* Escala plana y ligera, con bandas de color y marcas independientes. */}
+            <Path d={describeArc(165, 100, 83, 115, 245)} stroke="#10212d" strokeWidth={8} fill="none" strokeLinecap="round" />
+            <Path d={describeArc(165, 100, 83, 181, 245)} stroke={port} strokeWidth={4} fill="none" strokeLinecap="round" />
+            <Path d={describeArc(165, 100, 83, 115, 179)} stroke={starboard} strokeWidth={4} fill="none" strokeLinecap="round" />
             {ticks.map(tick => {
                 const degrees = 180 - tick / range * 65;
-                const inner = polarToCartesian(165, 100, 77, degrees);
-                const outer = polarToCartesian(165, 100, 89, degrees);
+                const inner = polarToCartesian(165, 100, tick === 0 ? 69 : 73, degrees);
+                const outer = polarToCartesian(165, 100, 79, degrees);
                 const label = polarToCartesian(165, 100, tick === 0 ? 104 : 116, degrees);
                 return (
                     <G key={tick}>
@@ -40,11 +42,11 @@ export default function RudderNeedle({ angle, limit = 35, isNightMode = false })
             })}
             {valid && (
                 <G rotation={rotation} origin="165, 100">
-                    <Polygon points="165,177 160,97 165,91" fill={alert ? port : foreground} />
-                    <Polygon points="165,177 170,97 165,91" fill={alert ? '#802020' : '#8a949e'} />
+                    <Polygon points="165,179 162.5,103 165,95 167.5,103" fill={alert ? port : foreground} />
                 </G>
             )}
-            <SteelBall cx={165} cy={100} radius={10 / 1.3} isNightMode={isNightMode} />
+            <Circle cx={165} cy={100} r={8} fill="#10212d" stroke={foreground} strokeOpacity={0.3} strokeWidth={1} />
+            <SteelBall cx={165} cy={100} radius={5.5} isNightMode={isNightMode} />
             <Text x={165} y={68} textAnchor="middle" fontFamily="NauticalFont" fontSize={24} fill={alert ? port : foreground}>
                 {valid ? `${angle > 0 ? '+' : ''}${Math.round(angle)}°` : '---'}
             </Text>

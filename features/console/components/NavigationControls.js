@@ -47,7 +47,7 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                     <InfoPanel
                         panelWidth={itemWidth}
                         height={indicatorHeight + 10}
-                        dataArray={[{ label: t('pilotLabel'), value: t({ AUTO: 'pilotAuto', WIND: 'pilotWind', TRACK: 'pilotTrack', STBY: 'pilotStandby' }[apInfo.value]), color: apInfo.color }]}
+                        dataArray={[{ label: t('pilotLabel'), value: apInfo.value === '—' ? '—' : t({ AUTO: 'pilotAuto', WIND: 'pilotWind', TRACK: 'pilotTrack', STBY: 'pilotStandby' }[apInfo.value]), color: apInfo.color }]}
                         isNightMode={isNightMode}
                         color={theme.bg}
                         width={columnWidth}
@@ -74,6 +74,7 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                         width={itemWidth}
                         height={cardHeight}
                         label="SOG"
+                        showHistoryAverage
                         historySamples={sogHistory}
                         historyHours={settings.sogHistoryHours}
                         showHistoryPopup
@@ -89,8 +90,8 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                     <DataSquare
                         width={itemWidth}
                         height={cardHeight}
-                        label={navigation.twa > 0 ? `TWA (${t('portInitial')})` : navigation.twa < 0 ? `TWA (${t('starboardInitial')})` : "TWA"}
-                        value={navigation.twa?.toFixed(0) + '°'}
+                        label={navigation.twa > 0 ? `TWA (${t('starboardInitial')})` : navigation.twa < 0 ? `TWA (${t('portInitial')})` : "TWA"}
+                        value={navigation.twa === null ? '—' : Math.abs(navigation.twa).toFixed(0) + '°'}
                         unit="DEG"
                         textColor={theme.wind}
                         showStatusDot
@@ -115,7 +116,7 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                         label={t('depthLabel')}
                         onPress={onSilenceDepth}
                         soundMuted={depthSoundMuted || !settings.depthAlarmEnabled || !settings.depthAlarmSound}
-                        value={navigation.depthMeters.toFixed(1)}
+                        value={Number.isFinite(navigation.depthMeters) ? navigation.depthMeters.toFixed(1) : '—'}
                         unit="MTRS"
                         color={isDepthAlarmActive ? theme.alarm : theme.bg}
                         textColor={isDepthAlarmActive ? "#fff" : undefined}

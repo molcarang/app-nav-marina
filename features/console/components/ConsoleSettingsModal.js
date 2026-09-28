@@ -1,14 +1,16 @@
+import { useResponsiveStyles } from '../../../hooks/useControlScale';
 import { useTranslation } from '../../../localization/LanguageProvider';
 import { SUPPORTED_LANGUAGES } from '../../../localization/translate';
 import Slider from '@react-native-community/slider';
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { normalizeServerAddress } from '../../../services/signalk/serverAddress.js';
-import { styles } from '../styles/settingsStyles';
+import { styles as baseStyles } from '../styles/settingsStyles';
 import HistoryRetentionSetting from './HistoryRetentionSetting';
 import NightDimmer from '../../../components/NightDimmer';
 /** Presenta ajustes; el hook se ocupa de guardarlos. */
 export default function ConsoleSettingsModal({ visible, settings, isNightMode, onChange, onSave, onNightModeChange, onClose, onTestDepthSound }) {
+    const styles = useResponsiveStyles(baseStyles);
     const { t } = useTranslation();
     const [savingLanguage, setSavingLanguage] = useState(false);
     const [languageError, setLanguageError] = useState(false);

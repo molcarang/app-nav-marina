@@ -7,7 +7,9 @@ export function getAutopilotInfo(state) {
             return { label: 'PILOT', value: 'WIND', color: '#2196f3' }; // Azul viento
         case 'route':
             return { label: 'PILOT', value: 'TRACK', color: '#bb86fc' }; // Púrpura navegación
-        default:
+        case 'standby':
             return { label: 'PILOT', value: 'STBY', color: '#ff4444' }; // Rojo standby
+        default:
+            return { label: 'PILOT', value: '—', color: '#8a9aa8' };
     }
 }

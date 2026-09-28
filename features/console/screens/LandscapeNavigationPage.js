@@ -1,3 +1,4 @@
+import { useControlScale } from '../../../hooks/useControlScale';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import HeadingGauge from '../../../components/gauges/HeadingGauge';
@@ -7,10 +8,13 @@ import AisToggleButton from '../components/AisToggleButton';
 import NavigationControls from '../components/NavigationControls';
 import ConsoleBackground from '../components/ConsoleBackground';
 import GpsPositionPanel, { GPS_PANEL_HEIGHT } from '../components/GpsPositionPanel';
+import WaypointPreviewPanel, { WAYPOINT_PREVIEW_HEIGHT } from '../components/WaypointPreviewPanel';
 
 /** Dos mitades: compás a la izquierda y controles a la derecha. */
 export default function LandscapeNavigationPage(props) {
+    const controlScale = useControlScale();
     const { navigation, settings, isConnected, isNightMode, onOpenSettings } = props;
+    const hasActiveWaypoint = Boolean(props.waypoint);
     const [area, setArea] = useState({ width: 0, height: 0 });
     const [controlsHeight, setControlsHeight] = useState(0);
     const [scrollOffset, setScrollOffset] = useState(0);
@@ -21,22 +25,29 @@ export default function LandscapeNavigationPage(props) {
         columnWidth - 4,
         area.height - 4,
     ));
-    const gaugeSize = Math.max(1, Math.min(previousGaugeSize * 1.10, area.width * 0.55 - 4, area.height - 4));
-    const gaugeColumnWidth = Math.max(columnWidth, gaugeSize + 4);
-    // Compensa el margen superior de 3 puntos de los InfoPanel.
-    const controlsTop = Math.max(0, (area.height - gaugeSize) / 2 - 3);
-    // El panel GPS es el último elemento y tiene 8 px de margen inferior.
+    const gaugeColumnWidth = columnWidth;
+    // Compensa el margen negativo de la fila superior para alinearla con el marco.
+    const controlsTop = 10;
+    // Alinea los botones con el último panel visible, excluyendo su margen final.
+    const lastPanelBottomMargin = (hasActiveWaypoint ? 3 : 8) * controlScale;
     const aisBottom = controlsHeight > 0
-        ? Math.max(8, Math.min(area.height - 44, area.height - (controlsTop + controlsHeight - 8 - scrollOffset)))
+        ? Math.max(8, Math.min(area.height - 44 * controlScale, area.height - (controlsTop + controlsHeight - lastPanelBottomMargin - scrollOffset)))
         : 8;
-    const controlsWidth = Math.max(1, area.width - gaugeColumnWidth) * 0.96;
+    // Centrar en el hueco real entre la cabecera y los controles AIS.
+    const gaugeTop = 48 * controlScale;
+    const aisHeight = props.aisVisible ? 60 * controlScale + 2 : 44 * controlScale;
+    const gaugeBottom = aisBottom + aisHeight + 8 * controlScale;
+    const gaugeSize = Math.max(1, Math.min(previousGaugeSize * 1.10, columnWidth - 4,
+        area.height - gaugeTop - gaugeBottom));
+    const controlsWidth = Math.max(1, area.width - gaugeColumnWidth);
     const itemWidth = Math.max(1, (controlsWidth - 24) / 3);
-    // El piloto termina tras el espacio exterior de la fila y su margen de 3 px.
-    const pilotRightInset = (area.width - gaugeColumnWidth - controlsWidth) / 2 + 4.5;
     const heelWidth = Math.max(1, controlsWidth - 9);
     // Sin la fila de modos, las tarjetas aprovechan el espacio libre sobre la escora.
     // Se reservan márgenes, resumen superior y espacio inferior; en pantallas bajas hay scroll.
-    const cardHeight = Math.max(80, Math.min(itemWidth * 0.9, (area.height - controlsTop - heelWidth * HEEL_PANEL_ASPECT_RATIO - GPS_PANEL_HEIGHT - 112) / 2));
+    const baseCardHeight = Math.max(80, Math.min(itemWidth * 0.9, (area.height - controlsTop - heelWidth * HEEL_PANEL_ASPECT_RATIO - GPS_PANEL_HEIGHT * controlScale - WAYPOINT_PREVIEW_HEIGHT * controlScale - 8 - 112) / 2));
+    // Las dos filas de datos absorben exactamente la altura y el margen del waypoint.
+    // Así el borde inferior y los márgenes existentes no cambian al alternarlo.
+    const cardHeight = baseCardHeight + (hasActiveWaypoint ? 0 : (WAYPOINT_PREVIEW_HEIGHT + 5 + 5 + 3) * controlScale / 2);
 
     return (
         <View style={[localStyles.screen, { backgroundColor: isNightMode ? '#050000' : '#0a0a0a' }]}>
@@ -44,25 +55,28 @@ export default function LandscapeNavigationPage(props) {
                 style={[localStyles.frame, isNightMode && { borderColor: '#400' }]}
             >
                 <ConsoleBackground isNightMode={isNightMode} />
-                <ConnectionHeader
-                    isConnected={isConnected}
-                    isNightMode={isNightMode}
-                    onOpenSettings={onOpenSettings}
-                    settingsWidth={area.width > 0 ? itemWidth : undefined}
-                    style={{ marginBottom: 4, width: '100%', paddingLeft: '2%', paddingRight: Math.max(0, pilotRightInset) }}
-                />
                 <View
                     style={localStyles.columns}
                     onLayout={({ nativeEvent }) => setArea(nativeEvent.layout)}
                 >
                     <View style={[localStyles.compass, { width: gaugeColumnWidth }]}>
+                        <View style={localStyles.leftHeader}>
+                <ConnectionHeader
+                    isConnected={isConnected}
+                    isNightMode={isNightMode}
+                    onOpenSettings={onOpenSettings}
+                    settingsInline
+                    style={{ width: '100%', paddingHorizontal: 8 }}
+                />
+                        </View>
+                        <View style={[localStyles.gaugeArea, { top: gaugeTop, bottom: gaugeBottom }]}>
                         {area.width > 0 && (
                             <HeadingGauge
-                                showAis={props.aisVisible}
+                                showAis={props.aisVisible} aisRangeNm={props.aisRangeNm}
                                 aisTargets={props.aisTargets} position={navigation.position}
                                 positionReceivedAt={navigation.positionReceivedAt} isConnected={isConnected}
                                 size={gaugeSize}
-                                value={navigation.cogDigital}
+                                value={navigation.headingDigital}
                                 awa={navigation.awa}
                                 awsKnots={navigation.awsKnots}
                                 twsKnots={Number(navigation.twsKnots)}
@@ -75,8 +89,11 @@ export default function LandscapeNavigationPage(props) {
                                 drift={navigation.driftKnots}
                             />
                         )}
-                        <View style={{ position: 'absolute', left: 8, bottom: aisBottom }}>
-                            <AisToggleButton visible={props.aisVisible} onPress={props.onToggleAis} />
+                        </View>
+                        <View style={{ position: 'absolute', left: 8, right: 8, bottom: aisBottom, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <View style={{ width: '100%' }}>
+                                <AisToggleButton visibleCount={props.aisVisibleCount} fullWidth auto={props.aisAuto} onToggleAuto={props.onToggleAisAuto} rangeNm={props.aisRangeNm} onRangeChange={props.onAisRangeChange} visible={props.aisVisible} onPress={props.onToggleAis} />
+                            </View>
                         </View>
                     </View>
                     <View style={[localStyles.controls, { width: Math.max(0, area.width - gaugeColumnWidth) }]}>
@@ -104,9 +121,10 @@ export default function LandscapeNavigationPage(props) {
                                     isNightMode={isNightMode}
                                 />
                                 <GpsPositionPanel width={heelWidth} position={navigation.position}
-                                    heading={navigation.cogDeg}
+                                    heading={navigation.headingDeg}
                                     receivedAt={navigation.positionReceivedAt} isConnected={isConnected}
                                     isNightMode={isNightMode} backgroundColor={props.theme.bg} />
+                                {hasActiveWaypoint && <WaypointPreviewPanel width={heelWidth} waypoint={props.waypoint} />}
                             </View>
                         )}
                     </ScrollView>
@@ -121,7 +139,9 @@ const localStyles = StyleSheet.create({
     screen: { flex: 1, padding: 8 },
     frame: { flex: 1, paddingTop: 6, borderWidth: 2, borderColor: '#333', borderRadius: 25, overflow: 'hidden' },
     columns: { flex: 1, flexDirection: 'row', minHeight: 0 },
-    compass: { width: '50%', alignItems: 'center', justifyContent: 'center' },
+    compass: { width: '50%', alignItems: 'center' },
+    gaugeArea: { position: 'absolute', left: 0, right: 0, alignItems: 'center', justifyContent: 'center' },
+    leftHeader: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2 },
     controls: { width: '50%', flexGrow: 0 },
     controlsContent: { flexGrow: 1, justifyContent: 'flex-start', alignItems: 'center', paddingBottom: 8 },
 });

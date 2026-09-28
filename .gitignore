@@ -41,3 +41,8 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Installable build artifacts
+/artifacts/
+*.apk
+*.aab

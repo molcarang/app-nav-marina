@@ -20,7 +20,7 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
     const foreground = isNightMode ? '#c49797' : '#f3f6fa';
     const muted = isNightMode ? '#795353' : '#777777';
     const portColor = isNightMode ? '#a83232' : '#dc1212';
-    const starboardColor = isNightMode ? '#287a38' : '#45d39a';
+    const starboardColor = isNightMode ? '#287a38' : 'rgba(0, 255, 0, 0.8)';
     const accent = !valid || centered ? foreground : angle < 0 ? portColor : starboardColor;
     const limitedAngle = Math.max(-30, Math.min(30, angle));
     // Arco inferior: los ángulos positivos avanzan hacia estribor (derecha).

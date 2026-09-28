@@ -1,6 +1,6 @@
 import { useTranslation } from '../../localization/LanguageProvider';
 import { useEffect, useId, useRef, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 import Svg, { ClipPath, Defs, G, Line, LinearGradient, Rect, Stop, Text } from 'react-native-svg';
 import { cardinalHeading, compassTicks, normalizeHeading } from './shared/compassRibbon.js';
 
@@ -47,7 +47,8 @@ export default function HorizontalCompass({ heading, isConnected, isNightMode })
     const rounded = Math.round(degrees) % 360;
     return (
         <View style={styles.container} accessible accessibilityLabel={valid ? t('headingDescription', { angle: rounded, cardinal: cardinalHeading(degrees).replace('W', t('west')) }) : t('headingNoData')}>
-            <Svg width="100%" height="100%" viewBox="0 0 320 110">
+            {/* En web la cinta llena su celda, sin las bandas vacías del ajuste proporcional. */}
+            <Svg width="100%" height="100%" viewBox="0 0 320 110" preserveAspectRatio={Platform.OS === 'web' ? 'none' : 'xMidYMid meet'}>
                 <Defs>
                     <LinearGradient id={shadeId} x1="0%" y1="0%" x2="100%" y2="0%">
                         <Stop offset="0%" stopColor="#000000" stopOpacity={0.85} />

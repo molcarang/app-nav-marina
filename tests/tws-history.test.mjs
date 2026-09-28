@@ -2,6 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { appendHistory, appendWindReading, getHistoryExtrema, pruneHistory, HISTORY_WINDOW_MS, normalizeHistoryHours, historyWindowMs } from '../features/console/model/twsHistory.js';
 import { getHistoryChart } from '../components/charts/historyPath.js';
+import { getHistoryAverage } from '../features/console/model/twsHistory.js';
+
+test('media del periodo: incluye ceros, excluye huecos y datos fuera de ventana', () => {
+    const now = HISTORY_WINDOW_MS + 10000;
+    const samples = [{ time: 0, value: 100 }, { time: now - 10000, value: 0 },
+        { time: now - 5000, value: 6, count: 100 }, { time: now, value: 12, count: 1 },
+        { time: now + 5000, value: 200 }, { time: now, value: NaN }];
+    assert.equal(getHistoryAverage(samples, now), 6);
+    assert.equal(getHistoryAverage([], now), null);
+    assert.equal(getHistoryAverage([{ time: now, value: 0 }], now), 0);
+});
 
 test('retiene dos horas y registra valores constantes cada cinco segundos', () => {
     let samples = [];

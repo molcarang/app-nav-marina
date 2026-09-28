@@ -1,4 +1,5 @@
-export const DEFAULT_SIGNALK_ADDRESS = 'http://openplotter.local:3000';
+export const DEFAULT_SIGNALK_ADDRESS = process.env.EXPO_PUBLIC_SIGNALK_ADDRESS || 'http://openplotter.local:3000';
+export const SIGNALK_RECONNECT_DELAY_MS = 5000;
 
 export function normalizeServerAddress(value) {
     const input = typeof value === 'string' ? value.trim() : '';

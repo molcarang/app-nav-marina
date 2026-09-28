@@ -9,10 +9,10 @@ export const styles = StyleSheet.create({
     settingRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20, alignItems: 'center' },
     settingRowContainer: { marginBottom: 20 },
     labelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-    settingLabel: { color: '#ccc' },
-    valueLabel: { fontWeight: 'bold' },
+    settingLabel: { color: '#ccc', fontSize: 14 },
+    valueLabel: { fontWeight: 'bold', fontSize: 14 },
     slider: { width: '100%', height: 40 },
     divider: { height: 1, backgroundColor: '#333', marginVertical: 15 },
     closeBtn: { backgroundColor: '#dc1212', padding: 15, borderRadius: 12, alignItems: 'center', marginTop: 10 },
-    closeBtnText: { color: '#fff', fontWeight: 'bold' },
+    closeBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
 });

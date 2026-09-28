@@ -1,0 +1,101 @@
+{
+  "apparentWindSpeed": {
+    "path": "environment.wind.speedApparent",
+    "minValue": 2.572222,
+    "maxValue": 15.433333,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "windDirection": {
+    "path": "environment.wind.directionTrue",
+    "minValue": 1.396263,
+    "maxValue": 1.745329,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "windSpeed": {
+    "path": "environment.wind.speedTrue",
+    "minValue": 5.144444,
+    "maxValue": 10.288889,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "speedOverGround": {
+    "path": "navigation.speedOverGround",
+    "minValue": 2.057778,
+    "maxValue": 4.115556,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "heading": {
+    "path": "navigation.headingTrue",
+    "minValue": 0.698132,
+    "maxValue": 0.872665,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "depth": {
+    "path": "environment.depth.belowTransducer",
+    "minValue": 8,
+    "maxValue": 16,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "currentDrift": {
+    "path": "environment.current.drift",
+    "minValue": 0.257222,
+    "maxValue": 0.771667,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "currentSet": {
+    "path": "environment.current.setTrue",
+    "minValue": 1.919862,
+    "maxValue": 2.268928,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "rudderAngle": {
+    "path": "steering.rudderAngle",
+    "minValue": -0.174533,
+    "maxValue": 0.174533,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "engineRevolutions": {
+    "path": "propulsion.0.revolutions",
+    "minValue": 0,
+    "maxValue": 0,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "apparentWindAngle": {
+    "path": "environment.wind.angleApparent",
+    "minValue": 0.349066,
+    "maxValue": 0.698132,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "heel": {
+    "path": "navigation.attitude.roll",
+    "minValue": -0.261799,
+    "maxValue": 0.261799,
+    "dataPeriod": 60,
+    "outputPeriod": 0.5
+  },
+  "position": {
+    "path": "navigation.position"
+  },
+  "attitude": {
+    "path": "navigation.attitude"
+  },
+  "current": {
+    "path": "environment.current"
+  },
+  "courseOverGround": {
+    "path": "navigation.courseOverGroundTrue"
+  },
+  "autopilotState": {
+    "path": "steering.autopilot.state"
+  }
+}

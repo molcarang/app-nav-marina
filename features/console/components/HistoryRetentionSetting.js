@@ -2,9 +2,11 @@ import { useTranslation } from '../../../localization/LanguageProvider';
 import { useEffect, useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MAX_HISTORY_HOURS } from '../model/twsHistory.js';
-import { styles } from '../styles/settingsStyles';
+import { styles as baseStyles } from '../styles/settingsStyles';
+import { useResponsiveStyles } from '../../../hooks/useControlScale';
 
 export default function HistoryRetentionSetting({ hours, visible, onSave, metric = 'TWS', settingKey = 'historyHours' }) {
+    const styles = useResponsiveStyles(baseStyles);
     const { t } = useTranslation();
     const [draft, setDraft] = useState(String(hours));
     const [message, setMessage] = useState('');

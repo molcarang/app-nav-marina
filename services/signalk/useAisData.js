@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getSignalKSocketUrl } from './serverAddress';
+import { createPendingUpdates } from './pendingUpdates';
+import { getSignalKSocketUrl, SIGNALK_RECONNECT_DELAY_MS } from './serverAddress';
 
 const paths = ['navigation.position', 'navigation.courseOverGroundTrue', 'navigation.speedOverGround', 'navigation.headingTrue', 'name', 'mmsi'];
 export function useAisData(address, enabled) {
@@ -11,13 +12,28 @@ export function useAisData(address, enabled) {
         let socket;
         let retry;
         let self;
+        let pending;
+        const pendingTargets = new Map();
         const connect = () => {
+            pending?.dispose();
+            pendingTargets.clear();
+            pending = createPendingUpdates(batch => {
+                if (disposed) return;
+                const targets = Object.fromEntries(pendingTargets);
+                pendingTargets.clear();
+                setState(previous => ({
+                    status: batch.status ?? previous.status,
+                    targets: batch.reset ? targets : { ...previous.targets,
+                        ...Object.fromEntries(Object.entries(targets).map(([id, changes]) =>
+                            [id, { ...previous.targets[id], ...changes }])) },
+                }));
+            });
             const url = new URL(getSignalKSocketUrl(address));
             url.searchParams.set('subscribe', 'none');
             socket = new WebSocket(url.toString());
             socket.onopen = () => {
                 if (disposed) return;
-                setState({ status: 'connected', targets: {} });
+                pending.add({ status: 'connected', reset: true });
                 socket.send(JSON.stringify({ context: 'vessels.*', subscribe: paths.map(path => ({ path, period: 1000, format: 'delta' })) }));
             };
             socket.onmessage = event => {
@@ -39,15 +55,19 @@ export function useAisData(address, enabled) {
                         if (item.path === 'navigation.position') changes.positionReceivedAt = Date.now();
                     }
                 }
-                if (Object.keys(changes).length) setState(previous => ({ ...previous, targets: {
-                    ...previous.targets, [id]: { ...previous.targets[id], ...changes, receivedAt: Date.now() },
-                } }));
+                if (Object.keys(changes).length) {
+                    pendingTargets.set(id, { ...pendingTargets.get(id), ...changes, receivedAt: Date.now() });
+                    pending.add({});
+                }
             };
-            socket.onerror = () => { if (!disposed) { setState({ status: 'error', targets: {} }); socket.close(); } };
+            socket.onerror = () => { if (!disposed) socket.close(); };
             socket.onclose = () => {
                 if (disposed) return;
+                pending.dispose();
+                pendingTargets.clear();
                 setState({ status: 'error', targets: {} });
-                retry = setTimeout(connect, 5000);
+                clearTimeout(retry);
+                retry = setTimeout(connect, SIGNALK_RECONNECT_DELAY_MS);
             };
         };
         connect();
@@ -56,6 +76,8 @@ export function useAisData(address, enabled) {
         })), 10000);
         return () => {
             disposed = true;
+            pending.dispose();
+            pendingTargets.clear();
             clearTimeout(retry);
             clearInterval(prune);
             socket.onopen = socket.onmessage = socket.onerror = socket.onclose = null;

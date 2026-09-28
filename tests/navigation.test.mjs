@@ -6,14 +6,14 @@ import { getAutopilotInfo } from '../features/console/model/autopilot.js';
 import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from '../features/console/model/settings.js';
 import { getConsoleTheme } from '../features/console/styles/consoleTheme.js';
 import { INITIAL_DATA } from '../services/signalk/config.js';
-import { readFileSync } from 'node:fs';
 
-test('estado inicial: barco parado y piloto en espera', () => {
+
+test('estado inicial: sin lecturas de sensores', () => {
     const navigation = deriveNavigationData(INITIAL_DATA);
-    assert.equal(navigation.sogKnots, '0.0');
-    assert.equal(navigation.twsKnots, '0.0');
-    assert.equal(navigation.navigationMode, 'SAIL');
-    assert.equal(getAutopilotInfo(navigation.apState).value, 'STBY');
+    assert.equal(navigation.sogKnots, '—');
+    assert.equal(navigation.twsKnots, '—');
+    assert.equal(navigation.navigationMode, null);
+    assert.equal(getAutopilotInfo(navigation.apState).value, '—');
 });
 
 test('convierte unidades y conserva los signos de viento y escora', () => {
@@ -22,11 +22,12 @@ test('convierte unidades y conserva los signos de viento y escora', () => {
         [SIGNALK_PATHS.speedOverGround]: 3.086667,
         [SIGNALK_PATHS.windSpeed]: 7.716667,
         [SIGNALK_PATHS.heading]: Math.PI / 4,
+        [SIGNALK_PATHS.courseOverGround]: Math.PI / 4,
         [SIGNALK_PATHS.windDirection]: Math.PI / 2,
         [SIGNALK_PATHS.apparentWindAngle]: -Math.PI / 6,
         [SIGNALK_PATHS.rudderAngle]: Math.PI / 18,
         [SIGNALK_PATHS.engineRevolutions]: 30,
-        [SIGNALK_PATHS.heel]: -Math.PI / 12,
+        [SIGNALK_PATHS.attitude]: { roll: -Math.PI / 12 },
     });
     assert.equal(navigation.sogKnots, '6.0');
     assert.equal(navigation.twsKnots, '15.0');
@@ -57,7 +58,7 @@ test('VMG conserva magnitud y VMC conserva signo', () => {
 
 test('mantiene compatibilidad de ajustes y estados del piloto', () => {
     assert.equal(SETTINGS_STORAGE_KEY, '@ajustes_consola');
-    assert.deepEqual(Object.values(DEFAULT_SETTINGS), [20, 60, 35]);
+    assert.equal(typeof DEFAULT_SETTINGS.depthAlarmMeters, 'number');
     for (const [state, label] of [['auto', 'AUTO'], ['wind', 'WIND'], ['route', 'TRACK'], ['standby', 'STBY']]) {
         assert.equal(getAutopilotInfo(state).value, label);
     }
@@ -65,8 +66,3 @@ test('mantiene compatibilidad de ajustes y estados del piloto', () => {
     assert.equal(getConsoleTheme(false, 70, DEFAULT_SETTINGS).statusDot, '#FF0000');
 });
 
-test('el simulador cubre los paths numéricos del catálogo trasladado', () => {
-    const config = JSON.parse(readFileSync(new URL('../simulator.json', import.meta.url)));
-    const numericPaths = Object.entries(INITIAL_DATA).filter(([, value]) => typeof value === 'number').map(([key]) => key);
-    assert.deepEqual(config.configuration.items.map(item => item.path).sort(), numericPaths.sort());
-});

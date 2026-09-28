@@ -1,0 +1,8 @@
+{
+  "name": "signalk-standard-demo",
+  "version": "1.0.0",
+  "description": "Instrumentos simulados en formato Signal K estándar",
+  "main": "index.js",
+  "keywords": ["signalk-node-server-plugin"],
+  "license": "UNLICENSED"
+}

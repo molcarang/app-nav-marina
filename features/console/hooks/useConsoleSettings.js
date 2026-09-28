@@ -1,3 +1,4 @@
+import { normalizeAisRange } from '../../../components/gauges/shared/aisRange.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { normalizeLanguage } from '../../../localization/translate';
 import { useEffect, useState } from 'react';
@@ -19,6 +20,7 @@ export function useConsoleSettings() {
                 const saved = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
                 if (saved && mounted) {
                     const restored = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+                    restored.aisRangeNm = normalizeAisRange(restored.aisRangeNm);
                     restored.language = normalizeLanguage(restored.language);
                     restored.historyHours = normalizeHistoryHours(restored.historyHours);
                     restored.sogHistoryHours = normalizeHistoryHours(restored.sogHistoryHours);
@@ -45,6 +47,7 @@ export function useConsoleSettings() {
     }
     async function saveSetting(key, value) {
         const next = { ...settings, [key]: key === 'signalKAddress' ? normalizeServerAddress(value)
+            : key === 'aisRangeNm' ? normalizeAisRange(value)
             : key === 'language' ? normalizeLanguage(value)
             : ['depthAlarmSound', 'depthAlarmEnabled'].includes(key) ? Boolean(value)
             : key === 'depthAlarmMeters' ? normalizeDepthAlarm(value)

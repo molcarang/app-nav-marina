@@ -24,6 +24,7 @@ import AisTouchOverlay from './AisTouchOverlay';
 const HeadingGauge = React.memo(({
     size,
     showAis = true,
+    aisRangeNm = 6,
     aisTargets,
     position,
     positionReceivedAt,
@@ -174,7 +175,12 @@ const HeadingGauge = React.memo(({
                         const isMid = deg % 10 === 0;
                         const tLen = isMajor ? 20 : isMid ? 12 : 7;
                         const degreeRad = dims.RADIUS - 35;
-                        const cardinalRad = dims.INNER_RADIUS - 65;
+                        // En web, reserva espacio para el glifo completo dentro del aro,
+                        // también cuando el rumbo sitúa la letra en la mitad superior.
+                        const cardinalRad = Platform.OS === 'web'
+                            ? Math.max(0, Math.min(dims.INNER_RADIUS - 65,
+                                dims.INNER_RADIUS - 39 - dims.FONT_CARD * 0.85 - COMPASS_SIZE * 0.012))
+                            : dims.INNER_RADIUS - 65;
 
                         return (
                             <G key={`tick-${deg}`}>
@@ -280,7 +286,7 @@ const HeadingGauge = React.memo(({
                     animationPhase={display.currentFlow}
                     onSelect={Platform.OS === 'web' ? setSelectedVessel : undefined}
                     center={dims.CENTER} radius={currentMaxRadius * 0.9} size={COMPASS_SIZE}
-                    positionReceivedAt={positionReceivedAt} connected={isConnected} />}
+                    rangeNm={aisRangeNm} positionReceivedAt={positionReceivedAt} connected={isConnected} />}
                 <SteelBall cx={dims.CENTER} cy={dims.CENTER} isNightMode={isNightMode} />
 
                 {/* --- CRISTAL --- */}
@@ -293,7 +299,7 @@ const HeadingGauge = React.memo(({
             {showAis && Platform.OS !== 'web' && <AisTouchOverlay targets={aisTargets}
                 position={position} heading={display.heading} center={dims.CENTER}
                 radius={currentMaxRadius * 0.9} size={COMPASS_SIZE}
-                positionReceivedAt={positionReceivedAt} connected={isConnected} onSelect={setSelectedVessel} />}
+                rangeNm={aisRangeNm} positionReceivedAt={positionReceivedAt} connected={isConnected} onSelect={setSelectedVessel} />}
             <AisVesselPopup vessel={showAis && isConnected ? selectedVessel : null} onClose={() => setSelectedVessel(null)} />
         </View>
     );

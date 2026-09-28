@@ -1,12 +1,15 @@
+import { useResponsiveStyles, useControlScale } from '../../hooks/useControlScale';
 import { useTranslation } from '../../localization/LanguageProvider';
 import { getLanguageLocale } from '../../localization/translate';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import NightDimmer from '../NightDimmer';
 import Svg, { G, Line, Path, Text as SvgText } from 'react-native-svg';
 import { getHistoryChart } from './historyPath';
-import { historyWindowMs, getHistoryExtrema } from '../../features/console/model/twsHistory.js';
+import { historyWindowMs, getHistoryExtrema, getHistoryAverage } from '../../features/console/model/twsHistory.js';
 
-export default function HistoryChartModal({ visible, onClose, history, label, unit, value, maxValue, isNightMode, historyHours = 2 }) {
+export default function HistoryChartModal({ visible, onClose, history, label, unit, value, maxValue, isNightMode, historyHours = 2, showAverage = false }) {
+    const styles = useResponsiveStyles(baseStyles);
+    const scale = useControlScale();
     const { t, language } = useTranslation();
     const { width, height } = useWindowDimensions();
     const accent = isNightMode ? '#bc7777' : '#79f17b';
@@ -17,6 +20,7 @@ export default function HistoryChartModal({ visible, onClose, history, label, un
     const windowMs = historyWindowMs(historyHours);
     const windowStart = now - windowMs;
     const extrema = getHistoryExtrema(history, now, historyHours);
+    const average = showAverage ? getHistoryAverage(history, now, historyHours) : null;
     const range = Math.max(1, Number(maxValue) || 0, extrema.max?.value ?? 0);
     const minimum = extrema.min?.value.toFixed(1) ?? '—';
     const maximum = extrema.max?.value.toFixed(1) ?? '—';
@@ -37,7 +41,7 @@ export default function HistoryChartModal({ visible, onClose, history, label, un
         <Modal visible={visible} transparent statusBarTranslucent navigationBarTranslucent animationType="fade" onRequestClose={onClose}>
             <View style={styles.overlay}>
                 <View accessibilityViewIsModal style={[styles.panel, {
-                    width: Math.min(900, width * 0.94), maxHeight: height * 0.9,
+                    width: Math.min(900 * scale, width * 0.94), maxHeight: height * 0.9,
                     backgroundColor: isNightMode ? '#170b0b' : '#0c1b27',
                     borderColor: isNightMode ? '#684444' : '#4b6a7c',
                 }]}>
@@ -46,11 +50,12 @@ export default function HistoryChartModal({ visible, onClose, history, label, un
                         <Text style={[styles.reading, { color: accent }]}>{value} {unit}</Text>
                         <View style={styles.extremaRow}>
                             {[{ title: t('maximum'), value: maximum, time: sampleTime(extrema.max), color: isNightMode ? '#c49797' : '#ffd070' },
-                                { title: t('minimum'), value: minimum, time: sampleTime(extrema.min), color: isNightMode ? '#b38b8b' : '#80d7ed' }].map(item => (
+                                { title: t('minimum'), value: minimum, time: sampleTime(extrema.min), color: isNightMode ? '#b38b8b' : '#80d7ed' },
+                                ...(showAverage ? [{ title: t('average'), value: average?.toFixed(1) ?? '—', color: accent }] : [])].map(item => (
                                 <View key={item.title} style={[styles.extremaBadge, { borderColor: item.color }]}>
                                     <Text style={[styles.extremaLabel, { color: item.color }]}>{item.title}</Text>
-                                    <Text style={[styles.extremaValue, { color: foreground }]}>{item.value} {unit}</Text>
-                                    <Text style={[styles.extremaTime, { color: foreground }]}>{item.time}</Text>
+                                    <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.extremaValue, { color: foreground }]}>{item.value} {unit}</Text>
+                                    {item.time && <Text style={[styles.extremaTime, { color: foreground }]}>{item.time}</Text>}
                                 </View>
                             ))}
                         </View>
@@ -90,7 +95,7 @@ export default function HistoryChartModal({ visible, onClose, history, label, un
     );
 }
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
     overlay: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.85)' },
     panel: { borderWidth: 1, borderRadius: 20, padding: 18 },
     title: { fontFamily: 'NauticalFont', fontSize: 17, textAlign: 'center' },

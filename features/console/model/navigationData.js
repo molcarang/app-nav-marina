@@ -1,60 +1,60 @@
 import { mpsToKnots, normalizeAngle, radToDeg } from '../../../utils/Utils.js';
-import { SIGNALK_PATHS } from '../../../services/signalk/paths.js';
+import { SIGNALK_PATHS as P, ENGINE_PATH_PATTERN } from '../../../services/signalk/paths.js';
 import { isValidPosition } from './gpsPosition.js';
-/** Convierte datos crudos para la consola; conserva las fórmulas existentes. */
+
+const number = value => Number.isFinite(value) ? value : null;
+const positive = value => Number.isFinite(value) && value >= 0 ? value : null;
+const degrees = value => value === null ? null : radToDeg(value);
+const bearing = value => value === null ? null : ((radToDeg(value) % 360) + 360) % 360;
+const knots = value => value === null ? '—' : mpsToKnots(value);
+
+/** Objetos y unidades de Signal K. Ausencia de datos distinta de cero. */
 export function deriveNavigationData(data) {
-    const realPosition = data[SIGNALK_PATHS.position];
-    const simulatedPosition = {
-        latitude: data[SIGNALK_PATHS.simulatedLatitude],
-        longitude: data[SIGNALK_PATHS.simulatedLongitude],
-    };
-    const hasRealPosition = isValidPosition(realPosition);
-    const position = hasRealPosition ? realPosition : isValidPosition(simulatedPosition) ? simulatedPosition : null;
-    const simulatedReceivedAt = Number.isFinite(data.simulatedLatitudeReceivedAt) && Number.isFinite(data.simulatedLongitudeReceivedAt)
-        ? Math.min(data.simulatedLatitudeReceivedAt, data.simulatedLongitudeReceivedAt) : null;
-    // Corriente (Set & Drift)
-    const rawDrift = data['navigation.current.drift'] ?? data['performance.currentDrift'] ?? data['ocean.drift'] ?? 0;
-    const rawSet = data['navigation.current.setTrue'] ?? data['performance.currentSetTrue'] ?? data['ocean.set'] ?? 0;
-    const rawRudderAngle = data['steering.rudderAngle'] ?? 0;
-    // Navegación (COG)
-    const headingRad = data['navigation.headingTrue'] ?? 0;
-    const headingDeg = radToDeg(headingRad);
-    // Viento (TWS & TWD)
-    const twsMps = data['environment.wind.speedTrue'] ?? 0;
-    const twdRad = data['environment.wind.directionTrue'] ?? 0;
-    const twdDeg = radToDeg(twdRad);
-    const depth = data['navigation.depthBelowTransducer'] ?? 0;
-    const engineRpm = data['propulsion.0.revolutions'] ?? 0;
-    const awaRad = data[SIGNALK_PATHS.apparentWindAngle] ?? 0;
-    const awaDeg = radToDeg(awaRad);
-    const awaFixed = Math.abs(normalizeAngle(awaDeg)).toFixed(0);
-    const awaSide = normalizeAngle(awaDeg) < 0 ? 'P' : 'S';
-    const apState = data['steering.autopilot.state'];
-    const vesselHeelRad = data['vessels.self.navigation.attitude.roll'] ?? 0;
+    const position = isValidPosition(data[P.position]) ? data[P.position] : null;
+    const variation = number(data[P.magneticVariation]);
+    const magnetic = number(data[P.headingMagnetic]);
+    const heading = number(data[P.heading]) ?? (magnetic !== null && variation !== null ? magnetic + variation : null);
+    const headingDeg = bearing(heading);
+    const cog = bearing(number(data[P.courseOverGround]));
+    const current = data[P.current];
+    const drift = positive(current?.drift ?? data[P.currentDrift]);
+    const set = number(current?.setTrue ?? data[P.currentSet]) ??
+        (Number.isFinite(current?.setMagnetic ?? data['environment.current.setMagnetic']) && variation !== null ? (current?.setMagnetic ?? data['environment.current.setMagnetic']) + variation : null);
+    const tws = positive(data[P.windSpeed]);
+    const twd = number(data[P.windDirection]);
+    const twaRad = number(data[P.trueWindAngle]) ?? (twd !== null && heading !== null ? twd - heading : null);
+    const twa = twaRad === null ? null : normalizeAngle(radToDeg(twaRad));
+    const awaRad = number(data[P.apparentWindAngle]);
+    const awa = awaRad === null ? null : normalizeAngle(radToDeg(awaRad));
+    const engines = Object.entries(data).filter(([path, value]) => ENGINE_PATH_PATTERN.test(path) && positive(value) !== null);
+    const engineRpm = engines.length ? Math.max(...engines.map(([, value]) => value * 60)) : null;
+    const rudder = degrees(number(data[P.rudderAngle]));
     return {
         position,
-        positionReceivedAt: hasRealPosition ? data.positionReceivedAt ?? null : position ? simulatedReceivedAt : null,
-        driftKnots: rawDrift * 1.94384,
-        setDeg: radToDeg(rawSet),
-        cogDeg: headingDeg, // Para compatibilidad con componentes existentes
-        cogDigital: headingDeg.toFixed(1),
-        cogSquare: headingDeg.toFixed(0) + '°',
-        twsKnots: mpsToKnots(twsMps),
-        awsKnots: Number(mpsToKnots(data[SIGNALK_PATHS.apparentWindSpeed] ?? 0)),
-        twdDeg: twdDeg,
-        twdDigital: !isNaN(twdDeg) ? Math.abs(normalizeAngle(twdDeg)).toFixed(0) + '°' : '---',
-        twaCog: !isNaN(twdDeg) ? normalizeAngle(headingDeg - twdDeg) : null, // TWA respecto a proa (signed, COG)
-        twa: !isNaN(twdDeg) ? -normalizeAngle(headingDeg - twdDeg) : null, // TWA con signo (positivo = estribor, negativo = babor)
-        sogKnots: mpsToKnots(data['navigation.speedOverGround'] ?? 0),
-        depthMeters: depth,
-        rudderAngle: Math.round(rawRudderAngle * (180 / Math.PI)),
-        engineRpm: engineRpm * 60,
-        navigationMode: ((engineRpm * 60) > 666661 ? 'ENGINE' : 'SAIL'),
-        awa: normalizeAngle(awaDeg),
-        awaFixed: awaFixed,
-        awaDigital: 'AWA (' + awaSide + ')',
-        apState: apState,
-        vesselHeelDeg: radToDeg(vesselHeelRad)
+        positionReceivedAt: position ? data.positionReceivedAt ?? null : null,
+        driftKnots: drift !== null && set !== null && heading !== null ? drift * 1.94384 : null,
+        setDeg: bearing(set),
+        headingDeg,
+        headingDigital: headingDeg === null ? '—' : headingDeg.toFixed(1),
+        cogDeg: cog,
+        cogDigital: cog === null ? '—' : cog.toFixed(1),
+        cogSquare: cog === null ? '—' : cog.toFixed(0) + '°',
+        twsKnots: knots(tws),
+        awsKnots: positive(data[P.apparentWindSpeed]) === null ? 0 : Number(mpsToKnots(data[P.apparentWindSpeed])),
+        twdDeg: bearing(twd),
+        twdDigital: twd === null ? '—' : bearing(twd).toFixed(0) + '°',
+        twaCog: twa === null ? null : -twa,
+        twa,
+        sogKnots: knots(positive(data[P.speedOverGround])),
+        depthMeters: positive(data[P.depth]),
+        rudderAngle: rudder === null ? null : Math.round(rudder),
+        engineRpm,
+        navigationMode: engineRpm === null ? null : engineRpm > 0 ? 'ENGINE' : 'SAIL',
+        awa,
+        awaFixed: awa === null ? '—' : Math.abs(awa).toFixed(0),
+        awaDigital: awa === null ? 'AWA' : `AWA (${awa < 0 ? 'P' : 'S'})`,
+        apState: data[P.autopilotState] ?? null,
+        vesselHeelDeg: degrees(number(data[P.attitude]?.roll ?? data[P.heel])),
     };
 }
 /** Proyección respecto al viento utilizada por VMG y VMC. */

@@ -9,6 +9,12 @@ export function normalizeHistoryHours(value) {
 }
 export const historyWindowMs = hours => normalizeHistoryHours(hours) * 60 * 60 * 1000;
 
+/** Media de los bloques de cinco segundos disponibles; los huecos no cuentan como cero. */
+export function getHistoryAverage(samples, now, hours = DEFAULT_HISTORY_HOURS) {
+    const recent = pruneHistory(samples, now, hours);
+    return recent.length ? recent.reduce((sum, sample) => sum + sample.value, 0) / recent.length : null;
+}
+
 export function pruneHistory(samples, now, hours = DEFAULT_HISTORY_HOURS) {
     if (!Array.isArray(samples)) return [];
     const windowMs = historyWindowMs(hours);

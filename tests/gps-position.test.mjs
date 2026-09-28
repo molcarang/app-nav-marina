@@ -23,23 +23,8 @@ test('formato náutico con hemisferios y redondeo de minutos', () => {
     assert.equal(formatCoordinate(null, true), '—');
 });
 
-test('combina las dos coordenadas simuladas y conserva la hora de la menos reciente', () => {
-    const data = { ...INITIAL_DATA, [SIGNALK_PATHS.simulatedLatitude]: 39.4699,
-        [SIGNALK_PATHS.simulatedLongitude]: -0.3763, simulatedLatitudeReceivedAt: 1000, simulatedLongitudeReceivedAt: 2000 };
-    const navigation = deriveNavigationData(data);
-    assert.deepEqual(navigation.position, { latitude: 39.4699, longitude: -0.3763 });
-    assert.equal(navigation.positionReceivedAt, 1000);
-    assert.equal(deriveNavigationData({ ...data, [SIGNALK_PATHS.simulatedLongitude]: null }).position, null);
-    assert.equal(deriveNavigationData({ ...data, [SIGNALK_PATHS.simulatedLatitude]: 100 }).position, null);
-    assert.deepEqual(deriveNavigationData({ ...data, [SIGNALK_PATHS.simulatedLatitude]: 0, [SIGNALK_PATHS.simulatedLongitude]: 0 }).position, { latitude: 0, longitude: 0 });
-});
-
-test('la posición estándar tiene prioridad y no se refresca con datos simulados', () => {
-    const position = { latitude: 40, longitude: 2 };
-    const data = { ...INITIAL_DATA, [SIGNALK_PATHS.position]: position, positionReceivedAt: 500,
-        [SIGNALK_PATHS.simulatedLatitude]: 39, [SIGNALK_PATHS.simulatedLongitude]: -1,
-        simulatedLatitudeReceivedAt: 1000, simulatedLongitudeReceivedAt: 2000 };
-    assert.deepEqual(deriveNavigationData(data).position, position);
-    assert.equal(deriveNavigationData(data).positionReceivedAt, 500);
-    assert.deepEqual(deriveNavigationData({ ...data, [SIGNALK_PATHS.position]: {} }).position, { latitude: 39, longitude: -1 });
+test('los paths privados del simulador no sustituyen una posición estándar ausente', () => {
+    assert.equal(deriveNavigationData({
+        'simulation.gps.latitude': 39, 'simulation.gps.longitude': -1,
+    }).position, null);
 });

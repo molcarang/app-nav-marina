@@ -1,84 +1,83 @@
 import { useEffect, useRef, useState } from 'react';
 import { INITIAL_DATA } from './config';
-import { SIGNALK_PATHS } from './paths';
-import { DEFAULT_SIGNALK_ADDRESS, getSignalKSocketUrl } from './serverAddress';
-/**
- * Hook personalizado para gestionar la conexión WebSocket y el estado de los datos de Signal K.
- * @returns {object} Estado actualizado de los datos de Signal K y conexión.
- */
+import { SIGNALK_PATHS, SUBSCRIPTION_PATHS } from './paths';
+import { readInstrumentDelta } from './instrumentDeltas';
+import { DEFAULT_SIGNALK_ADDRESS, getSignalKSocketUrl, SIGNALK_RECONNECT_DELAY_MS } from './serverAddress';
+import { createPendingUpdates } from './pendingUpdates';
+
+/** Suscripción estándar: reconecta y caduca lecturas tras 30 segundos sin actualizar. */
 export const useSignalKData = (address = DEFAULT_SIGNALK_ADDRESS, enabled = true, onWindReading, onSogReading) => {
     const sogListener = useRef(onSogReading);
     useEffect(() => { sogListener.current = onSogReading; }, [onSogReading]);
     const windListener = useRef(onWindReading);
     useEffect(() => { windListener.current = onWindReading; }, [onWindReading]);
-    // Estado principal con los valores de las rutas suscritas
     const [signalKData, setSignalKData] = useState(INITIAL_DATA);
-    // Referencia persistente al WebSocket
-    const wsRef = useRef(null);
     useEffect(() => {
-        if (!enabled) return;
         setSignalKData(INITIAL_DATA);
+        if (!enabled) return;
         let active = true;
-        const socket = new WebSocket(getSignalKSocketUrl(address));
-        wsRef.current = socket;
-        socket.onopen = () => {
-            if (!active) return;
-            setSignalKData(prev => ({ ...prev, isConnected: true }));
-            // Suscribirse a todas las rutas excepto isConnected
-            const pathsToSubscribe = Object.keys(INITIAL_DATA).filter(key => key !== 'isConnected');
-            const subscribeMessage = JSON.stringify({
-                context: 'vessels.self',
-                subscribe: pathsToSubscribe.map(path => ({
-                    path,
-                    period: 500,
-                    format: 'delta',
-                })),
+        let socket;
+        let retry;
+        let pending;
+        let self;
+        const timestamps = new Map();
+        const connect = () => {
+            timestamps.clear();
+            pending = createPendingUpdates(updates => {
+                if (active) setSignalKData(previous => ({ ...previous, ...updates }));
             });
-            socket.send(subscribeMessage);
+            const url = new URL(getSignalKSocketUrl(address));
+            url.searchParams.set('subscribe', 'none');
+            socket = new WebSocket(url.toString());
+            socket.onopen = () => {
+                if (!active) return;
+                setSignalKData({ ...INITIAL_DATA, isConnected: true });
+                socket.send(JSON.stringify({ context: 'vessels.self', subscribe:
+                    SUBSCRIPTION_PATHS.map(path => ({ path, period: 500, format: 'delta' })) }));
+            };
+            socket.onmessage = event => {
+                if (!active) return;
+                let message;
+                try { message = JSON.parse(event.data); } catch { return; }
+                if (typeof message.self === 'string') self = message.self.startsWith('vessels.') ? message.self : `vessels.${message.self}`;
+                if (!Array.isArray(message.updates)) return;
+                const now = Date.now();
+                const updates = readInstrumentDelta(message, self, now);
+                for (const path of Object.keys(updates)) if (path !== 'positionReceivedAt') timestamps.set(path, now);
+                const wind = updates[SIGNALK_PATHS.windSpeed];
+                if (Number.isFinite(wind) && wind >= 0) windListener.current?.(wind * 1.94384, now);
+                const sog = updates[SIGNALK_PATHS.speedOverGround];
+                if (Number.isFinite(sog) && sog >= 0) sogListener.current?.(sog * 1.94384, now);
+                if (Object.keys(updates).length) pending.add(updates);
+            };
+            socket.onerror = () => { if (active) socket.close(); };
+            socket.onclose = () => {
+                if (!active) return;
+                pending.dispose();
+                timestamps.clear();
+                setSignalKData(INITIAL_DATA);
+                clearTimeout(retry);
+                retry = setTimeout(connect, SIGNALK_RECONNECT_DELAY_MS);
+            };
         };
-        socket.onmessage = (event) => {
-            if (!active) return;
-            let data;
-            try { data = JSON.parse(event.data); } catch { return; }
-            if (Array.isArray(data.updates)) {
-                const updates = {};
-                for (const update of data.updates) {
-                    for (const value of update.values ?? []) {
-                    if (value.path in INITIAL_DATA) {
-                        updates[value.path] = value.value;
-                        if (value.path === SIGNALK_PATHS.position) updates.positionReceivedAt = Date.now();
-                        if (value.path === SIGNALK_PATHS.simulatedLatitude) updates.simulatedLatitudeReceivedAt = Date.now();
-                        if (value.path === SIGNALK_PATHS.simulatedLongitude) updates.simulatedLongitudeReceivedAt = Date.now();
-                        if (value.path === 'environment.wind.speedTrue' && Number.isFinite(value.value) && value.value >= 0) {
-                            const receivedAt = Date.now();
-                            updates.twsReceivedAt = receivedAt;
-                            windListener.current?.(value.value * 1.94384, receivedAt);
-                        }
-                        if (value.path === 'navigation.speedOverGround' && Number.isFinite(value.value) && value.value >= 0) {
-                            sogListener.current?.(value.value * 1.94384, Date.now());
-                        }
-                    }
-                    }
-                }
-                if (Object.keys(updates).length > 0) {
-                    setSignalKData(prev => ({ ...prev, ...updates }));
+        connect();
+        const expiry = setInterval(() => {
+            const expired = {};
+            for (const [path, time] of timestamps) {
+                if (Date.now() - time > 30000) {
+                    expired[path] = null;
+                    timestamps.delete(path);
                 }
             }
-        };
-        socket.onerror = () => {
-            if (!active) return;
-            setSignalKData(prev => ({ ...prev, isConnected: false }));
-        };
-        socket.onclose = () => {
-            if (!active) return;
-            setSignalKData(prev => ({ ...prev, isConnected: false }));
-        };
-        // Limpieza al desmontar
+            if (Object.keys(expired).length) pending.add(expired);
+        }, 1000);
         return () => {
             active = false;
+            clearTimeout(retry);
+            clearInterval(expiry);
+            pending.dispose();
             socket.onopen = socket.onmessage = socket.onerror = socket.onclose = null;
             socket.close();
-            if (wsRef.current === socket) wsRef.current = null;
         };
     }, [address, enabled]);
     return signalKData;
