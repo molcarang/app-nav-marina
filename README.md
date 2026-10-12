@@ -11,6 +11,9 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ## Get started
 
+Para generar la aplicación web instalable (PWA), ejecuta `npm run build:web`.
+Consulta [la guía de instalación web](WEB-INSTALABLE.md).
+
 1. Install dependencies
 
    ```bash

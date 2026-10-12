@@ -292,6 +292,7 @@ no incorpora una entrada de token: necesita integrar ese mecanismo para esa inst
 | COG | `navigation.courseOverGroundTrue` |
 | SOG | `navigation.speedOverGround` |
 | Profundidad | `environment.depth.belowTransducer` |
+| Temperatura del agua (panel GPS en horizontal; etiqueta en vertical) | `environment.water.temperature`, en kelvin; la app muestra °C |
 | Escora | `navigation.attitude`, propiedad `roll` |
 | Corriente | `environment.current`, propiedades `drift` y `setTrue` |
 | Viento aparente | `environment.wind.angleApparent` y `speedApparent` |

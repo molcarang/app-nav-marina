@@ -3,6 +3,7 @@
  * simulator define ejemplos numéricos; después ejecuta npm run simulator:generate.
  */
 export const SIGNALK_FIELDS = {
+    waterTemperature: { path: 'environment.water.temperature', initialValue: null },
     attitude: { path: 'navigation.attitude', initialValue: null },
     current: { path: 'environment.current', initialValue: null },
     headingMagnetic: { path: 'navigation.headingMagnetic', initialValue: null },

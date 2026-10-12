@@ -1,5 +1,6 @@
 import { useTranslation } from '../../../localization/LanguageProvider';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
+import { useControlScale } from '../../../hooks/useControlScale';
 import DataSquare from '../../../components/DataSquare';
 import InfoPanel from '../../../components/gauges/InfoPanel';
 import NavigationModeLabels from './NavigationModeLabels';
@@ -9,6 +10,7 @@ import { styles } from '../styles/consoleStyles';
 /** Controles compartidos por ambas orientaciones; el contenedor define las dimensiones opcionales. */
 export default function NavigationControls({ navigation, settings, maxSOG, maxTWS, isNightMode, theme, windowWidth, onResetSOG, onResetTWS, itemWidth, cardHeight, landscape = false, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted }) {
     const { t } = useTranslation();
+    const scale = useControlScale();
     const columnWidth = itemWidth ?? windowWidth * 0.94 / 3;
     const indicatorHeight = 32;
     const apInfo = getAutopilotInfo(navigation.apState);
@@ -133,5 +135,9 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                     />
 
                 </View>
+                {!landscape && <Text numberOfLines={1} style={{ fontFamily: 'NauticalFont', fontSize: 14 * scale,
+                    color: '#8fcbdc', textAlign: 'center', marginVertical: 6 * scale }}>
+                    {t('waterTemperatureShort')} {Number.isFinite(navigation.waterTemperatureCelsius) ? navigation.waterTemperatureCelsius.toFixed(1) : '—'} °C
+                </Text>}
     </>;
 }

@@ -15,6 +15,7 @@ const DataSquare = ({
     label,
     value,
     unit,
+    secondaryText,
     color,
     textColor,
     showStatusDot = false,
@@ -181,6 +182,10 @@ const DataSquare = ({
                 <Text style={[styles.unit, { color: labelUnitColor, fontSize: fontBasis * 0.13 }]}>
                     {unit}
                 </Text>
+                {secondaryText && <Text numberOfLines={1} adjustsFontSizeToFit
+                    style={[styles.unit, { color: labelUnitColor, fontSize: fontBasis * 0.085, maxWidth: '94%' }]}>
+                    {secondaryText}
+                </Text>}
             </TouchableOpacity>
             {showHistoryPopup && historyOpen && (
                 <HistoryChartModal visible onClose={() => setHistoryOpen(false)} history={history}

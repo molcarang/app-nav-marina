@@ -7,8 +7,9 @@ import { styles } from '../styles/consoleStyles';
 import AisToggleButton from './AisToggleButton';
 import { useControlScale } from '../../../hooks/useControlScale';
 import FullscreenButton from '../../../components/FullscreenButton';
+import AnchorButton from './AnchorButton';
 const HEADER_INDICATOR_HEIGHT = 36;
-export default function ConnectionHeader({ isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false }) {
+export default function ConnectionHeader({ navigation, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false }) {
     const { t } = useTranslation();
     const { enabled: nightEnabled, toggle: toggleNightMode } = useContext(NightModeContext);
     const scale = useControlScale();
@@ -54,7 +55,8 @@ export default function ConnectionHeader({ isConnected, isNightMode, onOpenSetti
             </TouchableOpacity>)}
             <FullscreenButton />
             </View>
-            {onToggleAis && <View style={{ width: '100%' }}>
+            {onToggleAis && <View style={{ width: '100%', gap: 8 * scale, alignItems: 'flex-start' }}>
+                <AnchorButton position={navigation?.position} receivedAt={navigation?.positionReceivedAt} connected={isConnected} />
                 <AisToggleButton visibleCount={aisVisibleCount} auto={aisAuto} onToggleAuto={onToggleAisAuto} rangeNm={aisRangeNm} onRangeChange={onAisRangeChange} visible={aisVisible} onPress={onToggleAis} />
             </View>}
         </View>

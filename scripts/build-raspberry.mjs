@@ -8,6 +8,7 @@ const result = spawnSync(process.execPath, ['node_modules/expo/bin/cli', 'export
 });
 if (result.status !== 0) process.exit(result.status || 1);
 mkdirSync(new URL(`../${output}`, import.meta.url), { recursive: true });
+cpSync(new URL('../assets/images/icon.png', import.meta.url), new URL(`../${output}/icon.png`, import.meta.url));
 for (const file of ['install.sh', 'server.py', 'README.md']) {
     cpSync(new URL(`../raspberry/${file}`, import.meta.url), new URL(`../${output}/${file}`, import.meta.url));
 }

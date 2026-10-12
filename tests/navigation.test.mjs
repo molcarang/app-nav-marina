@@ -7,6 +7,15 @@ import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from '../features/console/mode
 import { getConsoleTheme } from '../features/console/styles/consoleTheme.js';
 import { INITIAL_DATA } from '../services/signalk/config.js';
 
+test('temperatura del agua: convierte kelvin y conserva cero y negativos Celsius', () => {
+    for (const [kelvin, celsius] of [[293.15, 20], [273.15, 0], [271.15, -2]]) {
+        assert.ok(Math.abs(deriveNavigationData({ [SIGNALK_PATHS.waterTemperature]: kelvin }).waterTemperatureCelsius - celsius) < 1e-9);
+    }
+    for (const value of [undefined, null, NaN, Infinity, '293.15', -1]) {
+        assert.equal(deriveNavigationData({ [SIGNALK_PATHS.waterTemperature]: value }).waterTemperatureCelsius, null);
+    }
+});
+
 
 test('estado inicial: sin lecturas de sensores', () => {
     const navigation = deriveNavigationData(INITIAL_DATA);

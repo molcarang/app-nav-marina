@@ -17,6 +17,7 @@ import { computeCommonDims } from './shared/gaugeUtils';
 import SteelBall from './SteelBall';
 import GaugeSailboat from './GaugeSailboat';
 import AisRangeRings from './AisRangeRings';
+import AisRadarSweep from './AisRadarSweep';
 import AisTargets from './AisTargets';
 import AisVesselPopup from './AisVesselPopup';
 import AisTouchOverlay from './AisTouchOverlay';
@@ -49,7 +50,8 @@ const HeadingGauge = React.memo(({
         twa: twaCog || 0,
         awa: awa || 0, // Recuperado
         twd: twd || 0,
-        currentFlow: 0
+        currentFlow: 0,
+        radarPhase: 0
     });
     const requestRef = useRef();
     const [selectedVessel, setSelectedVessel] = useState(null);
@@ -71,15 +73,17 @@ const HeadingGauge = React.memo(({
                 const nextAwa = typeof awa === 'number' ? lerpAngle(prev.awa, awa, 0.1) : prev.awa;
                 const nextTwd = typeof twd === 'number' ? lerpAngle(prev.twd, twd, 0.1) : prev.twd;
                 const nextFlow = Number.isFinite(time) ? (time % 1500) / 1500 : prev.currentFlow;
+                const nextRadarPhase = showAis && Number.isFinite(time) ? (time % 4000) / 4000 : prev.radarPhase;
                 
                 if (
                     Math.abs(nextHeading - prev.heading) > 0.01 ||
                     Math.abs(nextTwa - prev.twa) > 0.01 ||
                     Math.abs(nextAwa - prev.awa) > 0.01 ||
                     Math.abs(nextTwd - prev.twd) > 0.01 ||
-                    Math.abs(nextFlow - prev.currentFlow) > 0.01
+                    Math.abs(nextFlow - prev.currentFlow) > 0.01 ||
+                    Math.abs(nextRadarPhase - prev.radarPhase) > 0.002
                 ) {
-                    return { heading: nextHeading, twa: nextTwa, awa: nextAwa, twd: nextTwd, currentFlow: nextFlow };
+                    return { heading: nextHeading, twa: nextTwa, awa: nextAwa, twd: nextTwd, currentFlow: nextFlow, radarPhase: nextRadarPhase };
                 }
                 return prev;
             });
@@ -90,7 +94,7 @@ const HeadingGauge = React.memo(({
             mounted = false;
             cancelAnimationFrame(requestRef.current);
         };
-    }, [value, twaCog, awa, twd]);
+    }, [value, twaCog, awa, twd, showAis]);
 
     const dims = useMemo(() => {
         const base = computeCommonDims(COMPASS_SIZE);
@@ -150,6 +154,8 @@ const HeadingGauge = React.memo(({
                     <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill={GAUGE_THEME.colors.bg} />
                 </G>
 
+                {showAis && <AisRadarSweep center={dims.CENTER} radius={currentMaxRadius * 0.9}
+                    size={COMPASS_SIZE} phase={display.radarPhase} isNightMode={isNightMode} />}
                 {showAis && <AisRangeRings center={dims.CENTER} radius={currentMaxRadius * 0.9} size={COMPASS_SIZE} />}
 
                 {/* --- CAPA 2: ELEMENTOS ESTÁTICOS (BARCO Y LAYLINES) --- */}

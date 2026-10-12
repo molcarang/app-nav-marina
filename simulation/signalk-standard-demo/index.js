@@ -9,6 +9,7 @@ module.exports = function (app) {
         schema: {
             type: 'object',
             properties: {
+                waterTemperatureCelsius: { type: 'number', title: 'Temperatura del agua (°C)', default: defaults.waterTemperatureCelsius, minimum: -5, maximum: 50 },
                 latitude: { type: 'number', title: 'Latitud fija', default: defaults.latitude, minimum: -90, maximum: 90 },
                 longitude: { type: 'number', title: 'Longitud fija', default: defaults.longitude, minimum: -180, maximum: 180 },
                 engineRpm: { type: 'number', title: 'Motor (RPM; 0 = parado)', default: 0, minimum: 0, maximum: 10000 },

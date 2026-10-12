@@ -9,10 +9,12 @@ browser="$(command -v chromium || command -v chromium-browser || true)"
 [ -n "$browser" ] || { echo "Install Chromium first (sudo apt install chromium)."; exit 1; }
 source_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 [ -f "$source_dir/web/index.html" ] || { echo "Missing web/index.html"; exit 1; }
+[ -f "$source_dir/icon.png" ] || { echo "Missing icon.png"; exit 1; }
 target="$HOME/.local/share/navmarina"
 mkdir -p "$target/web" "$HOME/.local/bin" "$HOME/.config/systemd/user" "$HOME/.local/share/applications"
 cp -R "$source_dir/web/." "$target/web/"
 cp "$source_dir/server.py" "$target/server.py"
+cp "$source_dir/icon.png" "$target/icon.png"
 cat > "$HOME/.config/systemd/user/navmarina.service" <<'UNIT'
 [Unit]
 Description=NavMarina local dashboard
@@ -41,7 +43,7 @@ Type=Application
 Name=NavMarina
 Comment=Marine dashboard
 Exec="$HOME/.local/bin/navmarina"
-Icon=applications-internet
+Icon=$target/icon.png
 Terminal=false
 Categories=Utility;
 DESKTOP

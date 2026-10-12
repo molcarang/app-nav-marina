@@ -29,6 +29,7 @@ export function deriveNavigationData(data) {
     const engines = Object.entries(data).filter(([path, value]) => ENGINE_PATH_PATTERN.test(path) && positive(value) !== null);
     const engineRpm = engines.length ? Math.max(...engines.map(([, value]) => value * 60)) : null;
     const rudder = degrees(number(data[P.rudderAngle]));
+    const waterKelvin = positive(data[P.waterTemperature]);
     return {
         position,
         positionReceivedAt: position ? data.positionReceivedAt ?? null : null,
@@ -47,6 +48,7 @@ export function deriveNavigationData(data) {
         twa,
         sogKnots: knots(positive(data[P.speedOverGround])),
         depthMeters: positive(data[P.depth]),
+        waterTemperatureCelsius: waterKelvin === null ? null : waterKelvin - 273.15,
         rudderAngle: rudder === null ? null : Math.round(rudder),
         engineRpm,
         navigationMode: engineRpm === null ? null : engineRpm > 0 ? 'ENGINE' : 'SAIL',

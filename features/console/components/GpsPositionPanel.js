@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from '../../../localization/LanguageProvider';
 import { StyleSheet, Text, View } from 'react-native';
 import { formatCoordinate, isValidPosition } from '../model/gpsPosition.js';
 import HorizontalCompass from '../../../components/gauges/HorizontalCompass';
@@ -7,7 +8,8 @@ import { useControlScale, useResponsiveStyles } from '../../../hooks/useControlS
 
 export const GPS_PANEL_HEIGHT = 84;
 
-export default function GpsPositionPanel({ width, position, receivedAt, isConnected, isNightMode, backgroundColor, heading }) {
+export default function GpsPositionPanel({ width, position, receivedAt, isConnected, isNightMode, backgroundColor, heading, waterTemperatureCelsius }) {
+    const { t } = useTranslation();
     const styles = useResponsiveStyles(baseStyles);
     const controlScale = useControlScale();
     const [now, setNow] = useState(Date.now);
@@ -31,6 +33,12 @@ export default function GpsPositionPanel({ width, position, receivedAt, isConnec
                         <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.value, { color: foreground, opacity: fresh ? 1 : 0.5 }]}>{item.value}</Text>
                     </View>
                 ))}
+                <View style={styles.coordinate}>
+                    <Text style={[styles.label, { color: accent }]}>{t('waterTemperatureShort')}</Text>
+                    <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.value, { color: foreground }]}>
+                        {Number.isFinite(waterTemperatureCelsius) ? waterTemperatureCelsius.toFixed(1) : '—'} °C
+                    </Text>
+                </View>
                 {!fresh && <Text numberOfLines={1} style={[styles.status, { color: accent }]}>{valid ? 'SIN ACTUALIZAR' : 'SIN DATOS'}</Text>}
             </View>
             <View pointerEvents="none" style={[styles.divider, { backgroundColor: isNightMode ? '#795353' : '#777' }]} />
@@ -43,12 +51,12 @@ export default function GpsPositionPanel({ width, position, receivedAt, isConnec
 
 const baseStyles = StyleSheet.create({
     panel: { borderRadius: 15, borderWidth: 1, flexDirection: 'row', marginBottom: 8, overflow: 'hidden' },
-    status: { fontFamily: 'NauticalFont', fontSize: 8, marginTop: 4 },
-    coordinates: { width: '50%', justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 8, gap: 6,
+    status: { fontFamily: 'NauticalFont', fontSize: 8, lineHeight: 10 },
+    coordinates: { width: '50%', justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 4, gap: 2,
         overflow: 'hidden', borderTopLeftRadius: 14, borderBottomLeftRadius: 14 },
     coordinate: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    label: { fontFamily: 'NauticalFont', fontSize: 14 },
-    value: { fontFamily: 'NauticalFont', fontSize: 14, flex: 1, textAlign: 'right' },
+    label: { fontFamily: 'NauticalFont', fontSize: 14, lineHeight: 18 },
+    value: { fontFamily: 'NauticalFont', fontSize: 14, lineHeight: 18, flex: 1, textAlign: 'right' },
     divider: { position: 'absolute', left: '50%', top: 8, bottom: 8, width: 1, opacity: 0.4 },
     rightArea: { width: '50%' },
 });

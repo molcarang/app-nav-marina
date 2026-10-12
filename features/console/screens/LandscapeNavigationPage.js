@@ -5,6 +5,7 @@ import HeadingGauge from '../../../components/gauges/HeadingGauge';
 import HeelPanel, { HEEL_PANEL_ASPECT_RATIO } from '../../../components/gauges/HeelPanel';
 import ConnectionHeader from '../components/ConnectionHeader';
 import AisToggleButton from '../components/AisToggleButton';
+import AnchorButton from '../components/AnchorButton';
 import NavigationControls from '../components/NavigationControls';
 import ConsoleBackground from '../components/ConsoleBackground';
 import GpsPositionPanel, { GPS_PANEL_HEIGHT } from '../components/GpsPositionPanel';
@@ -36,7 +37,7 @@ export default function LandscapeNavigationPage(props) {
     // Centrar en el hueco real entre la cabecera y los controles AIS.
     const gaugeTop = 48 * controlScale;
     const aisHeight = props.aisVisible ? 60 * controlScale + 2 : 44 * controlScale;
-    const gaugeBottom = aisBottom + aisHeight + 8 * controlScale;
+    const gaugeBottom = aisBottom + aisHeight + (44 + 8 + 8) * controlScale;
     const gaugeSize = Math.max(1, Math.min(previousGaugeSize * 1.10, columnWidth - 4,
         area.height - gaugeTop - gaugeBottom));
     const controlsWidth = Math.max(1, area.width - gaugeColumnWidth);
@@ -91,7 +92,8 @@ export default function LandscapeNavigationPage(props) {
                         )}
                         </View>
                         <View style={{ position: 'absolute', left: 8, right: 8, bottom: aisBottom, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <View style={{ width: '100%' }}>
+                            <View style={{ width: '100%', gap: 8 * controlScale }}>
+                                <AnchorButton position={navigation.position} receivedAt={navigation.positionReceivedAt} connected={isConnected} />
                                 <AisToggleButton visibleCount={props.aisVisibleCount} fullWidth auto={props.aisAuto} onToggleAuto={props.onToggleAisAuto} rangeNm={props.aisRangeNm} onRangeChange={props.onAisRangeChange} visible={props.aisVisible} onPress={props.onToggleAis} />
                             </View>
                         </View>
@@ -121,6 +123,7 @@ export default function LandscapeNavigationPage(props) {
                                     isNightMode={isNightMode}
                                 />
                                 <GpsPositionPanel width={heelWidth} position={navigation.position}
+                                    waterTemperatureCelsius={navigation.waterTemperatureCelsius}
                                     heading={navigation.headingDeg}
                                     receivedAt={navigation.positionReceivedAt} isConnected={isConnected}
                                     isNightMode={isNightMode} backgroundColor={props.theme.bg} />

@@ -24,12 +24,20 @@ test('el simulador estándar alimenta la app sin los plugins antiguos', () => {
         }
         assert.ok(navigation.depthMeters >= 1 && navigation.depthMeters <= 3);
         assert.equal(navigation.engineRpm, 1800);
+        assert.equal(navigation.waterTemperatureCelsius, 22);
         assert.equal(navigation.navigationMode, 'ENGINE');
         assert.equal(navigation.apState, 'auto');
         assert.notEqual(navigation.cogDigital, navigation.headingDigital);
         assert.ok(Number(navigation.twsKnots) > 0);
         assert.ok(Number(navigation.sogKnots) > 0);
     } finally { plugin.stop(); }
+});
+
+test('temperatura configurable en Celsius publicada en kelvin', () => {
+    const water = options => createValues(0, options).find(item => item.path === 'environment.water.temperature').value;
+    assert.equal(water({ waterTemperatureCelsius: 0 }), 273.15);
+    assert.equal(water({ waterTemperatureCelsius: -2 }), 271.15);
+    assert.equal(water({ waterTemperatureCelsius: '22' }), 295.15);
 });
 
 test('publica cada segundo, reinicia sin duplicar timers y se detiene', context => {

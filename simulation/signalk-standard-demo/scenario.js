@@ -7,6 +7,7 @@ const defaults = {
     autopilotState: 'standby',
     depthMin: 8,
     depthMax: 16,
+    waterTemperatureCelsius: 22,
 };
 
 function bounded(value, fallback, min, max) {
@@ -24,6 +25,7 @@ function normalizeOptions(options = {}) {
             ? options.autopilotState : defaults.autopilotState,
         depthMin: Math.min(depthMin, depthMax),
         depthMax: Math.max(depthMin, depthMax),
+        waterTemperatureCelsius: bounded(options.waterTemperatureCelsius, defaults.waterTemperatureCelsius, -5, 50),
     };
 }
 
@@ -42,6 +44,7 @@ function createValues(elapsedSeconds, options = {}) {
         }
     }
     values.push(
+        { path: fields.waterTemperature.path, value: config.waterTemperatureCelsius + 273.15 },
         { path: fields.position.path, value: { latitude: config.latitude, longitude: config.longitude } },
         { path: fields.attitude.path, value: { roll: oscillate(fields.heel), pitch: 0, yaw: oscillate(fields.heading) } },
         { path: fields.current.path, value: { drift: oscillate(fields.currentDrift), setTrue: oscillate(fields.currentSet) } },

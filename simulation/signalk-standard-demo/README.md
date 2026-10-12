@@ -24,6 +24,14 @@ No necesita otros plugins de cálculo ni el simulador antiguo.
 
 ## Comprobar
 
+La opción **Temperatura del agua (°C)** permite fijar una temperatura, por defecto
+22 °C. El plugin publica `environment.water.temperature` cada segundo en kelvin
+(295.15 K para 22 °C). La app la muestra debajo de LAT/LON en horizontal y bajo los indicadores en vertical.
+Si ya tenías instalado el plugin, actualiza sus archivos y reinicia Signal K
+para que aparezca la nueva opción. Conserva tu configuración local de viento
+si la adaptaste para Derived Data; el ZIP del repositorio incluye el escenario
+completo original de viento simulado.
+
 En Data Browser, contexto del barco propio, busca:
 
 | Path | Ejemplo / unidad |
@@ -32,6 +40,7 @@ En Data Browser, contexto del barco propio, busca:
 | navigation.attitude | objeto roll/pitch/yaw en radianes |
 | environment.current | objeto drift (m/s), setTrue (rad) |
 | environment.depth.belowTransducer | 8–16 m |
+| environment.water.temperature | 295.15 K = 22 °C por defecto |
 | navigation.courseOverGroundTrue | rumbo de proa + 8°, en radianes |
 | navigation.headingTrue | rumbo de proa en radianes |
 | navigation.speedOverGround | velocidad en m/s |
