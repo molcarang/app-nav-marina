@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTranslation } from '../../../localization/LanguageProvider';
 import { AnchorWatchContext } from '../hooks/useAnchorWatch';
 import AnchorSetupModal from './AnchorSetupModal';
+import AisRadarBackground from './AisRadarBackground';
 import { useControlScale } from '../../../hooks/useControlScale';
 
 export default function AnchorButton({ position, receivedAt, connected }) {
@@ -21,7 +22,9 @@ export default function AnchorButton({ position, receivedAt, connected }) {
     }, [active]);
     const color = watch.status === 'outside' ? '#ef6b72' : (watch.status === 'gpsLost' || watch.status === 'pending') ? '#e4bb78' : '#45d39a';
     return <View style={{ width: '100%' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 * scale }}>
+        <View style={[styles.row, { gap: 10 * scale }, active && [styles.panel,
+            { padding: 8 * scale, borderRadius: 16 * scale, minHeight: 60 * scale + 2 }]]}>
+        {active && <AisRadarBackground />}
         <TouchableOpacity accessibilityRole="button" accessibilityLabel={t(active ? 'anchorArmedHelp' : 'anchorButton')}
             accessibilityHint={active ? t('anchorArmedHelp') : undefined}
             disabled={!watch.ready} delayLongPress={2000} onLongPress={active ? watch.deactivate : undefined}
@@ -30,10 +33,10 @@ export default function AnchorButton({ position, receivedAt, connected }) {
             <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.text, { fontSize: 12 * scale, flexShrink: 1, color: active ? (lit ? '#10202c' : color) : '#8fcbdc' }]}>{t('anchorButton')}</Text>
         </TouchableOpacity>
         <View style={{ flex: 1, minWidth: 0, gap: 3 * scale }}>
-            <Text accessibilityLiveRegion="polite" style={[styles.text, { color: active ? color : '#aaa', fontSize: 11 * scale }]}>
+            <Text numberOfLines={1} adjustsFontSizeToFit accessibilityLiveRegion="polite" style={[styles.text, { color: active ? color : '#aaa', fontSize: 11 * scale }]}>
                 {t(!watch.ready ? 'anchorStatus_loading' : `anchorStatus_${watch.status}`)}
             </Text>
-            {active && <Text style={[styles.text, { fontSize: 11 * scale }]}>
+            {active && <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.text, { fontSize: 11 * scale }]}>
                 {t('anchorWatchDistance', { distance: watch.distanceMeters === null ? '\u2014' : watch.distanceMeters.toFixed(1), radius: watch.draft.radius })}
             </Text>}
         </View>
@@ -49,8 +52,6 @@ const styles = StyleSheet.create({
         flexShrink: 1, borderRadius: 10, borderWidth: 1, borderColor: '#aaa',
         backgroundColor: '#10202c', alignSelf: 'flex-start' },
     text: { fontFamily: 'NauticalFont', color: '#8fcbdc' },
-    backdrop: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 20 },
-    panel: { width: '100%', maxWidth: 560, padding: 24, gap: 20, alignItems: 'center',
-        backgroundColor: '#10202c', borderColor: '#58788b', borderWidth: 1, borderRadius: 18 },
-    close: { borderWidth: 1, borderColor: '#58788b', borderRadius: 10 },
+    row: { flexDirection: 'row', alignItems: 'center' },
+    panel: { borderWidth: 1, borderColor: '#426777', backgroundColor: 'rgba(10, 28, 40, 0.94)', overflow: 'hidden' },
 });
