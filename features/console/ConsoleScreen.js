@@ -87,6 +87,8 @@ export default function ConsoleScreen() {
             ) : (
             <ScrollView
                 horizontal
+                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
                 pagingEnabled
                 // Restaurar windowWidth * 2 al reactivar TelemetryPage.
                 contentContainerStyle={{ width: windowWidth }}

@@ -8,7 +8,7 @@ export default function ConsolePage({ width, isNightMode, children }) {
             <View style={[styles.consoleFrame, isNightMode && styles.consoleFrameNight]}>
                 <View style={{ flex: 1, width: '100%', borderRadius: 25, overflow: 'hidden' }}>
                     <ConsoleBackground isNightMode={isNightMode} />
-                    <ScrollView contentContainerStyle={styles.scrollContent}>
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                         {children}
                     </ScrollView>
                 </View>

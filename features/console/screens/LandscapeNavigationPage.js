@@ -103,6 +103,7 @@ export default function LandscapeNavigationPage(props) {
                     </View>
                     <View style={[localStyles.controls, { width: Math.max(0, area.width - gaugeColumnWidth) }]}>
                     <ScrollView
+                        showsVerticalScrollIndicator={false}
                         style={{ flex: 1 }}
                         onScroll={({ nativeEvent }) => setScrollOffset(nativeEvent.contentOffset.y)}
                         scrollEventThrottle={16}
