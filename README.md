@@ -58,3 +58,45 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Publicacion y aviso de actualizaciones
+
+El workflow `.github/workflows/release.yml` compila y publica al abrir un nuevo
+pull request hacia `main`, desde una rama del propio repositorio. El evento es
+`pull_request` con `types: [opened]`: no se ejecuta por pushes, cambios posteriores
+del PR, reaperturas ni al fusionarlo. No tiene disparador manual. La publicacion
+se identifica como canal `main`; el cliente conserva el aislamiento por canal.
+La compilacion usa la combinacion de cambios del PR con su base que proporciona
+GitHub, antes de su aprobacion o fusion. Los PR de forks externos no publican
+releases ni utilizan las credenciales de Expo.
+Los paquetes se publican en GitHub Releases, sin meter binarios en el historial
+del codigo. La release permanece en borrador hasta completar la subida.
+
+Cada publicacion incluye `navmarina-web.zip`, `navmarina-raspberry.zip` y
+`SHA256SUMS`. El numero de compilacion de GitHub Actions identifica cada version,
+aunque no cambie la version comercial de `app.json`. `config/buildInfo.json`
+contiene los datos que se incluyen dentro de cada paquete. Las compilaciones
+manuales fuera de CI usan el numero 0 y el canal estable por defecto.
+
+Por ahora el flujo publica unicamente web y Raspberry. No compila ni publica
+APK, no necesita `EXPO_TOKEN` y el aviso de actualizaciones esta deshabilitado en
+la app nativa. La configuracion Android se conserva para retomarla mas adelante.
+
+Al arrancar, el cliente consulta las ultimas 100 releases publicas por HTTPS,
+sin tokens en la app, con un limite de espera de 8 segundos. Solo avisa si hay
+una compilacion mayor del mismo canal y un paquete para su plataforma. Los
+borradores y releases ajenas se ignoran. Sin Internet, ante errores o si se
+agota la cuota publica de GitHub, el arranque continua sin bloquearse.
+Referencia de GitHub: https://docs.github.com/en/rest/releases/releases
+
+En web, el aviso ofrece Descargar o Mas tarde y el ZIP se publica manualmente
+en el servidor. En Raspberry, tras instalar una vez el nuevo actualizador, ofrece
+Actualizar con confirmacion, descarga y verifica el paquete y lo instala localmente.
+Al terminar el usuario pulsa Abrir nueva version para recargar. El perfil del
+navegador se conserva. Consulta `raspberry/README.md` para el proceso y sus limites.
+Las instalaciones anteriores a esta funcion necesitan actualizarse una vez
+manualmente para empezar a recibir avisos.
+
+La automatizacion se aplicara a los nuevos PR hacia `main` cuando GitHub disponga
+del workflow. Los PR ya abiertos no la disparan retroactivamente. No publica ni
+actualiza por si sola el servidor de la Raspberry.
