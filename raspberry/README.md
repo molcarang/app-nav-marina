@@ -70,3 +70,34 @@ node scripts/build-raspberry.mjs
 
 El resultado queda en `artifacts/navmarina-raspberry`. Copia la carpeta completa,
 incluida `web`; no abras `index.html` directamente con `file://`.
+
+## Actualizaciones desde la aplicacion
+
+Instala manualmente una vez este paquete nuevo con `bash install.sh`, sin sudo.
+Este paso migra el servidor local y conserva el perfil Chromium y sus ajustes.
+Python debe ser 3.9 o posterior. El servicio se reinicia al ejecutar el instalador.
+
+A partir de entonces, al detectar una nueva release, NavMarina ofrece Actualizar
+y Mas tarde. Actualizar solicita confirmacion con Instalar ahora. El servidor
+local descarga el ZIP Raspberry y SHA256SUMS desde la release seleccionada del
+repositorio, comprueba integridad, canal y version, extrae en una carpeta temporal
+y selecciona la nueva version mediante un enlace simbolico cambiado atomicamente.
+No ejecuta el install.sh descargado y no necesita permisos sudo ni tokens GitHub.
+Los ficheros se sirven solo desde 127.0.0.1:8765. La API exige origen local y un
+token de sesion antes de iniciar una instalacion.
+
+La interfaz muestra descarga, verificacion e instalacion. Al terminar, pulsa
+Abrir nueva version para recargar la pantalla. Hasta entonces la pantalla actual
+permanece abierta. El codigo Python ya cargado sigue atendiendo; los ficheros de
+servidor nuevos se cargan al siguiente reinicio del servicio. El protocolo debe
+ser compatible (version 1); si no lo es, se rechaza el paquete.
+
+Si falla la descarga o la validacion, la version instalada sigue seleccionada.
+Los ajustes en el directorio browser no forman parte de la sustitucion y las
+versiones anteriores se conservan bajo ~/.local/share/navmarina/releases.
+No cierres la sesion ni apagues la Raspberry durante la instalacion. Los paquetes
+antiguos que no incorporan este actualizador siguen ofreciendo descarga manual.
+
+Las pruebas automaticas cubren integridad, extraccion, autorizacion HTTP y
+conservacion de ajustes. La sustitucion de enlaces se comprueba cuando el sistema
+permite crear enlaces simbolicos; falta validar el flujo en la Raspberry real.
