@@ -4,10 +4,15 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ## Documentación del proyecto
 
+- [Guía de instalación y configuración de OpenCPN, OpenPlotter y Signal K](GUIA-INSTALACION-OPENCPN.md).
+
 - [Arquitectura y explicación de las partes del proyecto](ARQUITECTURA.md).
 - [Paths de Signal K y configuración del simulador](SIGNALK-SIMULADOR.md).
 
 ## Get started
+
+Para generar la aplicación web instalable (PWA), ejecuta `npm run build:web`.
+Consulta [la guía de instalación web](WEB-INSTALABLE.md).
 
 1. Install dependencies
 

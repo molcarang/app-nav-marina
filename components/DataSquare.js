@@ -1,6 +1,10 @@
+import { useTranslation } from '../localization/LanguageProvider';
 import { useEffect, useRef, useState } from 'react';
+import { Feather } from '@expo/vector-icons';
 import { Animated, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
+import HistoryChartModal from './charts/HistoryChartModal';
+import { getHistoryChart } from './charts/historyPath';
 
 
 // --- CONFIGURACIÓN ESTÁTICA ---
@@ -11,6 +15,7 @@ const DataSquare = ({
     label,
     value,
     unit,
+    secondaryText,
     color,
     textColor,
     showStatusDot = false,
@@ -18,39 +23,43 @@ const DataSquare = ({
     showProgressBar = false,
     showHistory = false,
     maxValue = 0,
-    onPress
+    onReset,
+    onPress,
+    soundMuted = false,
+    showHistoryPopup = false,
+    showHistoryAverage = false,
+    historySamples,
+    historyHours = 2,
+    isNightMode = false,
+    width,
+    height
 }) => {
+    const { t } = useTranslation();
     // 1. DIMENSIONES REACTIVAS
     const { width: windowWidth } = useWindowDimensions();
-    const SQUARE_WIDTH = (windowWidth * 0.9) / 3;
-    const SQUARE_HEIGHT = SQUARE_WIDTH * 0.9;
+    const SQUARE_WIDTH = width ?? (windowWidth * 0.9) / 3;
+    const SQUARE_HEIGHT = height ?? SQUARE_WIDTH * 0.9;
+    const fontBasis = height == null ? SQUARE_WIDTH : Math.min(SQUARE_WIDTH, SQUARE_HEIGHT / 0.9);
 
     // Dimensiones internas para el gráfico
     const chartW = SQUARE_WIDTH * 0.75;
     const chartH = 50;
 
     // 2. ESTADOS Y REFERENCIAS
-    const [history, setHistory] = useState([]);
+    const [localHistory, setHistory] = useState([]);
+    const history = historySamples ?? localHistory;
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const lastTap = useRef(null);
+    const pressStarted = useRef(0);
+    const resetTriggered = useRef(false);
     const animatedHeight = useRef(new Animated.Value(0)).current;
 
     const numericValue = parseFloat(value) || 0;
     const isRecord = maxValue > 0 && numericValue >= maxValue;
     const labelUnitColor = textColor || '#79f17bff';
 
-    // 3. LÓGICA DE DIBUJO (PATH SVG)
-    const getSmoothPath = (data, width, height, range) => {
-        if (data.length < 2) return "";
-        const points = data.map((val, index) => ({
-            x: (index / (data.length - 1)) * width,
-            y: height - (Math.min(val / (range || 1), 1) * (height - 5))
-        }));
-
-        return points.reduce((acc, point, i, a) => {
-            if (i === 0) return `M ${point.x},${point.y}`;
-            const cp1x = a[i - 1].x + (point.x - a[i - 1].x) / 2;
-            return `${acc} C ${cp1x},${a[i - 1].y} ${cp1x},${point.y} ${point.x},${point.y}`;
-        }, "");
-    };
+    const historyRange = Math.max(Number(maxValue) || 15, ...history.map(sample => typeof sample === 'object' ? sample.value : sample));
+    const historyChart = getHistoryChart(history, chartW, chartH, historyRange, Date.now(), historyHours);
 
     // 4. EFECTOS
     useEffect(() => {
@@ -63,14 +72,14 @@ const DataSquare = ({
     }, [numericValue, maxValue, animatedHeight]);
 
     useEffect(() => {
-        if (showHistory && numericValue >= 0) {
+        if (historySamples === undefined && showHistory && numericValue >= 0) {
             setHistory(prev => {
                 if (prev.length > 0 && prev[prev.length - 1] === numericValue) return prev;
                 const newHistory = [...prev, numericValue];
                 return newHistory.length > 40 ? newHistory.slice(1) : newHistory;
             });
         }
-    }, [numericValue, showHistory]);
+    }, [numericValue, showHistory, historySamples]);
 
     // Limpiar historial solo cuando showHistory cambia a false
     useEffect(() => {
@@ -82,17 +91,40 @@ const DataSquare = ({
     const opacityInterpolated = animatedHeight.interpolate({ inputRange: [0, 100], outputRange: [0.3, 1] });
     const glowInterpolated = animatedHeight.interpolate({ inputRange: [0, 100], outputRange: [0, 8] });
 
-    const handlePress = () => {
+    const handleReset = () => {
+        resetTriggered.current = true;
+        lastTap.current = null;
         if (showHistory) setHistory([]);
+        if (onReset) onReset();
+    };
+    const handleTap = () => {
         if (onPress) onPress();
+        if (!showHistoryPopup) return;
+        const now = Date.now();
+        if (resetTriggered.current || now - pressStarted.current > 350) {
+            lastTap.current = null;
+            return;
+        }
+        if (lastTap.current !== null && now - lastTap.current <= 350) {
+            lastTap.current = null;
+            setHistoryOpen(true);
+        } else lastTap.current = now;
     };
 
     return (
         <View style={[styles.container, { width: SQUARE_WIDTH, height: SQUARE_HEIGHT, backgroundColor: color, borderWidth: 1, borderColor: labelUnitColor }]}>
             <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={handlePress}
-                disabled={!onPress}
+                onPressIn={() => { pressStarted.current = Date.now(); resetTriggered.current = false; }}
+                onPress={handleTap}
+                onLongPress={onReset ? handleReset : undefined}
+                delayLongPress={3000}
+                disabled={!onReset && !showHistoryPopup && !onPress}
+                accessibilityRole={onReset || showHistoryPopup || onPress ? 'button' : undefined}
+                accessibilityLabel={onPress ? `${label}, ${value} ${unit}. ${t(soundMuted ? 'muted' : 'muteMinute')}` : undefined}
+                accessibilityHint={showHistoryPopup ? t('historyGesture') : onReset ? t('resetGesture') : undefined}
+                accessibilityActions={showHistoryPopup ? [{ name: 'showHistory', label: t('openHistory') }] : undefined}
+                onAccessibilityAction={event => { if (event.nativeEvent.actionName === 'showHistory') setHistoryOpen(true); }}
                 style={styles.touchable}
             >
                 {/* BARRA DE PROGRESO LATERAL */}
@@ -117,11 +149,11 @@ const DataSquare = ({
                     <View style={styles.chartWrapper} pointerEvents="none">
                         <Svg height={chartH} width={chartW}>
                             <Path
-                                d={`${getSmoothPath(history, chartW, chartH, maxValue || 15)} L ${chartW},${chartH} L 0,${chartH} Z`}
+                                d={historyChart.area}
                                 fill={isRecord ? "rgba(255, 215, 0, 0.15)" : "rgba(121, 241, 123, 0.15)"}
                             />
                             <Path
-                                d={getSmoothPath(history, chartW, chartH, maxValue || 15)}
+                                d={historyChart.line}
                                 fill="none"
                                 stroke={isRecord ? "rgba(255, 215, 0, 0.6)" : "rgba(121, 241, 123, 0.6)"}
                                 strokeWidth="2.5"
@@ -133,22 +165,32 @@ const DataSquare = ({
 
                 {/* CONTENIDO: ETIQUETA + DOT */}
                 <View style={styles.labelWrapper}>
-                    <Text style={[styles.label, { color: labelUnitColor, fontSize: SQUARE_WIDTH * 0.13 }]}>
+                    <Text style={[styles.label, { color: labelUnitColor, fontSize: fontBasis * 0.13 }]}>
                         {label}
                     </Text>
                     {showStatusDot && <View style={[styles.statusDot, { backgroundColor: statusDotColor }]} />}
+                    {soundMuted && <Feather name="bell-off" size={fontBasis * 0.15} color={labelUnitColor} />}
                 </View>
 
                 {/* VALOR PRINCIPAL (Escalado dinámico) */}
-                <Text style={[styles.value, { fontSize: SQUARE_WIDTH * 0.28 }]}>
+                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}
+                    style={[styles.value, { fontSize: fontBasis * 0.25, maxWidth: '100%', textAlign: 'center' }]}>
                     {value}
                 </Text>
 
                 {/* UNIDAD */}
-                <Text style={[styles.unit, { color: labelUnitColor, fontSize: SQUARE_WIDTH * 0.13 }]}>
+                <Text style={[styles.unit, { color: labelUnitColor, fontSize: fontBasis * 0.13 }]}>
                     {unit}
                 </Text>
+                {secondaryText && <Text numberOfLines={1} adjustsFontSizeToFit
+                    style={[styles.unit, { color: labelUnitColor, fontSize: fontBasis * 0.085, maxWidth: '94%' }]}>
+                    {secondaryText}
+                </Text>}
             </TouchableOpacity>
+            {showHistoryPopup && historyOpen && (
+                <HistoryChartModal visible onClose={() => setHistoryOpen(false)} history={history}
+                    label={label} unit={unit} value={value} maxValue={maxValue} isNightMode={isNightMode} historyHours={historyHours} showAverage={showHistoryAverage} />
+            )}
         </View>
     );
 };
@@ -184,7 +226,7 @@ const styles = StyleSheet.create({
     value: {
         fontFamily: FONT_FAMILY,
         color: '#ffffff',
-        fontWeight: 'bold',
+        fontWeight: 'normal',
     },
     unit: {
         fontFamily: FONT_FAMILY,

@@ -1,6 +1,6 @@
 # Paths y datos de ejemplo para app-nav-marina
 
-Inventario obtenido de `services/signalk/config.js` y `features/console/model/navigationData.js` el 22/09/2026. Son ejemplos nuevos para reconstruir la simulación, no los valores originales perdidos.
+Inventario obtenido de `services/signalk/paths.js` y `features/console/model/navigationData.js` el 22/09/2026. Son ejemplos nuevos para reconstruir la simulación, no los valores originales perdidos.
 
 ## Configurar el simulador
 
@@ -74,3 +74,11 @@ Estos cuatro paths no están suscritos ni aceptados por el hook actual. Además,
 - Escora de −15°: fija `vessels.self.navigation.attitude.roll` en `-0.261799`.
 
 Reinicia la simulación tras guardar los cambios y comprueba en la app la conexión y los indicadores correspondientes.
+
+## Catálogo común de paths
+
+La fuente única de rutas de la app es [services/signalk/paths.js](services/signalk/paths.js). Cada entrada de `SIGNALK_FIELDS` tiene un nombre lógico, `path`, `initialValue` y, si es numérica, valores de simulación. La suscripción y los cálculos usan este catálogo. Las alternativas históricas de corriente también están centralizadas, pero siguen sin suscribirse.
+
+Para corregir una ruta escalar, cambia solo su `path` y reinicia la app. Después ejecuta `npm run simulator:generate` para actualizar el ejemplo local `simulator.json`; su copia en el servidor debe actualizarse por separado. Este comando sustituye el ejemplo local con los valores del catálogo. Las tablas de esta guía son una referencia manual y deben revisarse si cambian las rutas.
+
+Si el nuevo path entrega un objeto, como `navigation.attitude`, cambiar el nombre no basta: hay que adaptar la extracción de `roll` y su valor inicial. La centralización no cambia automáticamente el tipo del dato ni corrige las rutas existentes.

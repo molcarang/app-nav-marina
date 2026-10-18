@@ -1,57 +1,123 @@
+import { useVisibleAisCount } from './hooks/useVisibleAisCount';
+import { useAisAutoRange } from './hooks/useAisAutoRange';
 import { useMemo, useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSignalKData } from '../../services/signalk/useSignalKData';
+import { useWaypointData } from '../../services/signalk/useWaypointData';
+import { useAisData } from '../../services/signalk/useAisData';
 import ConsoleSettingsModal from './components/ConsoleSettingsModal';
 import { useConsoleSettings } from './hooks/useConsoleSettings';
+import { AnchorWatchContext, useAnchorWatch } from './hooks/useAnchorWatch';
+import { useAnchorAlarmSound } from './hooks/useAnchorAlarmSound';
+import { useDepthAlarmSound } from './hooks/useDepthAlarmSound';
 import { useSessionMaxima } from './hooks/useSessionMaxima';
+import { useInstrumentHistory } from './hooks/useInstrumentHistory';
 import { deriveNavigationData } from './model/navigationData';
 import NavigationPage from './screens/NavigationPage';
-import TelemetryPage from './screens/TelemetryPage';
+import LandscapeNavigationPage from './screens/LandscapeNavigationPage';
+// import TelemetryPage from './screens/TelemetryPage';
 import { styles } from './styles/consoleStyles';
 import { getConsoleTheme } from './styles/consoleTheme';
+import NightDimmer, { NightModeContext } from '../../components/NightDimmer';
+import { LanguageProvider } from '../../localization/LanguageProvider';
 /** Coordina datos y acciones. Cada página se ocupa de su presentación. */
 export default function ConsoleScreen() {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-    const data = useSignalKData();
+    const { settings, isLoaded, updateSetting, saveSetting } = useConsoleSettings();
+    const [aisVisible, setAisVisible] = useState(false);
+    const ais = useAisData(settings.signalKAddress, isLoaded);
+    const { history: twsHistory, clearHistory: clearTwsHistory, recordReading } = useInstrumentHistory(
+        'tws', settings.signalKAddress, isLoaded, settings.historyHours,
+    );
+    const { history: sogHistory, clearHistory: clearSogHistory, recordReading: recordSogReading } = useInstrumentHistory(
+        'sog', settings.signalKAddress, isLoaded, settings.sogHistoryHours,
+    );
+    const data = useSignalKData(settings.signalKAddress, isLoaded, recordReading, recordSogReading);
     const navigation = useMemo(() => deriveNavigationData(data), [data]);
-    const { settings, updateSetting, saveSetting } = useConsoleSettings();
+    const anchorWatch = useAnchorWatch(navigation.position, navigation.positionReceivedAt, data.isConnected);
+    useAnchorAlarmSound(anchorWatch.status === 'outside' || anchorWatch.status === 'gpsLost');
+    const [aisAuto, setAisAuto] = useState(false);
+    const aisRangeNm = useAisAutoRange(aisAuto, settings.aisRangeNm, {
+        targets: ais.targets, position: navigation.position, positionReceivedAt: navigation.positionReceivedAt,
+        connected: data.isConnected && ais.status === 'connected',
+    });
+    const aisVisibleCount = useVisibleAisCount(ais.targets, navigation.position, navigation.positionReceivedAt,
+        aisVisible && data.isConnected, aisRangeNm);
+    const toggleAisAuto = () => {
+        if (aisAuto) saveSetting('aisRangeNm', aisRangeNm);
+        setAisAuto(previous => !previous);
+    };
+    const waypoint = useWaypointData(settings.signalKAddress, isLoaded, navigation.position);
+    const depthSoundActive = isLoaded && data.isConnected && settings.depthAlarmEnabled && settings.depthAlarmSound
+        && navigation.depthMeters > 0 && navigation.depthMeters < settings.depthAlarmMeters;
+    const { testSound: testDepthSound, silenceForMinute, remainingSeconds } = useDepthAlarmSound(depthSoundActive);
     const { maxSOG, maxTWS, resetSOG, resetTWS } = useSessionMaxima(navigation.sogKnots, navigation.twsKnots);
+    const resetTwsWithHistory = () => { resetTWS(); clearTwsHistory(); };
+    const resetSogWithHistory = () => { resetSOG(); clearSogHistory(); };
     const [isSettingsOpen, setSettingsOpen] = useState(false);
     const [isNightMode, setNightMode] = useState(false);
-    const theme = getConsoleTheme(isNightMode, navigation.twaCog, settings);
-    const gaugeSize = Math.min(windowWidth * 0.90, windowHeight * 0.45);
+    const theme = getConsoleTheme(false, navigation.twaCog, settings);
+    const gaugeSize = Math.min(Math.min(windowWidth * 0.90, windowHeight * 0.45) * 1.3915, windowWidth * 0.94);
+    const isLandscape = windowWidth > windowHeight;
     const pageProps = {
+        waypoint,
+        aisVisibleCount, aisRangeNm, aisAuto, onToggleAisAuto: toggleAisAuto,
+        onAisRangeChange: value => { setAisAuto(false); saveSetting('aisRangeNm', value); },
         navigation, settings, maxSOG, isConnected: data.isConnected,
-        isNightMode, theme, windowWidth, gaugeSize,
+        aisVisible, aisTargets: ais.targets, aisStatus: ais.status, onToggleAis: () => setAisVisible(previous => !previous),
+        isNightMode: false, theme, windowWidth, gaugeSize, twsHistory, sogHistory,
+        onSilenceDepth: depthSoundActive && remainingSeconds === 0 ? silenceForMinute : undefined,
+        depthSoundMuted: depthSoundActive && remainingSeconds > 0,
     };
     return (
+        <LanguageProvider language={settings.language}>
+        <AnchorWatchContext.Provider value={anchorWatch}>
+        <NightModeContext.Provider value={{ enabled: isNightMode, intensity: settings.nightIntensity, toggle: () => setNightMode(previous => !previous) }}>
         <View style={styles.mainContainer}>
+            {isLandscape ? (
+                <LandscapeNavigationPage
+                    {...pageProps}
+                    maxTWS={maxTWS}
+                    onOpenSettings={() => setSettingsOpen(true)}
+                    onResetSOG={resetSogWithHistory}
+                    onResetTWS={resetTwsWithHistory}
+                />
+            ) : (
             <ScrollView
                 horizontal
                 pagingEnabled
-                contentContainerStyle={{ width: windowWidth * 2 }}
+                // Restaurar windowWidth * 2 al reactivar TelemetryPage.
+                contentContainerStyle={{ width: windowWidth }}
             >
                 <NavigationPage
                     {...pageProps}
                     maxTWS={maxTWS}
                     onOpenSettings={() => setSettingsOpen(true)}
-                    onResetSOG={resetSOG}
-                    onResetTWS={resetTWS}
+                    onResetSOG={resetSogWithHistory}
+                    onResetTWS={resetTwsWithHistory}
                 />
+                {/* Telemetría desactivada temporalmente.
                 <TelemetryPage
                     {...pageProps}
                     windowHeight={windowHeight}
                 />
+                */}
             </ScrollView>
+            )}
+            <NightDimmer />
             <ConsoleSettingsModal
                 visible={isSettingsOpen}
                 settings={settings}
                 isNightMode={isNightMode}
                 onChange={updateSetting}
                 onSave={saveSetting}
+                onTestDepthSound={testDepthSound}
                 onNightModeChange={setNightMode}
                 onClose={() => setSettingsOpen(false)}
             />
         </View>
+        </NightModeContext.Provider>
+        </AnchorWatchContext.Provider>
+        </LanguageProvider>
     );
 }

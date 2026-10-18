@@ -1,6 +1,7 @@
+import { useTranslation } from '../../localization/LanguageProvider';
 // --- LIBRERÍAS Y COMPONENTES ---
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Svg, {
     Circle,
     Defs,
@@ -13,19 +14,35 @@ import { GAUGE_THEME } from '../../styles/GaugeTheme';
 import { describeArc, lerpAngle } from '../../utils/Utils';
 import { GaugeDefs } from './shared/GaugeDefs';
 import { computeCommonDims } from './shared/gaugeUtils';
+import SteelBall from './SteelBall';
+import GaugeSailboat from './GaugeSailboat';
+import AisRangeRings from './AisRangeRings';
+import AisRadarSweep from './AisRadarSweep';
+import AisTargets from './AisTargets';
+import AisVesselPopup from './AisVesselPopup';
+import AisTouchOverlay from './AisTouchOverlay';
 
 const HeadingGauge = React.memo(({
     size,
+    showAis = true,
+    aisRangeNm = 6,
+    aisTargets,
+    position,
+    positionReceivedAt,
+    isConnected,
     value = 0,
     minLayline = 20,
     maxLayline = 60,
     awa = 0, // Recuperado
     twd,
+    awsKnots = 0,
+    twsKnots = 0,
     twaCog,
     isNightMode,
     set = 0,
     drift = 0
 }) => {
+    const { t } = useTranslation();
     const { width: windowWidth, height: windowHeight } = require('react-native').useWindowDimensions();
     const COMPASS_SIZE = size || Math.min(windowWidth * 0.9, windowHeight * 0.45);
         const [display, setDisplay] = useState({
@@ -33,9 +50,19 @@ const HeadingGauge = React.memo(({
         twa: twaCog || 0,
         awa: awa || 0, // Recuperado
         twd: twd || 0,
-        pulse: 0
+        currentFlow: 0,
+        radarPhase: 0
     });
     const requestRef = useRef();
+    const [selectedVessel, setSelectedVessel] = useState(null);
+    useEffect(() => {
+        if (!selectedVessel) return;
+        const timeout = setTimeout(() => setSelectedVessel(null), 3000);
+        return () => clearTimeout(timeout);
+    }, [selectedVessel]);
+    useEffect(() => {
+        if (!showAis || !isConnected) setSelectedVessel(null);
+    }, [showAis, isConnected]);
 
     useEffect(() => {
         let mounted = true;
@@ -45,16 +72,18 @@ const HeadingGauge = React.memo(({
                 const nextTwa = typeof twaCog === 'number' ? lerpAngle(prev.twa, twaCog, 0.1) : prev.twa;
                 const nextAwa = typeof awa === 'number' ? lerpAngle(prev.awa, awa, 0.1) : prev.awa;
                 const nextTwd = typeof twd === 'number' ? lerpAngle(prev.twd, twd, 0.1) : prev.twd;
-                const nextPulse = time ? (Math.sin(time / 600) + 1) / 2 : prev.pulse;
+                const nextFlow = Number.isFinite(time) ? (time % 1500) / 1500 : prev.currentFlow;
+                const nextRadarPhase = showAis && Number.isFinite(time) ? (time % 4000) / 4000 : prev.radarPhase;
                 
                 if (
                     Math.abs(nextHeading - prev.heading) > 0.01 ||
                     Math.abs(nextTwa - prev.twa) > 0.01 ||
                     Math.abs(nextAwa - prev.awa) > 0.01 ||
                     Math.abs(nextTwd - prev.twd) > 0.01 ||
-                    Math.abs(nextPulse - prev.pulse) > 0.01
+                    Math.abs(nextFlow - prev.currentFlow) > 0.01 ||
+                    Math.abs(nextRadarPhase - prev.radarPhase) > 0.002
                 ) {
-                    return { heading: nextHeading, twa: nextTwa, awa: nextAwa, twd: nextTwd, pulse: nextPulse };
+                    return { heading: nextHeading, twa: nextTwa, awa: nextAwa, twd: nextTwd, currentFlow: nextFlow, radarPhase: nextRadarPhase };
                 }
                 return prev;
             });
@@ -65,7 +94,7 @@ const HeadingGauge = React.memo(({
             mounted = false;
             cancelAnimationFrame(requestRef.current);
         };
-    }, [value, twaCog, awa, twd]);
+    }, [value, twaCog, awa, twd, showAis]);
 
     const dims = useMemo(() => {
         const base = computeCommonDims(COMPASS_SIZE);
@@ -78,10 +107,41 @@ const HeadingGauge = React.memo(({
     }, [COMPASS_SIZE]);
 
     const rotationAngle = -display.heading;
+    // Margen exterior para que las flechas giren fuera del bisel sin recortarse.
+    const windMargin = COMPASS_SIZE * 0.11;
+    const windBaseY = -windMargin + 3;
+    const windTipY = -3;
+    const windHalfWidth = COMPASS_SIZE * 0.055;
+    // El tamaño máximo coincide con el actual y se alcanza a 30 kn.
+    const windMarker = speed => {
+        const ratio = Math.min(1, Math.max(0, Number.isFinite(speed) ? speed / 30 : 0));
+        const scale = 0.45 + ratio * 0.55;
+        const baseY = windTipY + (windBaseY - windTipY) * scale;
+        return {
+            points: `${dims.CENTER - windHalfWidth * scale},${baseY} ${dims.CENTER + windHalfWidth * scale},${baseY} ${dims.CENTER},${windTipY}`,
+            labelY: baseY + COMPASS_SIZE * 0.044 * scale,
+            fontSize: COMPASS_SIZE * 0.037 * scale,
+        };
+    };
+    // Una escala común mantiene iguales las flechas A y T, incluidas sus letras.
+    const sharedWindSpeed = Math.max(
+        Number.isFinite(awsKnots) ? awsKnots : 0,
+        Number.isFinite(twsKnots) ? twsKnots : 0,
+    );
+    const apparentMarker = windMarker(sharedWindSpeed);
+    const trueMarker = apparentMarker;
+    // A 5 kn alcanza su longitud máxima, dejando margen al borde interior rojo.
+    const currentMaxRadius = Math.max(0, dims.INNER_RADIUS - 39 - 4);
+    const currentRatio = Math.min(1, Math.max(0, Number.isFinite(drift) ? drift / 5 : 0));
+    const currentLength = currentMaxRadius * (0.35 + currentRatio * 0.65);
+    const currentShaftLength = currentLength * 0.64;
+    const currentChevronWidth = Math.min(COMPASS_SIZE * 0.061875, currentMaxRadius * 0.24);
+    const currentChevronStep = (currentLength + currentShaftLength) / 6.3;
+    const currentLabelRadius = currentShaftLength + COMPASS_SIZE * 0.09;
 
     return (
         <View style={[styles.outerContainer, { width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
-            <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`0 0 ${COMPASS_SIZE} ${COMPASS_SIZE}`}>
+            <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`${-windMargin} ${-windMargin} ${COMPASS_SIZE + windMargin * 2} ${COMPASS_SIZE + windMargin * 2}`}>
                 <Defs>
                     <GaugeDefs />
                 </Defs>
@@ -94,6 +154,10 @@ const HeadingGauge = React.memo(({
                     <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill={GAUGE_THEME.colors.bg} />
                 </G>
 
+                {showAis && <AisRadarSweep center={dims.CENTER} radius={currentMaxRadius * 0.9}
+                    size={COMPASS_SIZE} phase={display.radarPhase} isNightMode={isNightMode} />}
+                {showAis && <AisRangeRings center={dims.CENTER} radius={currentMaxRadius * 0.9} size={COMPASS_SIZE} />}
+
                 {/* --- CAPA 2: ELEMENTOS ESTÁTICOS (BARCO Y LAYLINES) --- */}
                 <G>
                     <Path
@@ -105,17 +169,7 @@ const HeadingGauge = React.memo(({
                         fill="none" stroke="#ff0000" strokeWidth={COMPASS_SIZE * 0.07} strokeLinecap="butt" opacity={0.5}
                     />
 
-                    <G opacity={isNightMode ? 0.3 : 0.4}>
-                        <Path
-                            d={`M ${dims.CENTER} ${dims.CENTER - COMPASS_SIZE * 0.22} C ${dims.CENTER + COMPASS_SIZE * 0.08} ${dims.CENTER - COMPASS_SIZE * 0.10}, ${dims.CENTER + COMPASS_SIZE * 0.075} ${dims.CENTER + COMPASS_SIZE * 0.15}, ${dims.CENTER + COMPASS_SIZE * 0.07} ${dims.CENTER + COMPASS_SIZE * 0.21} L ${dims.CENTER - COMPASS_SIZE * 0.07} ${dims.CENTER + COMPASS_SIZE * 0.21} C ${dims.CENTER - COMPASS_SIZE * 0.075} ${dims.CENTER + COMPASS_SIZE * 0.15}, ${dims.CENTER - COMPASS_SIZE * 0.08} ${dims.CENTER - COMPASS_SIZE * 0.10}, ${dims.CENTER} ${dims.CENTER - COMPASS_SIZE * 0.22} Z`}
-                            fill="none" stroke="#fff" strokeWidth="2"
-                        />
-                        <Line
-                            x1={dims.CENTER} y1={dims.CENTER - COMPASS_SIZE * 0.22}
-                            x2={dims.CENTER} y2={dims.CENTER + COMPASS_SIZE * 0.21}
-                            stroke="#fff" strokeDasharray="3, 5" opacity={0.5}
-                        />
-                    </G>
+                    <GaugeSailboat center={dims.CENTER} size={COMPASS_SIZE} isNightMode={isNightMode} showAis={showAis} />
                 </G>
 
                 {/* --- CAPA 3: DIAL ROTATIVO --- */}
@@ -127,7 +181,12 @@ const HeadingGauge = React.memo(({
                         const isMid = deg % 10 === 0;
                         const tLen = isMajor ? 20 : isMid ? 12 : 7;
                         const degreeRad = dims.RADIUS - 35;
-                        const cardinalRad = dims.INNER_RADIUS - 65;
+                        // En web, reserva espacio para el glifo completo dentro del aro,
+                        // también cuando el rumbo sitúa la letra en la mitad superior.
+                        const cardinalRad = Platform.OS === 'web'
+                            ? Math.max(0, Math.min(dims.INNER_RADIUS - 65,
+                                dims.INNER_RADIUS - 39 - dims.FONT_CARD * 0.85 - COMPASS_SIZE * 0.012))
+                            : dims.INNER_RADIUS - 65;
 
                         return (
                             <G key={`tick-${deg}`}>
@@ -146,7 +205,7 @@ const HeadingGauge = React.memo(({
                                         </G>
                                         {(deg % 90 === 0) && (
                                             <G rotation={-rotationAngle} origin={`${dims.CENTER + cardinalRad * Math.cos(angleRad)}, ${dims.CENTER + cardinalRad * Math.sin(angleRad)}`}>
-                                                <SvgText x={dims.CENTER + cardinalRad * Math.cos(angleRad)} y={dims.CENTER + cardinalRad * Math.sin(angleRad) + 5} fill={GAUGE_THEME.colors.engine} fontSize={dims.FONT_CARD} textAnchor="middle" fontFamily="NauticalFont">{deg === 0 ? 'N' : deg === 90 ? 'E' : deg === 180 ? 'S' : deg === 270 ? 'O' : ''}</SvgText>
+                                                <SvgText x={dims.CENTER + cardinalRad * Math.cos(angleRad)} y={dims.CENTER + cardinalRad * Math.sin(angleRad) + 5} fill={GAUGE_THEME.colors.engine} fontSize={dims.FONT_CARD} textAnchor="middle" fontFamily="NauticalFont">{deg === 0 ? 'N' : deg === 90 ? 'E' : deg === 180 ? 'S' : deg === 270 ? t('west') : ''}</SvgText>
                                             </G>
                                         )}
                                     </G>
@@ -161,19 +220,19 @@ const HeadingGauge = React.memo(({
                 {/* Viento Aparente (AWA) - AZUL */}
                 {typeof awa === 'number' && (
                     <G rotation={display.awa} origin={`${dims.CENTER}, ${dims.CENTER}`}>
-                        <Line x1={dims.CENTER} y1={dims.CENTER} x2={dims.CENTER} y2={dims.BEZEL_SIZE + 35} stroke="#2196f3" strokeWidth="2" strokeDasharray="5, 3" opacity={0.8} />
-                        <Polygon points={`${dims.CENTER - 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER + 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER},${dims.BEZEL_SIZE + 35}`} fill="url(#needleBlue)" stroke="#fff" strokeWidth="1" />
-                        <SvgText x={dims.CENTER} y={dims.BEZEL_SIZE + 20} fill="white" fontSize={dims.FONT_NUM} fontWeight="bold" textAnchor="middle" fontFamily="NauticalFont">A</SvgText>
+                        <Line x1={dims.CENTER} y1={dims.CENTER} x2={dims.CENTER} y2={windTipY} stroke="#2196f3" strokeWidth="2" strokeDasharray="5, 3" opacity={0.8} />
+                        <Polygon points={apparentMarker.points} fill="url(#needleBlue)" stroke="#fff" strokeWidth="1" />
+                        <SvgText x={dims.CENTER} y={apparentMarker.labelY} fill="white" fontSize={apparentMarker.fontSize} fontWeight="bold" textAnchor="middle" fontFamily="NauticalFont">A</SvgText>
                     </G>
                 )}
 
                 {/* Viento Real (TWA) - NARANJA */}
                 {typeof twaCog === 'number' && (
                     <G rotation={display.twa} origin={`${dims.CENTER}, ${dims.CENTER}`}>
-                        <Line x1={dims.CENTER} y1={dims.CENTER} x2={dims.CENTER} y2={dims.BEZEL_SIZE + 35} stroke="#ff9800" strokeWidth="2" strokeDasharray="5, 3" opacity={0.8} />
-                        <Polygon points={`${dims.CENTER - 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER + 14},${dims.BEZEL_SIZE + 5} ${dims.CENTER},${dims.BEZEL_SIZE + 35}`} fill="url(#needleOrange)" stroke="#fff" strokeWidth="1" />
-                        <SvgText x={dims.CENTER} y={dims.BEZEL_SIZE + 20} fill="white" 
-                        fontSize={dims.FONT_NUM} fontWeight="bold" textAnchor="middle" fontFamily="NauticalFont">T</SvgText>
+                        <Line x1={dims.CENTER} y1={dims.CENTER} x2={dims.CENTER} y2={windTipY} stroke="#ff9800" strokeWidth="2" strokeDasharray="5, 3" opacity={0.8} />
+                        <Polygon points={trueMarker.points} fill="url(#needleOrange)" stroke="#fff" strokeWidth="1" />
+                        <SvgText x={dims.CENTER} y={trueMarker.labelY} fill="white"
+                        fontSize={trueMarker.fontSize} fontWeight="bold" textAnchor="middle" fontFamily="NauticalFont">{t('trueWindInitial')}</SvgText>
                     </G>
                 )}
 
@@ -187,8 +246,23 @@ const HeadingGauge = React.memo(({
                 {/* --- CAPA 6: CORRIENTE --- */}
                 {drift > 0.1 && (
                     <G rotation={rotationAngle + set} origin={`${dims.CENTER}, ${dims.CENTER}`}>
-                        <Polygon points={`${dims.CENTER - 15},${dims.CENTER + COMPASS_SIZE * 0.15} ${dims.CENTER + 15},${dims.CENTER + COMPASS_SIZE * 0.15} ${dims.CENTER},${dims.CENTER + COMPASS_SIZE * 0.26}`} fill={drift > 2.0 ? "#ffcc00" : "#00ffff"} opacity={0.5 + (display.pulse * 0.3)} />
-                        <SvgText x={dims.CENTER} y={dims.CENTER + COMPASS_SIZE * 0.30} fill={drift > 2.0 ? "#ffcc00" : "#00ffff"} fontSize={dims.FONT_NUM * 0.8} textAnchor="middle" fontFamily="NauticalFont" rotation={-(rotationAngle + set)} origin={`${dims.CENTER}, ${dims.CENTER + COMPASS_SIZE * 0.30}`}>{drift.toFixed(1)} kn</SvgText>
+                        <G opacity={isNightMode ? 0.55 : 1}>
+                            {Array.from({ length: 6 }, (_, index) => {
+                                const back = dims.CENTER - currentShaftLength + index * currentChevronStep;
+                                const bend = currentChevronStep * 0.6;
+                                const thickness = currentChevronStep * 0.7;
+                                // La cresta de brillo recorre los chevrones desde la cola hasta la punta.
+                                const wave = (1 + Math.cos(2 * Math.PI * (index / 6 - display.currentFlow))) / 2;
+                                return (
+                                    <Polygon
+                                        key={`current-chevron-${index}`}
+                                        points={`${dims.CENTER - currentChevronWidth},${back} ${dims.CENTER},${back + bend} ${dims.CENTER + currentChevronWidth},${back} ${dims.CENTER + currentChevronWidth},${back + thickness} ${dims.CENTER},${back + bend + thickness} ${dims.CENTER - currentChevronWidth},${back + thickness}`}
+                                        fill={drift > 2.0 ? '#ffcc00' : '#00ffff'}
+                                        opacity={0.25 + 0.75 * wave * wave}
+                                    />
+                                );
+                            })}
+                        </G>
                     </G>
                 )}
 
@@ -199,12 +273,27 @@ const HeadingGauge = React.memo(({
                     <Polygon points={`${dims.CENTER},${dims.CENTER + (COMPASS_SIZE * 0.25)} ${dims.CENTER - 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER}`} fill="#e0e0e0" />
                     <Polygon points={`${dims.CENTER},${dims.CENTER + (COMPASS_SIZE * 0.25)} ${dims.CENTER + 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER}`} fill="#9e9e9e" />
                     <Polygon points={`${dims.CENTER},${dims.CENTER - (COMPASS_SIZE * 0.25)} ${dims.CENTER + 10},${dims.CENTER} ${dims.CENTER},${dims.CENTER + (COMPASS_SIZE * 0.25)} ${dims.CENTER - 10},${dims.CENTER}`} fill="none" stroke="#fff" strokeWidth="0.5" opacity={0.6} />
-                    <G>
-                        <Circle cx={dims.CENTER + 1} cy={dims.CENTER + 1} r={8} fill="rgba(0,0,0,0.4)" />
-                        <Circle cx={dims.CENTER} cy={dims.CENTER} r={7} fill="url(#hub3D)" stroke="#444" strokeWidth="1" />
-                        <Circle cx={dims.CENTER - 2} cy={dims.CENTER - 2} r={2} fill="rgba(255,255,255,0.2)" />
-                    </G>
                 </G>
+
+                {/* Lectura tras la cola: acompaña a la flecha, pero permanece horizontal. */}
+                {drift > 0.1 && (
+                    <G rotation={rotationAngle + set} origin={`${dims.CENTER}, ${dims.CENTER}`}>
+                        <G rotation={-(rotationAngle + set)} origin={`${dims.CENTER}, ${dims.CENTER - currentLabelRadius}`}>
+                            <SvgText
+                                x={dims.CENTER} y={dims.CENTER - currentLabelRadius + COMPASS_SIZE * 0.008}
+                                fill="#ffffff"
+                                fontSize={COMPASS_SIZE * 0.025} fontWeight="normal"
+                                textAnchor="middle" fontFamily="NauticalFont"
+                            >{drift.toFixed(1)} kn</SvgText>
+                        </G>
+                    </G>
+                )}
+                {showAis && <AisTargets targets={aisTargets} position={position} heading={display.heading}
+                    animationPhase={display.currentFlow}
+                    onSelect={Platform.OS === 'web' ? setSelectedVessel : undefined}
+                    center={dims.CENTER} radius={currentMaxRadius * 0.9} size={COMPASS_SIZE}
+                    rangeNm={aisRangeNm} positionReceivedAt={positionReceivedAt} connected={isConnected} />}
+                <SteelBall cx={dims.CENTER} cy={dims.CENTER} isNightMode={isNightMode} />
 
                 {/* --- CRISTAL --- */}
                 <G pointerEvents="none">
@@ -213,6 +302,11 @@ const HeadingGauge = React.memo(({
                 </G>
 
             </Svg>
+            {showAis && Platform.OS !== 'web' && <AisTouchOverlay targets={aisTargets}
+                position={position} heading={display.heading} center={dims.CENTER}
+                radius={currentMaxRadius * 0.9} size={COMPASS_SIZE}
+                rangeNm={aisRangeNm} positionReceivedAt={positionReceivedAt} connected={isConnected} onSelect={setSelectedVessel} />}
+            <AisVesselPopup vessel={showAis && isConnected ? selectedVessel : null} onClose={() => setSelectedVessel(null)} />
         </View>
     );
 });

@@ -1,3 +1,4 @@
+import { useTranslation } from '../../localization/LanguageProvider';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 
@@ -53,6 +54,7 @@ const getDegreeTextPosition = (angleDeg) => {
  * Componente principal del Indicador de Rumbo con rotación del dial.
  */
 const HeadingGauge = ({ value, unit, color }) => {
+    const { t } = useTranslation();
 
     const headingDegrees = parseFloat(value);
     const formattedHeading = headingDegrees.toFixed(0);
@@ -86,7 +88,7 @@ const HeadingGauge = ({ value, unit, color }) => {
         { deg: 180, label: 'S', isCardinal: true },
         { deg: 210, label: '210', isCardinal: false },
         { deg: 240, label: '240', isCardinal: false },
-        { deg: 270, label: 'O', isCardinal: true },
+        { deg: 270, label: t('west'), isCardinal: true },
         { deg: 300, label: '300', isCardinal: false },
         { deg: 330, label: '330', isCardinal: false },
     ];

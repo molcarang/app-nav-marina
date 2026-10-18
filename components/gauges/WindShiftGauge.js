@@ -1,9 +1,11 @@
+import { useTranslation } from '../../localization/LanguageProvider';
 import { StyleSheet, Text, View } from 'react-native';
 import { G, Line, Path } from 'react-native-svg';
 import { describeArc } from '../../utils/Utils';
 import VesselGaugeFrame from './VesselGaugeFrame';
 
 const WindShiftGauge = ({ currentTWD = 0, meanTWD = 0, size = 180 }) => {
+    const { t } = useTranslation();
     const CENTER = size / 2;
     const RADIUS = CENTER - (size * 0.12);
 
@@ -55,7 +57,7 @@ const WindShiftGauge = ({ currentTWD = 0, meanTWD = 0, size = 180 }) => {
                 <Text style={[styles.shiftValue, { color: shiftColor }]}>
                     {shift > 0 ? `+${shift.toFixed(1)}` : shift.toFixed(1)}°
                 </Text>
-                <Text style={styles.subText}>WIND SHIFT</Text>
+                <Text style={styles.subText}>{t('windShift')}</Text>
             </View>
         </View>
     );

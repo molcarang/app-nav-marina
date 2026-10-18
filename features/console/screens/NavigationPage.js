@@ -1,34 +1,41 @@
+import NavigationControls from '../components/NavigationControls';
+import { useState } from 'react';
 import { View } from 'react-native';
-import DataSquare from '../../../components/DataSquare';
 import HeadingGauge from '../../../components/gauges/HeadingGauge';
-import InfoPanel from '../../../components/gauges/InfoPanel';
 import ConsolePage from '../components/ConsolePage';
 import ConnectionHeader from '../components/ConnectionHeader';
-import { getAutopilotInfo } from '../model/autopilot';
 import { styles } from '../styles/consoleStyles';
 /** Primera página: rumbo, viento, profundidad y máximos. */
-export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, isConnected, isNightMode, theme, windowWidth, gaugeSize, onOpenSettings, onResetSOG, onResetTWS }) {
-    const columnWidth = windowWidth * 0.94 / 3;
-    const apInfo = getAutopilotInfo(navigation.apState);
-    const isDepthAlarmActive = navigation.depthMeters > 0 && navigation.depthMeters < 3;
+export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, isConnected, isNightMode, theme, windowWidth, gaugeSize, onOpenSettings, onResetSOG, onResetTWS, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted, aisVisibleCount, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, aisStatus, onToggleAis, aisTargets }) {
+    const [panelWidth, setPanelWidth] = useState(0);
+    const pilotWidth = windowWidth * 0.9 / 3;
+    const pilotRightInset = Math.max(0, (panelWidth - 3 * (pilotWidth + 6)) / 4) + 3;
     return (
         <ConsolePage
             width={windowWidth}
             isNightMode={isNightMode}
         >
-            <View style={styles.dataGrid}>
-                <ConnectionHeader
+            <View style={styles.dataGrid} onLayout={({ nativeEvent }) => setPanelWidth(nativeEvent.layout.width)}>
+                <ConnectionHeader navigation={navigation} aisTargets={aisTargets}
+                    aisVisibleCount={aisVisibleCount} aisAuto={aisAuto} onToggleAisAuto={onToggleAisAuto} aisRangeNm={aisRangeNm} onAisRangeChange={onAisRangeChange} aisVisible={aisVisible} aisStatus={aisStatus} onToggleAis={onToggleAis}
                     isConnected={isConnected}
                     isNightMode={isNightMode}
                     onOpenSettings={onOpenSettings}
+                    settingsWidth={pilotWidth}
+                    style={{ marginBottom: 5, width: '100%', paddingLeft: '4%', paddingRight: pilotRightInset }}
                 />
-                <View style={[styles.row, { marginBottom: 25 }]}>
+                <View style={[styles.row, { marginBottom: 30 }]}>
                     <HeadingGauge
+                        showAis={aisVisible} aisRangeNm={aisRangeNm}
+                        aisTargets={aisTargets} position={navigation.position}
+                        positionReceivedAt={navigation.positionReceivedAt} isConnected={isConnected}
                         size={gaugeSize}
                         headingColor={theme.heading}
-                        rotationAngle={-navigation.cogDeg}
-                        value={navigation.cogDigital}
+                        rotationAngle={-navigation.headingDeg}
+                        value={navigation.headingDigital}
                         awa={navigation.awa}
+                        awsKnots={navigation.awsKnots}
+                        twsKnots={Number(navigation.twsKnots)}
                         unit="°COG"
                         twd={navigation.twdDeg}
                         twaCog={navigation.twaCog}
@@ -39,80 +46,21 @@ export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, i
                         drift={navigation.driftKnots}
                     />
                 </View>
-                <View style={[styles.row, { marginBottom: 7 }]}>
-                    <InfoPanel
-                        dataArray={[{ label: 'MAX TWS', value: maxTWS, color: '#79f17bff' }]}
-                        color={theme.bg}
-                        width={columnWidth}
-                    />
-                    <InfoPanel
-                        dataArray={[{ label: 'MAX SOG', value: maxSOG, color: '#79f17bff' }]}
-                        color={theme.bg}
-                        width={columnWidth}
-                    />
-                    <InfoPanel
-                        dataArray={[{ label: apInfo.label, value: apInfo.value, color: apInfo.color }]}
-                        color={theme.bg}
-                        width={columnWidth}
-                    />
-                </View>
-                <View style={styles.row}>
-                    <DataSquare
-                        label="TWS"
-                        value={navigation.twsKnots}
-                        unit="KTS"
-                        showHistory
-                        showProgressBar
-                        maxValue={maxTWS}
-                        color={theme.bg}
-                        onPress={onResetTWS}
-                    />
-                    <DataSquare
-                        label="SOG"
-                        value={navigation.sogKnots}
-                        unit="KTS"
-                        showHistory
-                        showProgressBar
-                        maxValue={maxSOG}
-                        color={theme.bg}
-                        onPress={onResetSOG}
-                    />
-                    <DataSquare
-                        label={navigation.twa > 0 ? "TWA (P)" : navigation.twa < 0 ? "TWA (S)" : "TWA"}
-                        value={navigation.twa?.toFixed(0) + '°'}
-                        unit="DEG"
-                        textColor={theme.wind}
-                        showStatusDot
-                        statusDotColor={theme.statusDot}
-                        color={theme.bg}
-                    />
-                </View>
-
-                <View style={styles.row}>
-                    <DataSquare
-                        label="COG"
-                        value={navigation.cogSquare}
-                        unit="TRUE"
-                        textColor={theme.heading}
-                        color={theme.bg}
-                    />
-                    <DataSquare
-                        label="DEPTH"
-                        value={navigation.depthMeters.toFixed(1)}
-                        unit="MTRS"
-                        color={isDepthAlarmActive ? theme.alarm : theme.bg}
-                        textColor={isDepthAlarmActive ? "#fff" : undefined}
-                    />
-
-                    <DataSquare
-                        label={navigation.awaDigital}
-                        value={navigation.awaFixed}
-                        unit="DEG"
-                        textColor={theme.twd}
-                        color={theme.bg}
-                    />
-
-                </View>
+                <NavigationControls
+                    onSilenceDepth={onSilenceDepth}
+                    depthSoundMuted={depthSoundMuted}
+                    twsHistory={twsHistory}
+                    sogHistory={sogHistory}
+                    navigation={navigation}
+                    settings={settings}
+                    maxSOG={maxSOG}
+                    maxTWS={maxTWS}
+                    isNightMode={isNightMode}
+                    theme={theme}
+                    windowWidth={windowWidth}
+                    onResetSOG={onResetSOG}
+                    onResetTWS={onResetTWS}
+                />
             </View>
         </ConsolePage>
     );
