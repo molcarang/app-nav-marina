@@ -61,14 +61,13 @@ Join our community of developers creating universal apps.
 
 ## Publicacion y aviso de actualizaciones
 
-El workflow `.github/workflows/release.yml` compila y publica al abrir un nuevo
-pull request hacia `main`, desde una rama del propio repositorio. El evento es
-`pull_request` con `types: [opened]`: no se ejecuta por pushes, cambios posteriores
-del PR, reaperturas ni al fusionarlo. No tiene disparador manual. La publicacion
-se identifica como canal `main`; el cliente conserva el aislamiento por canal.
-La compilacion usa la combinacion de cambios del PR con su base que proporciona
-GitHub, antes de su aprobacion o fusion. Los PR de forks externos no publican
-releases ni utilizan las credenciales de Expo.
+El workflow `.github/workflows/release.yml` compila y publica cuando se fusiona
+un pull request hacia `main`, desde una rama del propio repositorio. Usa el evento
+`pull_request` con `types: [closed]` y exige `merged == true`: cerrar un PR sin
+fusionarlo no publica nada. Abrir un PR, subir cambios o hacer un push directo
+tampoco genera una release. No tiene disparador manual. La compilacion usa el
+codigo integrado en `main` y se publica en el canal `main`.
+Los PR de forks externos no publican releases con este workflow.
 Los paquetes se publican en GitHub Releases, sin meter binarios en el historial
 del codigo. La release permanece en borrador hasta completar la subida.
 
@@ -97,6 +96,6 @@ navegador se conserva. Consulta `raspberry/README.md` para el proceso y sus limi
 Las instalaciones anteriores a esta funcion necesitan actualizarse una vez
 manualmente para empezar a recibir avisos.
 
-La automatizacion se aplicara a los nuevos PR hacia `main` cuando GitHub disponga
-del workflow. Los PR ya abiertos no la disparan retroactivamente. No publica ni
-actualiza por si sola el servidor de la Raspberry.
+La automatizacion se aplica a las fusiones hacia `main` cuando GitHub dispone
+del workflow actualizado. No genera releases para fusiones anteriores. En la
+Raspberry el usuario decide cuando instalar la version publicada desde la app.

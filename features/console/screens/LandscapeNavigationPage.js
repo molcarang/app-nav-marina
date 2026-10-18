@@ -18,6 +18,7 @@ export default function LandscapeNavigationPage(props) {
     const hasActiveWaypoint = Boolean(props.waypoint);
     const [area, setArea] = useState({ width: 0, height: 0 });
     const [controlsHeight, setControlsHeight] = useState(0);
+    const [bottomControlsHeight, setBottomControlsHeight] = useState(0);
     const [scrollOffset, setScrollOffset] = useState(0);
     // Se mide el espacio real, después de cabecera, márgenes y áreas del sistema.
     const columnWidth = area.width / 2;
@@ -37,7 +38,8 @@ export default function LandscapeNavigationPage(props) {
     // Centrar en el hueco real entre la cabecera y los controles AIS.
     const gaugeTop = 48 * controlScale;
     const aisHeight = props.aisVisible ? 60 * controlScale + 2 : 44 * controlScale;
-    const gaugeBottom = aisBottom + aisHeight + (44 + 8 + 8) * controlScale;
+    const gaugeBottom = aisBottom
+        + (bottomControlsHeight || aisHeight + (44 + 8) * controlScale) + 8 * controlScale;
     const gaugeSize = Math.max(1, Math.min(previousGaugeSize * 1.10, columnWidth - 4,
         area.height - gaugeTop - gaugeBottom));
     const controlsWidth = Math.max(1, area.width - gaugeColumnWidth);
@@ -92,7 +94,8 @@ export default function LandscapeNavigationPage(props) {
                         )}
                         </View>
                         <View style={{ position: 'absolute', left: 8, right: 8, bottom: aisBottom, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <View style={{ width: '100%', gap: 8 * controlScale }}>
+                            <View style={{ width: '100%', gap: 8 * controlScale }}
+                                onLayout={({ nativeEvent }) => setBottomControlsHeight(nativeEvent.layout.height)}>
                                 <AnchorButton position={navigation.position} receivedAt={navigation.positionReceivedAt} connected={isConnected} />
                                 <AisToggleButton targets={props.aisTargets} position={navigation.position} positionReceivedAt={navigation.positionReceivedAt} connected={isConnected && props.aisStatus === 'connected'} visibleCount={props.aisVisibleCount} fullWidth auto={props.aisAuto} onToggleAuto={props.onToggleAisAuto} rangeNm={props.aisRangeNm} onRangeChange={props.onAisRangeChange} visible={props.aisVisible} onPress={props.onToggleAis} />
                             </View>
