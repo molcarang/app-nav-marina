@@ -16,7 +16,9 @@ test('reconexión recupera destino retenido con métricas recientes sin refresca
     } };
     const state = mergeWaypointSnapshot({}, rhumb, snapshot);
     assert.equal(deriveWaypoint(state, true, null, 100000).distanceNm, 1);
-    assert.equal(deriveWaypoint(state, true, null, 140000), null);
+    const retained = deriveWaypoint(state, true, null, 140000);
+    assert.deepEqual(retained.position, position);
+    assert.equal(retained.distanceNm, null);
     const cancelled = merge({}, rhumb, { 'nextPoint.position': null }, 100000);
     assert.equal(mergeWaypointSnapshot(cancelled, rhumb, snapshot), cancelled);
 });
@@ -35,11 +37,11 @@ test('normaliza ambas familias y convierte metros a millas y VMG a tiempo', () =
     }
 });
 
-test('cancelación, caducidad y desconexión ocultan sin resucitar otra familia', () => {
+test('cancelar o desconectar oculta el destino sin resucitar otra familia', () => {
     let state = merge({}, great, { 'nextPoint.position': position }, 99000);
     state = merge(state, rhumb, { 'nextPoint.position': position });
     assert.equal(deriveWaypoint(state, false, null, 100000), null);
-    assert.equal(deriveWaypoint(state, true, null, 130001), null);
+    assert.deepEqual(deriveWaypoint(state, true, null, 130001).position, position);
     state = merge(state, rhumb, { nextPoint: null }, 101000);
     assert.equal(deriveWaypoint(state, true, null, 101000), null);
     state = merge(state, rhumb, { 'nextPoint.distance': 5 }, 102000);
@@ -80,4 +82,37 @@ test('no mezcla métricas entre familias y acepta destino directo sin ruta', () 
     const wp = deriveWaypoint(state, true, null, 100000);
     assert.equal(wp.name, 'Port');
     assert.equal(wp.distanceNm, null);
+});
+
+test('conserva el destino y el nombre sin nuevas publicaciones y caduca solo las metricas', () => {
+    const state = merge({}, rhumb, { 'nextPoint.position': position, 'nextPoint.name': 'Puerto',
+        'nextPoint.distance': 1852, 'nextPoint.velocityMadeGood': 3, crossTrackError: 20 });
+    const wp = deriveWaypoint(state, true, { latitude: 28, longitude: -13 }, 700000);
+    assert.deepEqual(wp.position, position);
+    assert.equal(wp.name, 'Puerto');
+    assert.ok(wp.distanceNm > 0);
+    assert.ok(Number.isFinite(wp.bearingDeg));
+    assert.equal(wp.timeMinutes, null);
+    assert.equal(wp.crossTrackNm, null);
+});
+
+test('una rama que solo publica metricas no oculta el destino activo', () => {
+    let state = merge({}, rhumb, { 'nextPoint.position': position, 'nextPoint.name': 'Puerto' });
+    state = merge(state, great, { 'nextPoint.distance': 100, crossTrackError: 20 }, 105000);
+    const wp = deriveWaypoint(state, true, null, 105000);
+    assert.equal(wp.branch, rhumb);
+    assert.equal(wp.name, 'Puerto');
+    assert.equal(wp.distanceNm, null);
+    assert.equal(wp.crossTrackNm, null);
+});
+
+test('metricas posteriores de otra rama no resucitan un destino cancelado', () => {
+    let state = merge({}, great, { 'nextPoint.position': position }, 99000);
+    state = merge(state, rhumb, { 'nextPoint.position': position });
+    state = merge(state, rhumb, { 'nextPoint.position': null }, 101000);
+    state = merge(state, great, { 'nextPoint.distance': 100 }, 102000);
+    assert.equal(deriveWaypoint(state, true, null, 102000), null);
+    assert.equal(deriveWaypoint(state, true, null, 700000), null);
+    state = merge(state, great, { 'nextPoint.position': position }, 103000);
+    assert.deepEqual(deriveWaypoint(state, true, null, 103000).position, position);
 });

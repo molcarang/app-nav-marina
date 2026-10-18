@@ -85,9 +85,12 @@ function geometry(own, target) {
 export function deriveWaypoint(state, connected, ownPosition, now = Date.now()) {
     if (!connected) return null;
     const candidates = WAYPOINT_BRANCHES.map(branch => ({ branch, ...state[branch] }))
-        .filter(item => Number.isFinite(item.updatedAt)).sort((a, b) => b.updatedAt - a.updatedAt);
+        // Solo un destino o una cancelacion pueden elegir el tramo activo.
+        .filter(item => Number.isFinite(item.times?.['nextPoint.position']))
+        .sort((a, b) => b.times['nextPoint.position'] - a.times['nextPoint.position']
+            || b.updatedAt - a.updatedAt);
     const selected = candidates[0];
-    if (!selected || now - selected.updatedAt > WAYPOINT_TIMEOUT) return null;
+    if (!selected) return null;
     const position = selected.values['nextPoint.position'];
     // Una cancelación reciente no debe resucitar el destino retenido en la otra familia.
     if (!validPosition(position)) return null;
@@ -98,7 +101,8 @@ export function deriveWaypoint(state, connected, ownPosition, now = Date.now()) 
     const bearing = numeric(get('nextPoint.bearingTrue')) ?? fallback.bearing ?? null;
     const closingSpeed = numeric(get('nextPoint.velocityMadeGood'));
     const xte = numeric(get('crossTrackError'));
-    const name = get('nextPoint.name') ?? get('nextPoint.ID');
+    // El destino y su nombre son estado retenido; distancia, VMG y XTE si caducan.
+    const name = selected.values['nextPoint.name'] ?? selected.values['nextPoint.ID'];
     return { position, branch: selected.branch, demo: false,
         name: typeof name === 'string' || typeof name === 'number' ? String(name) : null,
         distanceNm: distance === null ? null : distance / 1852,

@@ -94,7 +94,7 @@ export default function LandscapeNavigationPage(props) {
                         <View style={{ position: 'absolute', left: 8, right: 8, bottom: aisBottom, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <View style={{ width: '100%', gap: 8 * controlScale }}>
                                 <AnchorButton position={navigation.position} receivedAt={navigation.positionReceivedAt} connected={isConnected} />
-                                <AisToggleButton visibleCount={props.aisVisibleCount} fullWidth auto={props.aisAuto} onToggleAuto={props.onToggleAisAuto} rangeNm={props.aisRangeNm} onRangeChange={props.onAisRangeChange} visible={props.aisVisible} onPress={props.onToggleAis} />
+                                <AisToggleButton targets={props.aisTargets} position={navigation.position} positionReceivedAt={navigation.positionReceivedAt} connected={isConnected && props.aisStatus === 'connected'} visibleCount={props.aisVisibleCount} fullWidth auto={props.aisAuto} onToggleAuto={props.onToggleAisAuto} rangeNm={props.aisRangeNm} onRangeChange={props.onAisRangeChange} visible={props.aisVisible} onPress={props.onToggleAis} />
                             </View>
                         </View>
                     </View>

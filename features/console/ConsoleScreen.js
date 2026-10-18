@@ -7,6 +7,8 @@ import { useWaypointData } from '../../services/signalk/useWaypointData';
 import { useAisData } from '../../services/signalk/useAisData';
 import ConsoleSettingsModal from './components/ConsoleSettingsModal';
 import { useConsoleSettings } from './hooks/useConsoleSettings';
+import { AnchorWatchContext, useAnchorWatch } from './hooks/useAnchorWatch';
+import { useAnchorAlarmSound } from './hooks/useAnchorAlarmSound';
 import { useDepthAlarmSound } from './hooks/useDepthAlarmSound';
 import { useSessionMaxima } from './hooks/useSessionMaxima';
 import { useInstrumentHistory } from './hooks/useInstrumentHistory';
@@ -32,6 +34,8 @@ export default function ConsoleScreen() {
     );
     const data = useSignalKData(settings.signalKAddress, isLoaded, recordReading, recordSogReading);
     const navigation = useMemo(() => deriveNavigationData(data), [data]);
+    const anchorWatch = useAnchorWatch(navigation.position, navigation.positionReceivedAt, data.isConnected);
+    useAnchorAlarmSound(anchorWatch.status === 'outside' || anchorWatch.status === 'gpsLost');
     const [aisAuto, setAisAuto] = useState(false);
     const aisRangeNm = useAisAutoRange(aisAuto, settings.aisRangeNm, {
         targets: ais.targets, position: navigation.position, positionReceivedAt: navigation.positionReceivedAt,
@@ -67,6 +71,7 @@ export default function ConsoleScreen() {
     };
     return (
         <LanguageProvider language={settings.language}>
+        <AnchorWatchContext.Provider value={anchorWatch}>
         <NightModeContext.Provider value={{ enabled: isNightMode, intensity: settings.nightIntensity, toggle: () => setNightMode(previous => !previous) }}>
         <View style={styles.mainContainer}>
             {isLandscape ? (
@@ -112,6 +117,7 @@ export default function ConsoleScreen() {
             />
         </View>
         </NightModeContext.Provider>
+        </AnchorWatchContext.Provider>
         </LanguageProvider>
     );
 }

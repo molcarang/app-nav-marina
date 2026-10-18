@@ -1,16 +1,22 @@
+import { useState } from 'react';
+import AisContactsModal from './AisContactsModal';
 import { useTranslation } from '../../../localization/LanguageProvider';
 import { useControlScale } from '../../../hooks/useControlScale';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { AIS_RANGES_NM, normalizeAisRange } from '../../../components/gauges/shared/aisRange';
 import AisRadarBackground from './AisRadarBackground';
 
-export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRangeChange, auto = false, onToggleAuto, fullWidth = false, visibleCount = 0 }) {
+export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRangeChange, auto = false, onToggleAuto, fullWidth = false, visibleCount = 0, targets, position, positionReceivedAt, connected }) {
     const { t } = useTranslation();
     const scale = useControlScale();
+    const [contactsOpen, setContactsOpen] = useState(false);
     const color = visible ? '#45d39a' : '#aaa';
     const range = normalizeAisRange(rangeNm);
     const index = AIS_RANGES_NM.indexOf(range);
-    return <View style={[
+    return <>
+    <AisContactsModal visible={contactsOpen && visible} onClose={() => setContactsOpen(false)}
+        targets={targets} position={position} receivedAt={positionReceivedAt} connected={connected} rangeNm={range} />
+    <View style={[
         styles.container,
         { gap: (visible ? 16 : 4) * scale },
         visible && [styles.panel, { padding: 8 * scale, borderRadius: 16 * scale,
@@ -21,7 +27,7 @@ export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRange
         <TouchableOpacity onPress={onPress} accessibilityRole="switch"
         accessibilityState={{ checked: visible }} accessibilityLabel={t(visible ? 'hideAis' : 'showAis')}
         style={[styles.button, { borderColor: color, backgroundColor: visible ? '#173e33' : '#10202c', height: 44 * scale, minHeight: 44 * scale, paddingHorizontal: 12 * scale,
-            flexShrink: 1, minWidth: 0 }]}>
+            width: 132 * scale, maxWidth: '100%', flexShrink: 1, minWidth: 0, alignItems: 'center' }]}>
         <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.text, { color, fontSize: 12 * scale }]}>{t('aisData')}</Text>
     </TouchableOpacity>
         {visible && onRangeChange && <View style={{ flexDirection: 'row', flex: 1, minWidth: 0, alignItems: 'center', gap: 8 * scale }}>
@@ -31,7 +37,12 @@ export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRange
                     borderColor: auto ? '#45d39a' : '#aaa', backgroundColor: auto ? '#173e33' : '#10202c' }]}>
                 <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.text, { color: auto ? '#45d39a' : '#aaa', fontSize: 12 * scale }]}>AUTO</Text>
             </TouchableOpacity>
-            <Text numberOfLines={1} adjustsFontSizeToFit accessibilityLiveRegion="polite" style={[styles.text, { color, fontSize: 12 * scale, flex: 1, minWidth: 0, textAlign: 'center' }]}>{t('aisVisibleCount', { count: visibleCount })}</Text>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel={t('aisContactsTitle')}
+                onPress={() => setContactsOpen(true)}
+                style={[styles.button, { flex: 1, minWidth: 0, height: 44 * scale, minHeight: 44 * scale,
+                    paddingHorizontal: 10 * scale, alignItems: 'center', borderColor: color, backgroundColor: '#173e33' }]}>
+                <Text numberOfLines={1} adjustsFontSizeToFit accessibilityLiveRegion="polite" style={[styles.text, { color, fontSize: 12 * scale, textAlign: 'center' }]}>{t('aisVisibleCount', { count: visibleCount })}</Text>
+            </TouchableOpacity>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 * scale, marginLeft: 'auto', flexShrink: 1, minWidth: 0 }}>
             {[{ label: '−', next: index + 1, title: 'aisZoomOut' },
                 { label: '+', next: index - 1, title: 'aisZoomIn' }].map(button => {
@@ -49,7 +60,8 @@ export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRange
             })}
             </View>
         </View>}
-    </View>;
+    </View>
+    </>;
 }
 
 const styles = StyleSheet.create({
