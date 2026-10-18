@@ -1,0 +1,46 @@
+name: Build and publish NavMarina
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NAVMARINA_BUILD_NUMBER: ${{ github.run_number }}
+      NAVMARINA_CHANNEL: main
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Build web and Raspberry packages
+        run: |
+          npm run build:web
+          node scripts/build-raspberry.mjs
+          cd dist
+          zip -qr ../artifacts/navmarina-web.zip .
+          cd ../artifacts
+          zip -qr navmarina-raspberry.zip navmarina-raspberry
+      - name: Prepare release metadata and checksums
+        run: node scripts/prepare-release.mjs
+      - name: Publish complete release
+        shell: bash
+        run: |
+          tag="navmarina-${NAVMARINA_CHANNEL}-${NAVMARINA_BUILD_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          flags=()
+          if [ "$NAVMARINA_CHANNEL" != "main" ]; then flags+=(--prerelease); fi
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft "${flags[@]}" --title "NavMarina ${NAVMARINA_CHANNEL} build ${NAVMARINA_BUILD_NUMBER}" --notes-file artifacts/release.json
+          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" artifacts/navmarina-web.zip artifacts/navmarina-raspberry.zip artifacts/SHA256SUMS
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest=false

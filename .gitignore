@@ -46,3 +46,7 @@ app-example
 /artifacts/
 *.apk
 *.aab
+
+# Local Python server and updater
+__pycache__/
+*.py[cod]

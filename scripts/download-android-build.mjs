@@ -1,0 +1,12 @@
+import { Buffer } from 'node:buffer';
+import { readFileSync, writeFileSync } from 'node:fs';
+const result = JSON.parse(readFileSync(new URL('../artifacts/eas-build.json', import.meta.url), 'utf8'));
+const builds = Array.isArray(result) ? result : [result];
+const build = builds.find(item => item.platform === 'ANDROID' && item.status === 'FINISHED');
+const url = build?.artifacts?.buildUrl;
+if (typeof url !== 'string' || !url.startsWith('https://')) throw new Error('EAS did not return a completed Android APK');
+const response = await fetch(url, { signal: AbortSignal.timeout(120000) });
+if (!response.ok) throw new Error(`APK download failed: ${response.status}`);
+const bytes = Buffer.from(await response.arrayBuffer());
+if (bytes[0] !== 0x50 || bytes[1] !== 0x4b) throw new Error('APK is not a ZIP archive');
+writeFileSync(new URL('../artifacts/navmarina-android.apk', import.meta.url), bytes);

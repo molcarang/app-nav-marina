@@ -1,3 +1,4 @@
+import UpdateNotice from '../../components/UpdateNotice';
 import { useVisibleAisCount } from './hooks/useVisibleAisCount';
 import { useAisAutoRange } from './hooks/useAisAutoRange';
 import { useMemo, useState } from 'react';
@@ -74,6 +75,7 @@ export default function ConsoleScreen() {
         <AnchorWatchContext.Provider value={anchorWatch}>
         <NightModeContext.Provider value={{ enabled: isNightMode, intensity: settings.nightIntensity, toggle: () => setNightMode(previous => !previous) }}>
         <View style={styles.mainContainer}>
+            <UpdateNotice />
             {isLandscape ? (
                 <LandscapeNavigationPage
                     {...pageProps}

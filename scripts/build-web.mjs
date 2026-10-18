@@ -1,9 +1,11 @@
+import { prepareBuildInfo } from './prepare-build-info.mjs';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+prepareBuildInfo('web');
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = resolve(root, 'dist');
 const result = spawnSync(process.execPath, [

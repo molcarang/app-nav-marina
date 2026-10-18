@@ -10,16 +10,24 @@ browser="$(command -v chromium || command -v chromium-browser || true)"
 source_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 [ -f "$source_dir/web/index.html" ] || { echo "Missing web/index.html"; exit 1; }
 [ -f "$source_dir/icon.png" ] || { echo "Missing icon.png"; exit 1; }
+[ -f "$source_dir/updater.py" ] || { echo "Missing updater.py"; exit 1; }
+[ -f "$source_dir/buildInfo.json" ] || { echo "Missing buildInfo.json"; exit 1; }
 target="$HOME/.local/share/navmarina"
-mkdir -p "$target/web" "$HOME/.local/bin" "$HOME/.config/systemd/user" "$HOME/.local/share/applications"
-cp -R "$source_dir/web/." "$target/web/"
-cp "$source_dir/server.py" "$target/server.py"
+mkdir -p "$target/releases" "$HOME/.local/bin" "$HOME/.config/systemd/user" "$HOME/.local/share/applications"
+release_dir="$(mktemp -d "$target/releases/manual.XXXXXX")"
+cp -R "$source_dir/web" "$release_dir/web"
+for file in server.py updater.py buildInfo.json icon.png; do
+    cp "$source_dir/$file" "$release_dir/$file"
+done
+# Publish the complete directory in one operation; browser settings stay outside it.
+ln -s "$release_dir" "$target/.current-install-$$"
+mv -Tf "$target/.current-install-$$" "$target/current"
 cp "$source_dir/icon.png" "$target/icon.png"
 cat > "$HOME/.config/systemd/user/navmarina.service" <<'UNIT'
 [Unit]
 Description=NavMarina local dashboard
 [Service]
-ExecStart=/usr/bin/python3 %h/.local/share/navmarina/server.py
+ExecStart=/usr/bin/python3 %h/.local/share/navmarina/current/server.py --home %h/.local/share/navmarina
 Restart=on-failure
 RestartSec=3
 [Install]
@@ -52,5 +60,6 @@ mkdir -p "$desktop"
 cp "$HOME/.local/share/applications/navmarina.desktop" "$desktop/navmarina.desktop"
 chmod +x "$desktop/navmarina.desktop"
 systemctl --user daemon-reload
-systemctl --user enable --now navmarina.service
+systemctl --user enable navmarina.service
+systemctl --user restart navmarina.service
 echo "Installed. Open NavMarina from the desktop or application menu."
