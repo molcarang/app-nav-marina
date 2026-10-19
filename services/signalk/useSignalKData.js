@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { INITIAL_DATA } from './config';
-import { SIGNALK_PATHS, SUBSCRIPTION_PATHS } from './paths';
+import { SIGNALK_PATHS, SUBSCRIPTION_PATHS, ENGINE_STATE_PATH_PATTERN, WATER_TEMPERATURE_ALARM_PATH_PATTERN, OIL_PRESSURE_ALARM_PATH_PATTERN, ALTERNATOR_CHARGE_ALARM_PATH_PATTERN, LOW_BATTERY_ALARM_PATH_PATTERN } from './paths';
 import { readInstrumentDelta } from './instrumentDeltas';
 import { DEFAULT_SIGNALK_ADDRESS, getSignalKSocketUrl, SIGNALK_RECONNECT_DELAY_MS } from './serverAddress';
 import { createPendingUpdates } from './pendingUpdates';
@@ -77,7 +77,14 @@ export const useSignalKData = (address = DEFAULT_SIGNALK_ADDRESS, enabled = true
                 if (!Array.isArray(message.updates)) return;
                 const now = Date.now();
                 const updates = readInstrumentDelta(message, self, now);
-                for (const path of Object.keys(updates)) if (path !== 'positionReceivedAt') timestamps.set(path, now);
+                for (const path of Object.keys(updates)) {
+                    // Engine states and alarm notifications remain until updated or disconnected.
+                    if (path !== 'positionReceivedAt' && !ENGINE_STATE_PATH_PATTERN.test(path)
+                        && !WATER_TEMPERATURE_ALARM_PATH_PATTERN.test(path)
+                        && !OIL_PRESSURE_ALARM_PATH_PATTERN.test(path)
+                        && !ALTERNATOR_CHARGE_ALARM_PATH_PATTERN.test(path)
+                        && !LOW_BATTERY_ALARM_PATH_PATTERN.test(path)) timestamps.set(path, now);
+                }
                 const wind = updates[SIGNALK_PATHS.windSpeed];
                 if (Number.isFinite(wind) && wind >= 0) windListener.current?.(wind * 1.94384, now);
                 const sog = updates[SIGNALK_PATHS.speedOverGround];

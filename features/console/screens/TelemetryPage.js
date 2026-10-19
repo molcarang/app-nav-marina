@@ -18,6 +18,8 @@ export default function TelemetryPage({ navigation, settings, maxSOG, isConnecte
         >
             <View style={styles.dataGrid}>
                 <ConnectionHeader
+                    settings={settings}
+                    navigation={navigation}
                     isConnected={isConnected}
                     isNightMode={isNightMode}
                 />

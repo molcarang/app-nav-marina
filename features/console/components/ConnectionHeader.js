@@ -10,8 +10,9 @@ import FullscreenButton from '../../../components/FullscreenButton';
 import AnchorButton from './AnchorButton';
 import SoftwareVersion from './SoftwareVersion';
 import AppExitButton from './AppExitButton';
+import EngineStatusIndicator from './EngineStatusIndicator';
 const HEADER_INDICATOR_HEIGHT = 36;
-export default function ConnectionHeader({ navigation, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds }) {
+export default function ConnectionHeader({ navigation, settings, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds }) {
     const { t } = useTranslation();
     const { enabled: nightEnabled, toggle: toggleNightMode } = useContext(NightModeContext);
     const scale = useControlScale();
@@ -20,7 +21,8 @@ export default function ConnectionHeader({ navigation, isConnected, isNightMode,
     const accent = isConnected ? '#45d39a' : '#ef6b72';
     return (
         <View style={[styles.headerRow, badgeStyles.header, onToggleAis && { flexWrap: 'wrap' }, style]}>
-            <View style={[badgeStyles.connectionGroup, !settingsInline && { flex: 1 }]}>
+            <View style={[badgeStyles.connectionGroup, !settingsInline && { flex: 1 }, onToggleAis && { marginBottom: 42 * scale }]}>
+            <View style={{ width: 36 * scale, height: 36 * scale, alignSelf: 'center', zIndex: 3 }}>
             <View accessible accessibilityLiveRegion="polite"
                 accessibilityLabel={t(isConnected ? 'connected' : 'disconnected')}
                 style={[badgeStyles.surface, surface, badgeStyles.badge, {
@@ -28,6 +30,10 @@ export default function ConnectionHeader({ navigation, isConnected, isNightMode,
                     borderColor: isConnected ? '#29634f' : '#71383f' }]}>
                 <View pointerEvents="none" style={badgeStyles.highlight} />
                 <MaterialIcons accessible={false} name={isConnected ? 'link' : 'link-off'} size={24 * scale} color={accent} />
+            </View>
+            <View style={{ position: 'absolute', left: 0, top: 42 * scale + 5, flexDirection: 'row', gap: 8 * scale }}>
+                <EngineStatusIndicator connected={isConnected} engineRunning={navigation?.engineRunning} navigation={navigation} settings={settings} />
+            </View>
             </View>
             {toggleNightMode && <TouchableOpacity onPress={toggleNightMode}
                 accessibilityRole="button" accessibilityLabel={t(nightEnabled ? 'switchDay' : 'switchNight')}
@@ -55,7 +61,8 @@ export default function ConnectionHeader({ navigation, isConnected, isNightMode,
             <FullscreenButton onBounds={onFullscreenBounds} />
             {onToggleAis && <SoftwareVersion style={{ flexShrink: 1, transform: [{ translateY: 5 }] }} />}
             </View>
-            {onToggleAis && <View style={{ width: '100%', gap: 8 * scale, alignItems: 'flex-start' }}>
+            {/* In portrait, use the gap above the compass for the taller motor indicator. */}
+            {onToggleAis && <View style={{ width: '100%', gap: 8 * scale, alignItems: 'flex-start', transform: [{ translateY: 12.6 * scale }] }}>
                 <AnchorButton position={navigation?.position} receivedAt={navigation?.positionReceivedAt} connected={isConnected} />
                 <AisToggleButton targets={aisTargets} position={navigation?.position} positionReceivedAt={navigation?.positionReceivedAt} connected={isConnected && aisStatus === 'connected'} visibleCount={aisVisibleCount} auto={aisAuto} onToggleAuto={onToggleAisAuto} rangeNm={aisRangeNm} onRangeChange={onAisRangeChange} visible={aisVisible} onPress={onToggleAis} />
             </View>}

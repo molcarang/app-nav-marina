@@ -6,6 +6,8 @@ import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from '../model/settings';
 import { normalizeServerAddress } from '../../../services/signalk/serverAddress.js';
 import { normalizeHistoryHours } from '../model/twsHistory.js';
 import { normalizeHeelAlarmDegrees } from '../model/heelAlarm.js';
+import { normalizeLowFuelPercent } from '../model/lowFuelAlarm.js';
+import { normalizeEngineRpmSettings } from '../model/engineRpmSettings.js';
 const normalizeDepthAlarm = value => Number.isFinite(value) && value >= 0.5 && value <= 30
     ? Math.round(value * 10) / 10 : DEFAULT_SETTINGS.depthAlarmMeters;
 const normalizeNightIntensity = value => Number.isFinite(value)
@@ -27,6 +29,8 @@ export function useConsoleSettings() {
                     restored.sogHistoryHours = normalizeHistoryHours(restored.sogHistoryHours);
                     restored.depthAlarmMeters = normalizeDepthAlarm(restored.depthAlarmMeters);
                     restored.heelAlarmDegrees = normalizeHeelAlarmDegrees(restored.heelAlarmDegrees);
+                    restored.lowFuelAlarmPercent = normalizeLowFuelPercent(restored.lowFuelAlarmPercent);
+                    Object.assign(restored, normalizeEngineRpmSettings(restored));
                     restored.nightIntensity = normalizeNightIntensity(restored.nightIntensity);
                     restored.depthAlarmSound = typeof restored.depthAlarmSound === 'boolean' ? restored.depthAlarmSound : true;
                     restored.depthAlarmEnabled = typeof restored.depthAlarmEnabled === 'boolean' ? restored.depthAlarmEnabled : true;
@@ -46,17 +50,22 @@ export function useConsoleSettings() {
     function updateSetting(key, value) {
         setSettings(previous => ({ ...previous, [key]: key === 'depthAlarmMeters' ? normalizeDepthAlarm(value)
             : key === 'heelAlarmDegrees' ? normalizeHeelAlarmDegrees(value)
+            : key === 'lowFuelAlarmPercent' ? normalizeLowFuelPercent(value)
             : key === 'nightIntensity' ? normalizeNightIntensity(value) : Math.round(value) }));
     }
     async function saveSetting(key, value) {
-        const next = { ...settings, [key]: key === 'signalKAddress' ? normalizeServerAddress(value)
+        const next = key === 'engineRpmSettings'
+            ? { ...settings, ...normalizeEngineRpmSettings(value) }
+            : { ...settings, [key]: key === 'signalKAddress' ? normalizeServerAddress(value)
             : key === 'aisRangeNm' ? normalizeAisRange(value)
             : key === 'language' ? normalizeLanguage(value)
             : ['depthAlarmSound', 'depthAlarmEnabled'].includes(key) ? Boolean(value)
             : key === 'depthAlarmMeters' ? normalizeDepthAlarm(value)
             : key === 'heelAlarmDegrees' ? normalizeHeelAlarmDegrees(value)
+            : key === 'lowFuelAlarmPercent' ? normalizeLowFuelPercent(value)
             : key === 'nightIntensity' ? normalizeNightIntensity(value)
                 : ['historyHours', 'sogHistoryHours'].includes(key) ? normalizeHistoryHours(value) : Math.round(value) };
+        Object.assign(next, normalizeEngineRpmSettings(next));
         try {
             await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next));
             setSettings(next);

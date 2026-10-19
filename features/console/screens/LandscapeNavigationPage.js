@@ -94,6 +94,8 @@ export default function LandscapeNavigationPage(props) {
                         <View style={localStyles.leftHeader}
                             onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}>
                 <ConnectionHeader
+                    settings={settings}
+                    navigation={navigation}
                     isConnected={isConnected}
                     isNightMode={isNightMode}
                     onOpenSettings={onOpenSettings}

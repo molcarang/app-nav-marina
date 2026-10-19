@@ -7,6 +7,7 @@ import { Modal, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } fr
 import { normalizeServerAddress } from '../../../services/signalk/serverAddress.js';
 import { styles as baseStyles } from '../styles/settingsStyles';
 import HistoryRetentionSetting from './HistoryRetentionSetting';
+import EngineRpmSettings from './EngineRpmSettings';
 import NightDimmer from '../../../components/NightDimmer';
 /** Presenta ajustes; el hook se ocupa de guardarlos. */
 export default function ConsoleSettingsModal({ visible, settings, isNightMode, onChange, onSave, onNightModeChange, onClose, onTestDepthSound }) {
@@ -95,12 +96,14 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
                     </View>
                     <HistoryRetentionSetting hours={settings.historyHours} visible={visible} onSave={onSave} />
                     <HistoryRetentionSetting metric="SOG" settingKey="sogHistoryHours" hours={settings.sogHistoryHours} visible={visible} onSave={onSave} />
+                    <EngineRpmSettings settings={settings} visible={visible} onSave={onSave} />
 
                     {[
             { label: t('minWind'), key: 'minAnguloCeñida', min: 10, max: 45, color: '#00ff00' },
             { label: t('maxWind'), key: 'maxAnguloCeñida', min: 50, max: 90, color: '#ff0000' },
             { label: t('rudder'), key: 'rudderLimit', min: 20, max: 45, color: '#00ffff' },
             { label: t('heelAlarm'), key: 'heelAlarmDegrees', min: 1, max: 90, color: '#dc1212' },
+            { label: t('lowFuelAlarm'), key: 'lowFuelAlarmPercent', min: 1, max: 100, unit: ' %', color: '#ff9800' },
             { label: t('depth'), key: 'depthAlarmMeters', min: 0.5, max: 30, step: 0.1, unit: ' m', color: '#dc1212' }
         ].map(s => (<View
             key={s.key}
@@ -126,6 +129,7 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
                 maximumTrackTintColor="rgba(255,255,255,0.1)"
             />
             {s.key === 'heelAlarmDegrees' && <Text style={styles.serverHint}>{t('heelAlarmHint')}</Text>}
+            {s.key === 'lowFuelAlarmPercent' && <Text style={styles.serverHint}>{t('lowFuelAlarmHint')}</Text>}
         </View>))}
 
                     <View style={styles.divider}/>
