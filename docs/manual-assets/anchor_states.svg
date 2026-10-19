@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg
+  PUBLIC '-//W3C//DTD SVG 1.0//EN'
+  'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+<svg width="500" height="190" preserveAspectRatio="xMinYMin meet" viewBox="0 0 500 190" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>...</title>
+	<desc>...</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="500" height="190"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-190)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="0" y="0" width="500" height="190" rx="8" ry="8" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(92%,95%,96%); fill-rule: evenodd;"/>
+			<rect x="12" y="70" width="143" height="88" rx="8" ry="8" style="stroke: rgb(12%,51%,36%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="31" cy="135" r="5" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(12%,51%,36%); fill-rule: evenodd;"/>
+			<text x="24" y="111" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(12%,51%,36%); stroke:none;" transform="translate(0,222) scale(1,-1)">Dentro</text>
+			<text x="24" y="90" style="font-family: Helvetica; font-size: 10px;fill: rgb(13%,23%,29%); stroke:none;" transform="translate(0,180) scale(1,-1)">Vigilancia activa</text>
+			<path d="M 158,113 L 176,113 Z" style="stroke: rgb(34%,44%,49%); stroke-linecap: butt; stroke-width: 2;"/>
+			<polygon points="176 113, 169.6969 116.0448, 169.6969 109.9552" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(34%,44%,49%); fill-rule: evenodd;"/>
+			<rect x="179" y="70" width="143" height="88" rx="8" ry="8" style="stroke: rgb(65%,41%,9%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="198" cy="135" r="5" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(65%,41%,9%); fill-rule: evenodd;"/>
+			<text x="191" y="111" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(65%,41%,9%); stroke:none;" transform="translate(0,222) scale(1,-1)">Primera salida</text>
+			<text x="191" y="90" style="font-family: Helvetica; font-size: 10px;fill: rgb(13%,23%,29%); stroke:none;" transform="translate(0,180) scale(1,-1)">Confirmando…</text>
+			<path d="M 325,113 L 343,113 Z" style="stroke: rgb(34%,44%,49%); stroke-linecap: butt; stroke-width: 2;"/>
+			<polygon points="343 113, 336.6969 116.0448, 336.6969 109.9552" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(34%,44%,49%); fill-rule: evenodd;"/>
+			<rect x="346" y="70" width="143" height="88" rx="8" ry="8" style="stroke: rgb(74%,25%,31%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="365" cy="135" r="5" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(74%,25%,31%); fill-rule: evenodd;"/>
+			<text x="358" y="111" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(74%,25%,31%); stroke:none;" transform="translate(0,222) scale(1,-1)">Salida confirmada</text>
+			<text x="358" y="90" style="font-family: Helvetica; font-size: 10px;fill: rgb(13%,23%,29%); stroke:none;" transform="translate(0,180) scale(1,-1)">Aviso sonoro</text>
+			<text x="123.62799999999999" y="43" style="font-family: Helvetica-Bold; font-size: 12px;fill: rgb(65%,41%,9%); stroke:none;" transform="translate(0,86) scale(1,-1)">Confirmación: 5 s con nuevas lecturas fuera</text>
+			<text x="153.466" y="20" style="font-family: Helvetica-Bold; font-size: 12px;fill: rgb(7%,19%,28%); stroke:none;" transform="translate(0,40) scale(1,-1)">Mantener Fondeo 2 s = desactivar</text>
+		</g>
+	</g>
+</svg>

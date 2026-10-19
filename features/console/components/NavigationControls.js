@@ -8,7 +8,7 @@ import { getAutopilotInfo } from '../model/autopilot';
 import { styles } from '../styles/consoleStyles';
 
 /** Controles compartidos por ambas orientaciones; el contenedor define las dimensiones opcionales. */
-export default function NavigationControls({ navigation, settings, maxSOG, maxTWS, isNightMode, theme, windowWidth, onResetSOG, onResetTWS, itemWidth, cardHeight, landscape = false, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted }) {
+export default function NavigationControls({ navigation, settings, maxSOG, maxTWS, isNightMode, theme, windowWidth, onResetSOG, onResetTWS, itemWidth, cardHeight, landscape = false, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted, onMaxTwsBounds }) {
     const { t } = useTranslation();
     const scale = useControlScale();
     const columnWidth = itemWidth ?? windowWidth * 0.94 / 3;
@@ -31,6 +31,7 @@ export default function NavigationControls({ navigation, settings, maxSOG, maxTW
                 {!landscape && modePanel}
                 <View style={[styles.row, { marginTop: -10, marginBottom: 7 }]}>
                     <InfoPanel
+                        onBounds={onMaxTwsBounds}
                         panelWidth={itemWidth}
                         height={indicatorHeight + 10}
                         dataArray={[{ label: `${t('maximum')} TWS`, value: maxTWS, color: '#79f17bff' }]}

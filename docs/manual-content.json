@@ -1,0 +1,136 @@
+{
+  "title": "NavMarina · Manual de usuario",
+  "edition": "19 de octubre de 2026",
+  "scope": "Edición basada en el código actual del proyecto · Aplicación web y paquete Raspberry",
+  "pages": [
+    {
+      "title": "Tu consola de navegación",
+      "intro": "Una guía práctica para consultar los instrumentos, ver contactos AIS, seguir un waypoint y preparar la vigilancia de fondeo. Diseñada para el uso con pantalla táctil o ratón.",
+      "figure": "overview",
+      "caption": "Esquema de orientación. Los gráficos de este manual son ilustrativos: no son capturas ni contienen lecturas reales.",
+      "sections": [
+        {"heading": "Qué versión describe", "text": "Describe las funciones presentes en el proyecto a fecha de esta edición. Algunas pueden requerir instalar una versión más reciente en tu equipo. En Raspberry, NavMarina utiliza Chromium en modo aplicación: se abre desde el icono del menú, sin pestañas ni barra de direcciones."},
+        {"heading": "Cómo utilizar el manual", "text": "Empieza por la conexión y el mapa de pantalla. Después consulta el apartado correspondiente a la función que quieras utilizar. Las etiquetas de los botones se muestran en español; el idioma puede cambiarse desde Ajustes."}
+      ],
+      "table": {"headers": ["Contenido", "Página"], "rows": [["Primer arranque y conexión", "2"], ["Mapa de pantalla e instrumentos", "3–4"], ["Historial y contactos AIS", "5–6"], ["Navegación a waypoint", "7"], ["Preparación y vigilancia de fondeo", "8–9"], ["Ajustes y avisos de profundidad", "10"], ["Actualizaciones y solución de problemas", "11–12"]]},
+      "note": "La vigilancia y los avisos sonoros descritos requieren mantener la app abierta y en primer plano. Una lectura ausente no debe interpretarse como cero."
+    },
+    {
+      "title": "Primer arranque y conexión",
+      "intro": "NavMarina recibe los datos de Signal K. El indicador CONECTADO confirma la conexión con el servidor; cada instrumento depende además de que su fuente esté enviando lecturas válidas.",
+      "figure": "dataflow",
+      "caption": "Los instrumentos pueden proceder de sensores o del simulador. La navegación al waypoint la aporta el sistema conectado, por ejemplo OpenCPN.",
+      "steps": ["Abre NavMarina desde su icono en la Raspberry o desde la dirección web donde se haya publicado.", "Pulsa Ajustes e introduce la dirección de tu servidor Signal K.", "Pulsa GUARDAR Y CONECTAR. Comprueba el indicador de conexión y que LAT/LON y los instrumentos reciben datos.", "Pulsa PROBAR SONIDO en Ajustes y comprueba el volumen y la salida de audio del equipo.", "Activa pantalla completa si lo deseas. En Raspberry, Escape permite salir de ella con un teclado."],
+      "table": {"headers": ["Dónde está Signal K", "Dirección de ejemplo"], "rows": [["En la misma Raspberry que ejecuta NavMarina", "http://localhost:3000"], ["En otro equipo de la red", "http://192.168.1.10:3000"], ["En un servidor protegido con HTTPS", "La dirección HTTPS de ese servidor"]]},
+      "sections": [{"heading": "Sin Internet o sin datos", "text": "El paquete Raspberry abre su interfaz desde el propio equipo. Los datos en vivo necesitan acceso a Signal K, aunque no haya Internet. En la web, la apertura sin conexión depende de que la PWA se haya cargado y guardado previamente. Una web HTTPS necesita una conexión compatible con Signal K; si no conecta, revisa la dirección con quien administre el servidor."}],
+      "note": "En una tablet, localhost se refiere a la tablet, no a la Raspberry. El simulador Standard Demo genera instrumentos de prueba; AIS Demo genera contactos simulados."
+    },
+    {
+      "title": "Mapa de la pantalla",
+      "intro": "La distribución se adapta a la orientación. En horizontal, el compás queda a la izquierda y los instrumentos a la derecha. En vertical, los paneles se reorganizan y pueden desplazarse aunque no se vea la barra de scroll.",
+      "figure": "screen",
+      "caption": "Distribución horizontal simplificada. Los números se corresponden con la tabla; el waypoint aparece cuando se recibe un destino válido.",
+      "table": {"headers": ["Zona", "Qué encontrarás"], "rows": [["1 · Cabecera", "Conexión, modo día/noche, Ajustes y pantalla completa."], ["2 · Compás", "Rumbo, referencias de viento, corriente y contactos AIS cuando están activados."], ["3 · Instrumentos", "TWS, SOG, TWA, COG, SONDA y AWA; máximos y estado recibido del piloto."], ["4 · Fondeo y AIS", "Activación y estado de fondeo; Datos AIS, AUTO, Contactos y alcance."], ["5 · Paneles inferiores", "Escora, timón, coordenadas y temperatura del agua."], ["6 · Waypoint", "Destino, distancia, tiempo, demora verdadera y desviación de ruta."]]},
+      "sections": [{"heading": "Interacción básica", "text": "Un toque o clic activa los botones. En TWS y SOG, dos toques rápidos abren el historial. Las pulsaciones largas tienen funciones específicas: 3 segundos reinician máximo e historial; 2 segundos sobre Fondeo desactivan su vigilancia."}],
+      "note": "El estado del piloto es una lectura recibida. NavMarina no envía órdenes al piloto ni activa una ruta en OpenCPN."
+    },
+    {
+      "title": "Entender los instrumentos",
+      "intro": "Las unidades aparecen junto a las lecturas. kn, KTS y nudos expresan velocidad; NM son millas náuticas; los ángulos se expresan en grados y la sonda en metros.",
+      "table": {"headers": ["Indicador", "Cómo leerlo"], "rows": [["Rumbo del compás", "Orientación de la proa, según el dato recibido. No es necesariamente igual al COG."], ["SOG", "Velocidad del barco sobre el fondo, en nudos."], ["COG · TRUE", "Dirección del desplazamiento sobre el fondo, referida al norte verdadero."], ["TWS", "Velocidad del viento real, en nudos."], ["TWA", "Ángulo del viento real; B o E identifica babor o estribor."], ["AWA", "Ángulo del viento aparente respecto al barco; B o E identifica su banda."], ["SONDA", "Profundidad bajo el transductor, según el dato recibido. No aplica por sí misma una corrección a la quilla."], ["ESCORA / TIMÓN", "Inclinación del barco y ángulo del timón, cuando existen esos datos."], ["LAT / LON y temperatura", "Coordenadas del barco y temperatura del agua, en °C."], ["PILOTO", "AUTO, VIENTO, RUTA o ESPERA: estado recibido, no un control."], ["VELA / MOTOR", "Estado estimado a partir de las RPM recibidas; no es una selección manual."]]},
+      "sections": [
+        {"heading": "Referencias del compás", "text": "La referencia azul A identifica el viento aparente. La referencia naranja R identifica el viento real en español. La corriente, cuando está disponible, se representa con una flecha y su velocidad en nudos. Los anillos de alcance pertenecen a la visualización AIS."},
+        {"heading": "Lecturas ausentes", "text": "Un guion o un panel sin lectura indica que ese dato no está disponible. En general, los instrumentos dejan de considerarse recientes tras unos 30 segundos sin actualización. No deduzcas que una variable vale cero por la ausencia de lectura."}
+      ],
+      "note": "La T que aparece detrás de la demora del waypoint significa True: norte verdadero o geográfico. La R del viento real es una etiqueta distinta."
+    },
+    {
+      "title": "Historial de viento y velocidad",
+      "intro": "TWS y SOG permiten consultar la evolución de las lecturas y reiniciar sus registros. El historial utiliza los datos recibidos, no una simulación del comportamiento del barco.",
+      "figure": "gestures",
+      "caption": "Dos toques rápidos abren el historial; mantener pulsado 3 segundos reinicia el máximo y el historial de ese instrumento.",
+      "steps": ["Da dos toques rápidos sobre TWS para abrir el historial de viento o sobre SOG para abrir el de velocidad.", "Consulta el gráfico y los valores que aparecen en la ventana. Ciérrala para volver a la consola.", "Para cambiar la duración, abre Ajustes y busca Horas de historial TWS o SOG.", "Introduce un número entero de 1 a 24 y pulsa GUARDAR HORAS. La duración inicial es de 2 horas para cada variable."],
+      "table": {"headers": ["Acción", "Resultado"], "rows": [["Dos toques rápidos en TWS o SOG", "Abre el historial correspondiente."], ["Mantener 3 segundos en TWS o SOG", "Reinicia su máximo y borra su historial."], ["Reducir las horas guardadas", "Elimina las muestras más antiguas que quedan fuera del periodo."], ["Intervalo sin lecturas", "Aparece como un hueco; no cuenta como una lectura de cero."]]},
+      "sections": [{"heading": "Antes de reiniciar", "text": "El reinicio afecta al instrumento que mantienes pulsado. Úsalo al comenzar una nueva sesión de observación si quieres descartar el registro anterior. Los ajustes de retención de TWS y SOG son independientes."}]
+    },
+    {
+      "title": "Contactos AIS",
+      "intro": "Pulsa DATOS AIS para mostrar los contactos alrededor del barco. Se necesita una posición GPS propia reciente y posiciones válidas de los otros barcos para calcular sus distancias.",
+      "figure": "ais",
+      "caption": "En el radar, los contactos se sitúan respecto a la proa. En el popup Contactos se ordenan del más cercano al más lejano.",
+      "steps": ["Activa DATOS AIS. El panel muestra AUTO, CONTACTOS y el alcance seleccionado.", "Utiliza + para acercar y − para alejar. Los alcances exteriores son 0,3; 0,75; 1,5 y 6 NM.", "Activa AUTO si quieres que el alcance se ajuste según los contactos recibidos. El zoom manual desactiva AUTO.", "Pulsa CONTACTOS para abrir la lista del alcance actual. Verás nombre, MMSI o identificador y distancia en NM.", "Para consultar la ficha de un barco, toca su símbolo en el compás. La ficha muestra sus datos disponibles y se cierra automáticamente tras unos segundos."],
+      "sections": [{"heading": "Qué representa el contador", "text": "CONTACTOS cuenta los barcos con posición válida y reciente dentro del alcance seleccionado. La lista se actualiza mientras está abierta. Los tres anillos representan un tercio, dos tercios y el alcance exterior completo."}],
+      "note": "Los contactos sin posiciones recientes dejan de mostrarse; el límite de antigüedad de la posición AIS es de 5 minutos. El barrido dibujado es decorativo: no indica una detección radar real."
+    },
+    {
+      "title": "Navegación a un waypoint",
+      "intro": "El destino se activa en OpenCPN u otro sistema que publique su navegación en Signal K. NavMarina recibe ese destino y presenta sus datos; no crea ni activa rutas desde su panel.",
+      "figure": "waypoint",
+      "caption": "La desviación XTE es la separación lateral respecto al tramo de ruta. La demora señala desde el barco hacia el waypoint.",
+      "table": {"headers": ["Dato", "Significado"], "rows": [["Destino", "Nombre o identificador del siguiente waypoint, cuando se recibe."], ["Distancia · NM", "Separación al destino. Puede calcularse con las posiciones si no llega una distancia reciente."], ["Tiempo restante", "Estimación según la distancia y la velocidad de acercamiento recibida. Sin velocidad de acercamiento positiva, se muestra sin dato."], ["Demora · T", "Dirección hacia el destino respecto al norte verdadero. Puede calcularse usando las posiciones."], ["Desviación de ruta · XTE", "Separación lateral del tramo, recibida de Signal K. La escala gráfica representa ±0,1 NM."]]},
+      "sections": [
+        {"heading": "Por qué puede faltar la desviación", "text": "XTE no se calcula actualmente en NavMarina. Si Signal K lo entrega a null, no llega o deja de actualizarse durante 30 segundos, la app muestra un guion. Esto es distinto de 0,00 NM, que sí es un valor. Distancia y demora pueden seguir visibles gracias a su cálculo de respaldo."},
+        {"heading": "Mantener y cancelar el destino", "text": "El destino se mantiene aunque no se publique de nuevo constantemente. Cambia al recibir otro destino y se oculta al recibir su cancelación o perder la conexión de navegación. Cancela o cambia la navegación desde el sistema que la originó."}
+      ],
+      "note": "Si falta XTE, comprueba en Signal K los campos crossTrackError de courseRhumbline y courseGreatCircle. El simulador de instrumentos no genera rutas ni desviación XTE."
+    },
+    {
+      "title": "Fondeo · Fijar el punto",
+      "intro": "Pulsa Fondeo para elegir el centro y el radio de vigilancia. El centro permanece fijo: no se desplaza siguiendo al barco.",
+      "figure": "anchor",
+      "caption": "Cruz: centro fijado. Círculo: radio permitido. Triángulo: posición del barco. Norte arriba; la orientación del triángulo no representa el rumbo.",
+      "sections": [
+        {"heading": "Voy a largar el ancla", "text": "Selecciona esta opción y, al soltar el ancla, pulsa Fijar este punto. Se captura la posición de la antena GPS en ese momento; seleccionar la opción por sí solo no la registra. No se corrige automáticamente la distancia entre antena, proa y punto real del ancla."},
+        {"heading": "Ya estoy fondeado · Distancia y demora", "text": "Introduce la distancia horizontal desde el barco hasta el ancla y su demora verdadera, de 0 a 360°. Pulsa Fijar este punto para calcular el centro. La distancia admitida es de 0 a 2.000 m. La longitud de cadena no equivale a esa distancia horizontal."},
+        {"heading": "Ya estoy fondeado · Coordenadas del ancla", "text": "Introduce latitud y longitud en grados decimales. Se admite coma o punto; sur y oeste llevan signo negativo. Pulsa Fijar este punto. Si cambias un campo después, debes volver a fijarlo."}
+      ],
+      "steps": ["Establece un radio permitido entre 10 y 1.000 m; el valor inicial es de 50 m.", "Comprueba en la vista el centro, la distancia del barco y el círculo.", "Pulsa Activar alarma. La ventana se cierra y comienza la vigilancia."],
+      "note": "Las coordenadas manuales se pueden fijar sin GPS reciente; para activar la vigilancia sí se requiere conexión y una posición GPS válida de menos de 30 segundos."
+    },
+    {
+      "title": "Fondeo · Vigilar y desactivar",
+      "intro": "Cuando está activo, Fondeo se rodea de un panel que muestra el estado, la distancia actual al centro y el radio permitido. El botón parpadea y su color identifica el estado.",
+      "figure": "anchor_states",
+      "caption": "La salida del radio se confirma con nuevas lecturas durante 5 segundos. Una lectura aislada no confirma la alarma.",
+      "table": {"headers": ["Estado", "Qué ocurre"], "rows": [["Verde · Vigilancia activa", "El barco está dentro del radio y hay GPS reciente."], ["Ámbar · Confirmando salida…", "Se reciben posiciones fuera del radio, pendientes de confirmación. Todavía no suena por salida."], ["Rojo · Fuera del radio", "La salida ha quedado confirmada y suena el aviso de fondeo."], ["Ámbar · Sin GPS reciente", "No puede comprobarse el radio; avisa por pérdida de datos. No equivale a estar dentro."], ["Vigilancia desactivada", "No hay una alarma de fondeo activa."]]},
+      "sections": [
+        {"heading": "Desactivar", "text": "Mantén pulsado Fondeo durante 2 segundos completos. Una pulsación corta abre la configuración. Al desactivarlo, deja de parpadear y el estado cambia a Vigilancia desactivada."},
+        {"heading": "Cómo actúa el filtro GPS", "text": "Si una lectura vuelve dentro antes de confirmar la salida, la confirmación se cancela. La pérdida de GPS reinicia esa confirmación y mantiene su aviso independiente. Dejar pasar el tiempo sin nuevas lecturas no confirma por sí solo una salida."},
+        {"heading": "Al cerrar y volver a abrir", "text": "El centro, el radio y el estado activo se guardan en ese dispositivo y se recuperan al abrir la app. Esta persistencia no significa vigilancia con la app cerrada: el sonido y la supervisión requieren primer plano. Fondeo utiliza una secuencia de tres pitidos ascendentes distinta del aviso de profundidad."}
+      ]
+    },
+    {
+      "title": "Ajustes, profundidad y modo noche",
+      "intro": "Abre Ajustes desde la cabecera. Los cambios se conservan en ese dispositivo. La dirección del servidor necesita GUARDAR Y CONECTAR; las horas de historial necesitan GUARDAR HORAS.",
+      "table": {"headers": ["Ajuste", "Uso"], "rows": [["Idioma", "Español, inglés o francés."], ["Servidor Signal K", "Dirección y puerto del servidor que suministra las lecturas."], ["Alarma de profundidad", "Activa o desactiva el aviso de SONDA."], ["Límite de profundidad", "De 0,5 a 30 m; valor inicial de 3 m."], ["Sonido de profundidad", "Controla ese aviso sonoro. PROBAR SONIDO permite comprobarlo."], ["Historial TWS y SOG", "Retención independiente de 1 a 24 horas; inicialmente 2 horas."], ["Mínimo / máximo de ceñida", "Ajusta las referencias angulares de viento de la visualización."], ["Alerta de timón", "Ajusta el límite visual del ángulo de timón, entre 20 y 45°. No acciona el timón."], ["Modo noche e intensidad", "Oscurece la interfaz. Un porcentaje menor produce una pantalla más oscura."]]},
+      "sections": [
+        {"heading": "Cuando avisa la profundidad", "text": "Con la alarma habilitada, SONDA pasa a rojo si una lectura positiva cae por debajo del límite elegido. El sonido requiere además conexión, sonido habilitado y primer plano. Pulsa SONDA durante el aviso para silenciarlo un minuto; el aviso visual puede permanecer."},
+        {"heading": "Comprobar el sonido", "text": "Pulsa PROBAR SONIDO en Ajustes. En web puede ser necesario tocar la pantalla para habilitar el audio. Revisa el volumen y la salida HDMI, altavoz o auriculares del equipo si no lo oyes. El interruptor de sonido de profundidad no es un control del aviso de fondeo."},
+        {"heading": "Modo noche", "text": "Se puede alternar desde la cabecera o en Ajustes. La intensidad se guarda; comprueba el estado de día/noche al volver a abrir. Este ajuste oscurece la aplicación, no modifica necesariamente el brillo físico de la pantalla."}
+      ]
+    },
+    {
+      "title": "Actualizar NavMarina en Raspberry",
+      "intro": "La app comprueba las versiones publicadas al arrancar. La comprobación requiere Internet; no se repite periódicamente mientras permanece abierta. La instalación comienza solo cuando el usuario la confirma.",
+      "figure": "updates",
+      "caption": "El usuario decide tanto el inicio de la instalación como el momento de abrir la nueva versión.",
+      "steps": ["Abre o recarga NavMarina después de que se publique una versión. Si no hay Internet, la app continúa funcionando.", "Si aparece el aviso, pulsa Actualizar o Más tarde. Más tarde lo oculta durante esa sesión.", "Para continuar, confirma Instalar ahora. Se mostrarán las fases de descarga, verificación e instalación.", "Espera a que termine. No apagues la Raspberry ni cierres la sesión durante la instalación.", "Pulsa Abrir nueva versión para recargar la pantalla cuando lo decidas."],
+      "sections": [
+        {"heading": "Qué se conserva", "text": "Los ajustes del perfil del navegador se mantienen. El paquete se descarga y verifica antes de seleccionar la nueva versión; si falla la descarga o la validación, se sigue usando la anterior. Ante un error puedes reintentar más tarde."},
+        {"heading": "Primera instalación del actualizador", "text": "Las instalaciones antiguas necesitan instalar una vez el paquete Raspberry nuevo manualmente: cierra NavMarina, extrae el ZIP y ejecuta bash install.sh desde su carpeta, con el mismo usuario del escritorio y sin sudo. Después vuelve a abrir el icono del menú."},
+        {"heading": "Si utilizas la versión web", "text": "El aviso ofrece Descargar. La publicación del ZIP en el servidor web la realiza su administrador; el navegador no instala ese ZIP como si fuera el paquete Raspberry."}
+      ],
+      "note": "Este manual describe el actualizador incluido en el proyecto. La comprobación física de una actualización completa en la Raspberry real debe realizarse al desplegarlo por primera vez."
+    },
+    {
+      "title": "Si algo no aparece",
+      "intro": "Comprueba primero conexión, validez y antigüedad de las lecturas. Que el servidor esté conectado no garantiza que todos los sensores o datos de ruta estén disponibles.",
+      "table": {"headers": ["Síntoma", "Comprobación útil"], "rows": [["SIN CONEXIÓN", "Revisa Ajustes, dirección de Signal K, red y que el servidor esté funcionando."], ["Instrumento sin lectura", "Mira en Signal K si ese dato tiene valor y se actualiza. Revisa qué fuente lo suministra."], ["AIS sin contactos", "Activa DATOS AIS; comprueba GPS propio reciente, recepción AIS y alcance seleccionado."], ["No aparece el waypoint", "Activa la navegación en OpenCPN y comprueba que Signal K recibe la posición del destino."], ["Desviación XTE con guion", "Comprueba crossTrackError. Un null no es cero. Revisa el envío de navegación desde OpenCPN."], ["Tiempo al waypoint vacío", "Comprueba que llega una velocidad de acercamiento positiva; no se sustituye por SOG."], ["Fondeo: Sin GPS reciente", "Revisa conexión y que las coordenadas se actualicen en menos de 30 segundos."], ["Fondeo avisa con el barco quieto", "Comprueba el centro y el radio elegidos. Un centro estimado demasiado lejos puede dejarte fuera desde el inicio."], ["No suena una alarma", "Mantén primer plano, toca la pantalla, revisa volumen y prueba de sonido. En profundidad revisa sus interruptores."], ["No aparece la actualización", "Abre de nuevo la app con Internet y comprueba que hay una compilación posterior para tu canal y plataforma."]]},
+      "sections": [
+        {"heading": "Referencia rápida de gestos", "text": "TWS / SOG: doble toque para historial; 3 segundos para reiniciar. SONDA: un toque durante el aviso para silenciar un minuto. Fondeo activo: 2 segundos para desactivar. CONTACTOS: un toque para abrir la lista. Escape: salir de pantalla completa cuando el navegador lo permita."},
+        {"heading": "Qué datos son de prueba", "text": "Standard Demo publica instrumentos simulados y posición fija; AIS Demo aporta cuatro contactos de prueba. El antiguo GPS Demo era un puente de coordenadas. Ninguno genera la desviación de una ruta: esa navegación debe venir de OpenCPN u otra fuente conectada."}
+      ],
+      "note": "Abreviaturas: AIS, identificación de barcos; GPS, posición; NM, milla náutica; kn/KTS, nudos; SOG, velocidad sobre el fondo; COG, dirección sobre el fondo; XTE, desviación lateral; T, referencia al norte verdadero."
+    }
+  ]
+}

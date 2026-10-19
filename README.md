@@ -4,6 +4,8 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ## Documentación del proyecto
 
+- [Manual de usuario ilustrado — PDF](docs/Manual-de-usuario-NavMarina.pdf).
+- [Manual de usuario — Word editable](docs/Manual-de-usuario-NavMarina.docx).
 - [Guía de instalación y configuración de OpenCPN, OpenPlotter y Signal K](GUIA-INSTALACION-OPENCPN.md).
 
 - [Arquitectura y explicación de las partes del proyecto](ARQUITECTURA.md).
@@ -99,3 +101,42 @@ manualmente para empezar a recibir avisos.
 La automatizacion se aplica a las fusiones hacia `main` cuando GitHub dispone
 del workflow actualizado. No genera releases para fusiones anteriores. En la
 Raspberry el usuario decide cuando instalar la version publicada desde la app.
+
+## Comprobar la estabilidad visual (CLS)
+
+La consola mantiene estables las cajas de texto de los instrumentos y muestra el
+aviso de actualizacion sobre la pantalla sin desplazarla. El panel del waypoint se
+oculta cuando no hay destino; los instrumentos aprovechan el espacio disponible y
+se reajustan cuando aparece o desaparece el destino.
+La compilacion web y la de Raspberry incluyen los estilos iniciales
+para evitar el margen por defecto antes de que cargue React.
+
+Se puede repetir la medicion con Chrome o Chromium instalado:
+
+```bash
+npm run build:web
+npm install --prefix artifacts/cls-tools --no-save --package-lock=false playwright-core
+node scripts/measure-cls.mjs current
+```
+
+Si el navegador no se detecta, configura `NAVMARINA_BROWSER` con su ruta.
+La prueba sirve `dist`, simula Signal K con datos cambiantes y mide ventanas CLS
+durante 10,5 segundos por escenario. Los escenarios dinamicos reciben ademas
+un waypoint y un aviso de actualizacion, con fondeo activo. Guarda las entradas
+de desplazamiento y capturas en `artifacts/cls/`.
+
+Medicion local en Chrome, antes y despues del ajuste (octubre de 2026):
+
+| Escenario | Antes | Despues |
+| --- | ---: | ---: |
+| Datos cambiantes, 1920 x 1080 | 0,0255 | 0,0070 |
+| Waypoint y actualizacion, 1920 x 1080 | 0,0697 | 0,0733 |
+| Waypoint y actualizacion, 1280 x 800 | 0,0837 | 0,0461 |
+| Datos cambiantes, 768 x 1024 | 0,0128 | 0,0024 |
+
+Son pruebas simuladas locales; no sustituyen una medicion prolongada durante el
+uso real de la Raspberry. Los cambios de datos siguen generando pequenas entradas
+de desplazamiento de texto, aunque las cajas de los instrumentos permanezcan fijas.
+La aparicion y ocultacion del waypoint vuelve a reajustar los paneles; por eso los
+resultados dinamicos incluyen ese cambio de distribucion y pueden superar los
+obtenidos cuando el espacio del destino se reservaba permanentemente.

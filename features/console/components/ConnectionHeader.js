@@ -8,8 +8,9 @@ import AisToggleButton from './AisToggleButton';
 import { useControlScale } from '../../../hooks/useControlScale';
 import FullscreenButton from '../../../components/FullscreenButton';
 import AnchorButton from './AnchorButton';
+import SoftwareVersion from './SoftwareVersion';
 const HEADER_INDICATOR_HEIGHT = 36;
-export default function ConnectionHeader({ navigation, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false }) {
+export default function ConnectionHeader({ navigation, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds }) {
     const { t } = useTranslation();
     const { enabled: nightEnabled, toggle: toggleNightMode } = useContext(NightModeContext);
     const scale = useControlScale();
@@ -21,15 +22,25 @@ export default function ConnectionHeader({ navigation, isConnected, isNightMode,
             <View style={[badgeStyles.connectionGroup, !settingsInline && { flex: 1 }]}>
             <View accessible accessibilityLiveRegion="polite"
                 accessibilityLabel={t(isConnected ? 'connected' : 'disconnected')}
-                style={[badgeStyles.surface, surface, badgeStyles.badge, { borderColor: isConnected ? '#29634f' : '#71383f' }]}>
+                style={[badgeStyles.surface, surface, badgeStyles.badge, {
+                    paddingHorizontal: 4 * scale, gap: 4 * scale,
+                    borderColor: isConnected ? '#29634f' : '#71383f' }]}>
                 <View pointerEvents="none" style={badgeStyles.highlight} />
-                <View style={[badgeStyles.lightHalo, { backgroundColor: isConnected ? '#193e34' : '#44252d' }]}>
+                <View style={[badgeStyles.lightHalo, { width: 14 * scale, height: 14 * scale,
+                    backgroundColor: isConnected ? '#193e34' : '#44252d' }]}>
                     <View style={[badgeStyles.light, { backgroundColor: accent, shadowColor: accent }]} />
                 </View>
-                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}
-                    style={[styles.statusText, badgeStyles.text, { color: accent, fontSize: 11 * scale }]}>
-                    {t(isConnected ? 'connected' : 'disconnected')}
-                </Text>
+                <View>
+                    <Text accessible={false} numberOfLines={1}
+                        style={[badgeStyles.text, textSize, { opacity: 0, letterSpacing: 0 }]}>
+                        {t('disconnected')}
+                    </Text>
+                    <Text numberOfLines={1}
+                        style={[badgeStyles.text, textSize, { position: 'absolute', left: 0, right: 0,
+                            letterSpacing: 0, color: accent }]}>
+                        {t(isConnected ? 'connected' : 'disconnected')}
+                    </Text>
+                </View>
             </View>
             {toggleNightMode && <TouchableOpacity onPress={toggleNightMode}
                 accessibilityRole="button" accessibilityLabel={t(nightEnabled ? 'switchDay' : 'switchNight')}
@@ -53,7 +64,8 @@ export default function ConnectionHeader({ navigation, isConnected, isNightMode,
                 />
                 <Text numberOfLines={1} adjustsFontSizeToFit style={[badgeStyles.settingsText, textSize]}>{t('settingsButton')}</Text>
             </TouchableOpacity>)}
-            <FullscreenButton />
+            <FullscreenButton onBounds={onFullscreenBounds} />
+            {onToggleAis && <SoftwareVersion style={{ flexShrink: 1, transform: [{ translateY: 5 }] }} />}
             </View>
             {onToggleAis && <View style={{ width: '100%', gap: 8 * scale, alignItems: 'flex-start' }}>
                 <AnchorButton position={navigation?.position} receivedAt={navigation?.positionReceivedAt} connected={isConnected} />
@@ -75,10 +87,10 @@ const badgeStyles = StyleSheet.create({
         borderColor: '#aaa', marginLeft: 'auto' },
     settingsText: { fontFamily: 'NauticalFont', fontWeight: 'normal', fontSize: 12, color: '#aaa', flexShrink: 1 },
     header: { alignItems: 'center', gap: 8 },
-    badge: { flexDirection: 'row', alignItems: 'center', flexShrink: 1, gap: 9 },
+    badge: { flexDirection: 'row', alignItems: 'center', flexShrink: 0 },
     highlight: { position: 'absolute', top: 1, left: 12, right: 12, height: 1,
         backgroundColor: 'rgba(225,245,255,0.16)' },
-    lightHalo: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+    lightHalo: { width: 18, height: 18, borderRadius: 9, flexShrink: 0, alignItems: 'center', justifyContent: 'center' },
     light: { width: 8, height: 8, borderRadius: 4, shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.8, shadowRadius: 4 },
     text: { fontFamily: 'NauticalFont', fontWeight: 'normal', fontSize: 11, letterSpacing: 0.5, flexShrink: 1 },

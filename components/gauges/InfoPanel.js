@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useEffect, useRef } from 'react';
 
 const getFontSizes = (width) => {
     // Ajusta los tamaños de fuente proporcionalmente al ancho del panel
@@ -8,14 +9,21 @@ const getFontSizes = (width) => {
     };
 };
 
-const InfoPanel = ({ dataArray, color, width = 225, height, panelWidth, isNightMode = false }) => {
+const InfoPanel = ({ dataArray, color, width = 225, height, panelWidth, isNightMode = false, onBounds }) => {
     const accent = dataArray[0]?.color || '#79f17b';
     const fontSizes = getFontSizes(width);
     const { width: windowWidth } = useWindowDimensions();
     const SQUARE_WIDTH = panelWidth ?? (windowWidth * 0.9) / 3;
+    const panelRef = useRef(null);
+    const measure = () => {
+        if (onBounds) panelRef.current?.measureInWindow((x, y, width, height) => onBounds({ x, y, width, height }));
+    };
+    useEffect(() => {
+        if (onBounds) panelRef.current?.measureInWindow((x, y, width, height) => onBounds({ x, y, width, height }));
+    }, [onBounds, SQUARE_WIDTH, height]);
     return (
 
-        <View style={[styles.panelContainer, height != null && {
+        <View ref={panelRef} onLayout={onBounds ? measure : undefined} style={[styles.panelContainer, height != null && {
             height, paddingVertical: 0, paddingBottom: 0, justifyContent: 'center',
         }, {
             backgroundColor: color, width: SQUARE_WIDTH,
@@ -56,10 +64,13 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: 'NauticalFont',
         textAlign: 'left',
-        flexShrink: 1,
+        flexShrink: 0,
         
     },
     rowValue: {
+        flex: 1,
+        minWidth: 0,
+        fontVariant: ['tabular-nums'],
         flexShrink: 1,
         fontSize: 16,
         fontWeight: 'normal',
