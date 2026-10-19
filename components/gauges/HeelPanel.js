@@ -10,7 +10,8 @@ import { describeArc, polarToCartesian } from '../../utils/Utils';
 export const HEEL_PANEL_ASPECT_RATIO = 300 / 800;
 
 /** Escora en grados. La escala se limita a ±30°, la cifra conserva el valor real. */
-export default function HeelPanel({ heel, width, isNightMode = false, rudderAngle, rudderLimit, backgroundColor }) {
+export default function HeelPanel({ heel, width, isNightMode = false, rudderAngle, rudderLimit, backgroundColor,
+    alarmActive = false, alarmColor = 'rgba(210, 0, 0, 0.95)' }) {
     const { t } = useTranslation();
     const valid = Number.isFinite(heel);
     const angle = valid ? heel : 0;
@@ -52,7 +53,7 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
                 <Line x1={325} y1={195} x2={475} y2={195} stroke={muted} strokeWidth={1} />
                 <G rotation={limitedAngle} origin="400, 180" opacity={valid ? 1 : 0.35}>
                     <G transform="translate(400, 180) scale(0.32) translate(-320, -466)">
-                        <SternSailboat isNightMode={isNightMode} />
+                        <SternSailboat isNightMode={isNightMode} alarmColor={alarmActive ? alarmColor : undefined} />
                     </G>
                 </G>
                 </G>

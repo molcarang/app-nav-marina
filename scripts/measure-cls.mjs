@@ -72,13 +72,20 @@ try {
                     window.__sockets.push(this);
                     setTimeout(() => {
                         this.readyState = 1;
-                        this.onmessage?.({ data: JSON.stringify({ self: 'vessels.own' }) });
                         this.onopen?.({});
+                        this.onmessage?.({ data: JSON.stringify({ self: 'vessels.own' }) });
                         this.timer = setInterval(() => this.publish(), 750);
                     }, 350);
                 }
                 send(body) {
                     const request = JSON.parse(body);
+                    if (request.query && request.requestId) {
+                        queueMicrotask(() => {
+                            if (!window.__dropSignalKReplies && this.readyState === 1) this.onmessage?.({ data:
+                                JSON.stringify({ requestId: request.requestId, statusCode: 404 }) });
+                        });
+                        return;
+                    }
                     this.kind = request.context === 'vessels.*' ? 'ais'
                         : request.subscribe[0].path.startsWith('navigation.course') ? 'waypoint' : 'instruments';
                 }

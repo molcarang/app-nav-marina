@@ -1,8 +1,8 @@
-async function request(options = {}) {
+async function request(options = {}, path = '/api/updates') {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
     try {
-        const response = await fetch('/api/updates', { cache: 'no-store', ...options, signal: controller.signal });
+        const response = await fetch(path, { cache: 'no-store', ...options, signal: controller.signal });
         if (!response.ok) throw new Error(`Local updater HTTP ${response.status}`);
         const result = await response.json();
         return result;
@@ -18,4 +18,10 @@ export async function getRaspberryUpdateStatus() {
 export function installRaspberryUpdate(releaseId, token) {
     return request({ method: 'POST', headers: { 'Content-Type': 'application/json', 'X-NavMarina-Token': token },
         body: JSON.stringify({ releaseId }) });
+}
+
+export async function exitRaspberryApplication() {
+    const { token } = await getRaspberryUpdateStatus();
+    return request({ method: 'POST', headers: { 'Content-Type': 'application/json', 'X-NavMarina-Token': token },
+        body: '{}' }, '/api/app/exit');
 }

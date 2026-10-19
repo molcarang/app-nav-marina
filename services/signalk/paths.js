@@ -36,9 +36,38 @@ export const INITIAL_DATA = {
 };
 
 export const ENGINE_PATH_PATTERN = /^propulsion\.[^.]+\.revolutions$/;
+export const ENGINE_STATE_PATH_PATTERN = /^propulsion\.[^.]+\.state$/;
+export const ENGINE_TEMPERATURE_PATH_PATTERN = /^propulsion\.[^.]+\.(coolantTemperature|temperature)$/;
+export const ENGINE_OIL_PRESSURE_PATH_PATTERN = /^propulsion\.[^.]+\.oilPressure$/;
+export const FUEL_LEVEL_PATH_PATTERN = /^tanks\.fuel\.[^.]+\.currentLevel$/;
+export const BATTERY_VOLTAGE_PATH_PATTERN = /^electrical\.batteries\.[^.]+\.voltage$/;
+export const WATER_TEMPERATURE_ALARM_PATH_PATTERN = /^notifications\.propulsion\.[^.]+\.(overTemperature|coolantTemperature|temperature)$/;
+export const OIL_PRESSURE_ALARM_PATH_PATTERN = /^notifications\.propulsion\.[^.]+\.(lowOilPressure|oilPressure)$/;
+export const ALTERNATOR_CHARGE_ALARM_PATH_PATTERN = /^notifications\.propulsion\.[^.]+\.(chargeIndicator|alternatorVoltage)$/;
+export const LOW_BATTERY_ALARM_PATH_PATTERN = /^notifications\.electrical\.batteries\.[^.]+\.(lowVoltage|lowStateOfCharge)$/;
 export const SUBSCRIPTION_PATHS = [...new Set([
     ...Object.values(SIGNALK_PATHS).filter(path => !path.startsWith('simulation.')),
     'propulsion.*.revolutions',
+    'propulsion.*.state',
+    'propulsion.*.coolantTemperature',
+    'propulsion.*.temperature',
+    'propulsion.*.oilPressure',
+    'tanks.fuel.*.currentLevel',
+    'electrical.batteries.*.voltage',
+    'notifications.propulsion.*.overTemperature',
+    'notifications.propulsion.*.coolantTemperature',
+    'notifications.propulsion.*.temperature',
+    'notifications.propulsion.*.lowOilPressure',
+    'notifications.propulsion.*.oilPressure',
+    'notifications.propulsion.*.chargeIndicator',
+    'notifications.propulsion.*.alternatorVoltage',
+    'notifications.electrical.batteries.*.lowVoltage',
+    'notifications.electrical.batteries.*.lowStateOfCharge',
     'environment.current.setMagnetic',
 ])];
-export const isInstrumentPath = path => SUBSCRIPTION_PATHS.includes(path) || ENGINE_PATH_PATTERN.test(path);
+export const isInstrumentPath = path => SUBSCRIPTION_PATHS.includes(path) || ENGINE_PATH_PATTERN.test(path)
+    || ENGINE_STATE_PATH_PATTERN.test(path) || WATER_TEMPERATURE_ALARM_PATH_PATTERN.test(path)
+    || OIL_PRESSURE_ALARM_PATH_PATTERN.test(path) || ALTERNATOR_CHARGE_ALARM_PATH_PATTERN.test(path)
+    || LOW_BATTERY_ALARM_PATH_PATTERN.test(path) || ENGINE_TEMPERATURE_PATH_PATTERN.test(path)
+    || ENGINE_OIL_PRESSURE_PATH_PATTERN.test(path) || FUEL_LEVEL_PATH_PATTERN.test(path)
+    || BATTERY_VOLTAGE_PATH_PATTERN.test(path);

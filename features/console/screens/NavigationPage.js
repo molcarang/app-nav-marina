@@ -16,7 +16,7 @@ export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, i
             isNightMode={isNightMode}
         >
             <View style={styles.dataGrid} onLayout={({ nativeEvent }) => setPanelWidth(nativeEvent.layout.width)}>
-                <ConnectionHeader navigation={navigation} aisTargets={aisTargets}
+                <ConnectionHeader navigation={navigation} settings={settings} aisTargets={aisTargets}
                     aisVisibleCount={aisVisibleCount} aisAuto={aisAuto} onToggleAisAuto={onToggleAisAuto} aisRangeNm={aisRangeNm} onAisRangeChange={onAisRangeChange} aisVisible={aisVisible} aisStatus={aisStatus} onToggleAis={onToggleAis}
                     isConnected={isConnected}
                     isNightMode={isNightMode}

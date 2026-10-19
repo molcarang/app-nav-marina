@@ -15,7 +15,7 @@ from http.server import ThreadingHTTPServer
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "raspberry"))
 import updater
-from server import DashboardHandler
+from server import DashboardHandler, close_application
 
 INFO = {"schema": 1, "app": "navmarina", "version": "1.0.2", "buildNumber": 12, "channel": "main", "commit": "abc"}
 CURRENT = {**INFO, "buildNumber": 11}
@@ -132,6 +132,34 @@ class QuietHandler(DashboardHandler):
     def log_message(self, *args): pass
 
 
+class ApplicationExitTests(unittest.TestCase):
+    def test_exit_only_targets_managed_browser_main_process(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            processes = home / 'proc'
+            processes.mkdir()
+            profile = f'--user-data-dir={home.resolve() / "browser"}'
+            app = '--app=http://127.0.0.1:8765'
+            candidates = {
+                '900001': ['chromium', '--user-data-dir=/other/browser', app],
+                '900002': ['chromium', profile, '--app=https://other.test'],
+                '900003': ['chromium', profile, app, '--type=renderer'],
+                '900004': ['unrelated', profile, app],
+                '900005': ['/usr/lib/chromium/chromium', profile, app],
+            }
+            for pid, arguments in candidates.items():
+                (processes / pid).mkdir()
+                (processes / pid / 'cmdline').write_bytes(('\0'.join(arguments) + '\0').encode())
+            with patch('server.os.kill') as kill:
+                self.assertTrue(close_application(home, processes))
+                import signal
+                kill.assert_called_once_with(900005, signal.SIGTERM)
+            (processes / '900005' / 'cmdline').unlink()
+            with patch('server.os.kill') as kill:
+                self.assertFalse(close_application(home, processes))
+                kill.assert_not_called()
+
+
 class HttpTests(unittest.TestCase):
     def test_install_requires_local_host_origin_and_token_and_rejects_concurrent_requests(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -143,8 +171,8 @@ class HttpTests(unittest.TestCase):
             try:
                 with urllib.request.urlopen(url + "/api/updates") as response:
                     self.assertEqual(json.load(response)["token"], manager.token)
-                def post(headers):
-                    request = urllib.request.Request(url + "/api/updates", data=b'{"releaseId":22}', headers={"Content-Type": "application/json", **headers})
+                def post(headers, path='/api/updates', body=b'{"releaseId":22}'):
+                    request = urllib.request.Request(url + path, data=body, headers={"Content-Type": "application/json", **headers})
                     try:
                         with urllib.request.urlopen(request) as response: return response.status
                     except urllib.error.HTTPError as error:
@@ -159,6 +187,16 @@ class HttpTests(unittest.TestCase):
                 self.assertEqual(post(valid), 202)
                 self.assertEqual(post(valid), 409)
                 self.assertEqual(manager.calls, [22, 22])
+                with patch('server.close_application', return_value=True) as close:
+                    for headers in [{}, {**valid, 'Origin': 'https://other.test'},
+                                    {**valid, 'Host': 'other.test'}, {**valid, 'X-NavMarina-Token': 'wrong'}]:
+                        self.assertEqual(post(headers, '/api/app/exit', b'{}'), 403)
+                    self.assertEqual(post(valid, '/api/app/exit', b'{"pid":123}'), 400)
+                    close.assert_not_called()
+                    self.assertEqual(post(valid, '/api/app/exit', b'{}'), 202)
+                    close.assert_called_once_with(Path(temporary))
+                with patch('server.close_application', return_value=False):
+                    self.assertEqual(post(valid, '/api/app/exit', b'{}'), 409)
             finally:
                 server.shutdown()
                 server.server_close()
