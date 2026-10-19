@@ -4,6 +4,8 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ## Documentación del proyecto
 
+- [Manual de usuario ilustrado — PDF](docs/Manual-de-usuario-NavMarina.pdf).
+- [Manual de usuario — Word editable](docs/Manual-de-usuario-NavMarina.docx).
 - [Guía de instalación y configuración de OpenCPN, OpenPlotter y Signal K](GUIA-INSTALACION-OPENCPN.md).
 
 - [Arquitectura y explicación de las partes del proyecto](ARQUITECTURA.md).

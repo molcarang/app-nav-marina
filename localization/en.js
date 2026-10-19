@@ -1,4 +1,7 @@
 export default {
+  "aisStatus_inactive": "AIS disabled",
+  "aisStatus_active": "AIS enabled",
+  "aisStatus_disconnected": "AIS disconnected",
   "updateInstall": "Update",
   "updateInstallConfirm": "Install now",
   "updateCancel": "Cancel",

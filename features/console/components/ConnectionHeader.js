@@ -8,8 +8,9 @@ import AisToggleButton from './AisToggleButton';
 import { useControlScale } from '../../../hooks/useControlScale';
 import FullscreenButton from '../../../components/FullscreenButton';
 import AnchorButton from './AnchorButton';
+import SoftwareVersion from './SoftwareVersion';
 const HEADER_INDICATOR_HEIGHT = 36;
-export default function ConnectionHeader({ navigation, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false }) {
+export default function ConnectionHeader({ navigation, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds }) {
     const { t } = useTranslation();
     const { enabled: nightEnabled, toggle: toggleNightMode } = useContext(NightModeContext);
     const scale = useControlScale();
@@ -53,7 +54,8 @@ export default function ConnectionHeader({ navigation, isConnected, isNightMode,
                 />
                 <Text numberOfLines={1} adjustsFontSizeToFit style={[badgeStyles.settingsText, textSize]}>{t('settingsButton')}</Text>
             </TouchableOpacity>)}
-            <FullscreenButton />
+            <FullscreenButton onBounds={onFullscreenBounds} />
+            {onToggleAis && <SoftwareVersion style={{ flexShrink: 1, transform: [{ translateY: 5 }] }} />}
             </View>
             {onToggleAis && <View style={{ width: '100%', gap: 8 * scale, alignItems: 'flex-start' }}>
                 <AnchorButton position={navigation?.position} receivedAt={navigation?.positionReceivedAt} connected={isConnected} />

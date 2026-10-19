@@ -18,7 +18,7 @@ export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRange
         targets={targets} position={position} receivedAt={positionReceivedAt} connected={connected} rangeNm={range} />
     <View style={[
         styles.container,
-        { gap: (visible ? 16 : 4) * scale },
+        { gap: (visible ? 16 : 10) * scale, width: '100%' },
         visible && [styles.panel, { padding: 8 * scale, borderRadius: 16 * scale,
             height: 60 * scale + 2, flexWrap: 'nowrap' }],
         visible && fullWidth && { width: '100%' },
@@ -30,6 +30,10 @@ export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRange
             width: 132 * scale, maxWidth: '100%', flexShrink: 1, minWidth: 0, alignItems: 'center' }]}>
         <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.text, { color, fontSize: 12 * scale }]}>{t('aisData')}</Text>
     </TouchableOpacity>
+        {!visible && <Text numberOfLines={1} adjustsFontSizeToFit accessibilityLiveRegion="polite"
+            style={[styles.text, { fontSize: 11 * scale, color, flex: 1, minWidth: 0 }]}>
+            {t('aisStatus_inactive')}
+        </Text>}
         {visible && onRangeChange && <View style={{ flexDirection: 'row', flex: 1, minWidth: 0, alignItems: 'center', gap: 8 * scale }}>
             <TouchableOpacity onPress={onToggleAuto} accessibilityRole="switch"
                 accessibilityState={{ checked: auto }} accessibilityLabel={t('aisAutoZoom')}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg
+  PUBLIC '-//W3C//DTD SVG 1.0//EN'
+  'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+<svg width="500" height="190" preserveAspectRatio="xMinYMin meet" viewBox="0 0 500 190" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>...</title>
+	<desc>...</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="500" height="190"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-190)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="0" y="0" width="500" height="190" rx="8" ry="8" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(92%,95%,96%); fill-rule: evenodd;"/>
+			<rect x="18" y="18" width="222" height="154" rx="8" ry="8" style="stroke: rgb(78%,84%,87%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<text x="93.97149999999999" y="146" style="font-family: Helvetica-Bold; font-size: 13px;fill: rgb(7%,19%,28%); stroke:none;" transform="translate(0,292) scale(1,-1)">HISTORIAL</text>
+			<rect x="83" y="64" width="92" height="59" rx="8" ry="8" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,19%,28%); fill-rule: evenodd;"/>
+			<text x="99.96549999999999" y="94" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,188) scale(1,-1)">TWS / SOG</text>
+			<rect x="260" y="18" width="222" height="154" rx="8" ry="8" style="stroke: rgb(78%,84%,87%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<text x="342.1075" y="146" style="font-family: Helvetica-Bold; font-size: 13px;fill: rgb(7%,19%,28%); stroke:none;" transform="translate(0,292) scale(1,-1)">REINICIO</text>
+			<rect x="325" y="64" width="92" height="59" rx="8" ry="8" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,19%,28%); fill-rule: evenodd;"/>
+			<text x="341.9655" y="94" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,188) scale(1,-1)">TWS / SOG</text>
+			<circle cx="105" cy="48" r="5" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<circle cx="135" cy="48" r="5" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="80.6175" y="27" style="font-family: Helvetica; font-size: 11px;fill: rgb(7%,49%,52%); stroke:none;" transform="translate(0,54) scale(1,-1)">Dos toques rápidos</text>
+			<text x="314.46" y="39" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(74%,25%,31%); stroke:none;" transform="translate(0,78) scale(1,-1)">Mantener 3 segundos</text>
+		</g>
+	</g>
+</svg>

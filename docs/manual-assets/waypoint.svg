@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg
+  PUBLIC '-//W3C//DTD SVG 1.0//EN'
+  'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+<svg width="500" height="190" preserveAspectRatio="xMinYMin meet" viewBox="0 0 500 190" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>...</title>
+	<desc>...</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="500" height="190"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-190)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="0" y="0" width="500" height="190" rx="8" ry="8" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(92%,95%,96%); fill-rule: evenodd;"/>
+			<path d="M 50,35 L 436,151 Z" style="stroke: rgb(21%,49%,69%); stroke-linecap: butt; stroke-width: 3;"/>
+			<text x="28" y="17" style="font-family: Helvetica; font-size: 10px;fill: rgb(21%,49%,69%); stroke:none;" transform="translate(0,34) scale(1,-1)">Inicio del tramo</text>
+			<circle cx="436" cy="151" r="6" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="409" y="169" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(7%,49%,52%); stroke:none;" transform="translate(0,338) scale(1,-1)">Waypoint</text>
+			<polygon points="244 55, 251 37, 244 41, 237 37" style="stroke: rgb(100%,100%,100%); stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,19%,28%); fill-rule: evenodd;"/>
+			<text x="264" y="34" style="font-family: Helvetica; font-size: 10px;fill: rgb(7%,19%,28%); stroke:none;" transform="translate(0,68) scale(1,-1)">Barco</text>
+			<path d="M 244,45 L 231,89 Z" style="stroke: rgb(74%,25%,31%); stroke-linecap: butt; stroke-width: 2; stroke-dasharray: 4, 3;"/>
+			<text x="182" y="55" style="font-family: Helvetica-Bold; font-size: 12px;fill: rgb(74%,25%,31%); stroke:none;" transform="translate(0,110) scale(1,-1)">XTE</text>
+			<path d="M 252,48 L 421,143 Z" style="stroke: rgb(65%,41%,9%); stroke-linecap: butt; stroke-width: 2;"/>
+			<polygon points="421 143, 414.0135 142.5655, 416.9975 137.2572" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(65%,41%,9%); fill-rule: evenodd;"/>
+			<text x="325" y="71" style="font-family: Helvetica; font-size: 10px;fill: rgb(65%,41%,9%); stroke:none;" transform="translate(0,142) scale(1,-1)">Demora al destino</text>
+			<text x="63" y="140" style="font-family: Helvetica; font-size: 11px;fill: rgb(74%,25%,31%); stroke:none;" transform="translate(0,280) scale(1,-1)">XTE: separación lateral</text>
+			<text x="63" y="123" style="font-family: Helvetica; font-size: 11px;fill: rgb(74%,25%,31%); stroke:none;" transform="translate(0,246) scale(1,-1)">respecto al tramo</text>
+		</g>
+	</g>
+</svg>

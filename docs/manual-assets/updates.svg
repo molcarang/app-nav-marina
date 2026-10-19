@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg
+  PUBLIC '-//W3C//DTD SVG 1.0//EN'
+  'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+<svg width="500" height="190" preserveAspectRatio="xMinYMin meet" viewBox="0 0 500 190" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>...</title>
+	<desc>...</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="500" height="190"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-190)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="0" y="0" width="500" height="190" rx="8" ry="8" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(92%,95%,96%); fill-rule: evenodd;"/>
+			<rect x="7" y="63" width="86" height="81" rx="8" ry="8" style="stroke: rgb(65%,78%,81%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="50" cy="121" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="47.22" y="118" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,236) scale(1,-1)">1</text>
+			<text x="35.0235" y="87" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(7%,19%,28%); stroke:none;" transform="translate(0,174) scale(1,-1)">Aviso</text>
+			<path d="M 95,102 L 105,102 Z" style="stroke: rgb(7%,49%,52%); stroke-linecap: butt; stroke-width: 2;"/>
+			<polygon points="105 102, 98.69687 105.0448, 98.69687 98.95524" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<rect x="107" y="63" width="86" height="81" rx="8" ry="8" style="stroke: rgb(65%,78%,81%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="150" cy="121" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="147.22" y="118" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,236) scale(1,-1)">2</text>
+			<text x="123.721" y="87" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(7%,19%,28%); stroke:none;" transform="translate(0,174) scale(1,-1)">Confirmar</text>
+			<path d="M 195,102 L 205,102 Z" style="stroke: rgb(7%,49%,52%); stroke-linecap: butt; stroke-width: 2;"/>
+			<polygon points="205 102, 198.6969 105.0448, 198.6969 98.95524" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<rect x="207" y="63" width="86" height="81" rx="8" ry="8" style="stroke: rgb(65%,78%,81%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="250" cy="121" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="247.22" y="118" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,236) scale(1,-1)">3</text>
+			<text x="223.0995" y="87" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(7%,19%,28%); stroke:none;" transform="translate(0,174) scale(1,-1)">Descargar</text>
+			<path d="M 295,102 L 305,102 Z" style="stroke: rgb(7%,49%,52%); stroke-linecap: butt; stroke-width: 2;"/>
+			<polygon points="305 102, 298.6969 105.0448, 298.6969 98.95524" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<rect x="307" y="63" width="86" height="81" rx="8" ry="8" style="stroke: rgb(65%,78%,81%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="350" cy="121" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="347.22" y="118" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,236) scale(1,-1)">4</text>
+			<text x="327.989" y="87" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(7%,19%,28%); stroke:none;" transform="translate(0,174) scale(1,-1)">Verificar</text>
+			<path d="M 395,102 L 405,102 Z" style="stroke: rgb(7%,49%,52%); stroke-linecap: butt; stroke-width: 2;"/>
+			<polygon points="405 102, 398.6969 105.0448, 398.6969 98.95524" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<rect x="407" y="63" width="86" height="81" rx="8" ry="8" style="stroke: rgb(65%,78%,81%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="450" cy="121" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="447.22" y="118" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,236) scale(1,-1)">5</text>
+			<text x="436.8605" y="87" style="font-family: Helvetica-Bold; font-size: 11px;fill: rgb(7%,19%,28%); stroke:none;" transform="translate(0,174) scale(1,-1)">Abrir</text>
+			<text x="134.62" y="30" style="font-family: Helvetica-Bold; font-size: 12px;fill: rgb(7%,49%,52%); stroke:none;" transform="translate(0,60) scale(1,-1)">Se conservan los ajustes del dispositivo</text>
+		</g>
+	</g>
+</svg>

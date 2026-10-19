@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg
+  PUBLIC '-//W3C//DTD SVG 1.0//EN'
+  'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+<svg width="500" height="190" preserveAspectRatio="xMinYMin meet" viewBox="0 0 500 190" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>...</title>
+	<desc>...</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="500" height="190"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-190)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="0" y="0" width="500" height="190" rx="8" ry="8" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(92%,95%,96%); fill-rule: evenodd;"/>
+			<rect x="12" y="12" width="476" height="166" rx="8" ry="8" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,19%,28%); fill-rule: evenodd;"/>
+			<text x="28" y="157" style="font-family: Helvetica-Bold; font-size: 13px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,314) scale(1,-1)">NavMarina</text>
+			<text x="145" y="157" style="font-family: Helvetica; font-size: 9px;fill: rgb(46%,87%,71%); stroke:none;" transform="translate(0,314) scale(1,-1)">CONECTADO</text>
+			<text x="333" y="157" style="font-family: Helvetica; font-size: 9px;fill: rgb(73%,82%,86%); stroke:none;" transform="translate(0,314) scale(1,-1)">NOCHE   AJUSTES   [ ]</text>
+			<circle cx="128" cy="94" r="47" style="stroke: rgb(56%,69%,78%); stroke-linecap: butt; stroke-width: 1; fill: rgb(11%,28%,38%); fill-rule: evenodd;"/>
+			<circle cx="128" cy="94" r="34" style="stroke: rgb(25%,41%,50%); stroke-linecap: butt; stroke-width: 1; fill: none; fill-rule: evenodd;"/>
+			<polygon points="128 104, 135 86, 128 90, 121 86" style="stroke: rgb(100%,100%,100%); stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<text x="124.751" y="127" style="font-family: Helvetica; font-size: 9px;fill: rgb(81%,90%,94%); stroke:none;" transform="translate(0,254) scale(1,-1)">N</text>
+			<text x="113.112" y="65" style="font-family: Helvetica; font-size: 8px;fill: rgb(81%,90%,94%); stroke:none;" transform="translate(0,130) scale(1,-1)">RUMBO</text>
+			<rect x="257" y="99" width="65" height="32" rx="4" ry="4" style="stroke: rgb(39%,53%,61%); stroke-linecap: butt; stroke-width: 1; fill: rgb(12%,28%,36%); fill-rule: evenodd;"/>
+			<text x="277.89" y="111" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(84%,91%,95%); stroke:none;" transform="translate(0,222) scale(1,-1)">TWS</text>
+			<rect x="329" y="99" width="65" height="32" rx="4" ry="4" style="stroke: rgb(39%,53%,61%); stroke-linecap: butt; stroke-width: 1; fill: rgb(12%,28%,36%); fill-rule: evenodd;"/>
+			<text x="349.885" y="111" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(84%,91%,95%); stroke:none;" transform="translate(0,222) scale(1,-1)">SOG</text>
+			<rect x="401" y="99" width="65" height="32" rx="4" ry="4" style="stroke: rgb(39%,53%,61%); stroke-linecap: butt; stroke-width: 1; fill: rgb(12%,28%,36%); fill-rule: evenodd;"/>
+			<text x="421.615" y="111" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(84%,91%,95%); stroke:none;" transform="translate(0,222) scale(1,-1)">TWA</text>
+			<rect x="257" y="60" width="65" height="32" rx="4" ry="4" style="stroke: rgb(39%,53%,61%); stroke-linecap: butt; stroke-width: 1; fill: rgb(12%,28%,36%); fill-rule: evenodd;"/>
+			<text x="277.61" y="72" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(84%,91%,95%); stroke:none;" transform="translate(0,144) scale(1,-1)">COG</text>
+			<rect x="329" y="60" width="65" height="32" rx="4" ry="4" style="stroke: rgb(39%,53%,61%); stroke-linecap: butt; stroke-width: 1; fill: rgb(12%,28%,36%); fill-rule: evenodd;"/>
+			<text x="342.945" y="72" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(84%,91%,95%); stroke:none;" transform="translate(0,144) scale(1,-1)">SONDA</text>
+			<rect x="401" y="60" width="65" height="32" rx="4" ry="4" style="stroke: rgb(39%,53%,61%); stroke-linecap: butt; stroke-width: 1; fill: rgb(12%,28%,36%); fill-rule: evenodd;"/>
+			<text x="421.06" y="72" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(84%,91%,95%); stroke:none;" transform="translate(0,144) scale(1,-1)">AWA</text>
+			<rect x="28" y="25" width="200" height="17" rx="4" ry="4" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(10%,37%,34%); fill-rule: evenodd;"/>
+			<text x="37" y="30" style="font-family: Helvetica; font-size: 8px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,60) scale(1,-1)">FONDEO     /     DATOS AIS</text>
+			<text x="263" y="46" style="font-family: Helvetica; font-size: 8px;fill: rgb(81%,90%,94%); stroke:none;" transform="translate(0,92) scale(1,-1)">ESCORA  ·  TIMÓN  ·  LAT/LON</text>
+			<text x="263" y="25" style="font-family: Helvetica; font-size: 8px;fill: rgb(81%,90%,94%); stroke:none;" transform="translate(0,50) scale(1,-1)">WAYPOINT (si está activo)</text>
+			<circle cx="229" cy="161" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="226.22" y="158" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,316) scale(1,-1)">1</text>
+			<circle cx="62" cy="100" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="59.22" y="97" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,194) scale(1,-1)">2</text>
+			<circle cx="465" cy="136" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="462.22" y="133" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,266) scale(1,-1)">3</text>
+			<circle cx="234" cy="33" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="231.22" y="30" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,60) scale(1,-1)">4</text>
+			<circle cx="467" cy="48" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="464.22" y="45" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,90) scale(1,-1)">5</text>
+			<circle cx="467" cy="26" r="9" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
+			<text x="464.22" y="23" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(100%,100%,100%); stroke:none;" transform="translate(0,46) scale(1,-1)">6</text>
+		</g>
+	</g>
+</svg>
