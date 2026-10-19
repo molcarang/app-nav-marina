@@ -1,6 +1,7 @@
 // Se conservan las claves originales para recuperar los ajustes ya guardados.
 import { DEFAULT_SIGNALK_ADDRESS } from '../../../services/signalk/serverAddress.js';
 import { DEFAULT_HISTORY_HOURS } from './twsHistory.js';
+import { DEFAULT_HEEL_ALARM_DEGREES } from './heelAlarm.js';
 export const SETTINGS_STORAGE_KEY = '@ajustes_consola';
 export const DEFAULT_SETTINGS = {
     language: 'es',
@@ -11,6 +12,7 @@ export const DEFAULT_SETTINGS = {
     minAnguloCeñida: 20,
     maxAnguloCeñida: 60,
     rudderLimit: 35,
+    heelAlarmDegrees: DEFAULT_HEEL_ALARM_DEGREES,
     depthAlarmMeters: 3,
     depthAlarmEnabled: true,
     depthAlarmSound: true,

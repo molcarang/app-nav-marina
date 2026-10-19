@@ -100,6 +100,7 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
             { label: t('minWind'), key: 'minAnguloCeñida', min: 10, max: 45, color: '#00ff00' },
             { label: t('maxWind'), key: 'maxAnguloCeñida', min: 50, max: 90, color: '#ff0000' },
             { label: t('rudder'), key: 'rudderLimit', min: 20, max: 45, color: '#00ffff' },
+            { label: t('heelAlarm'), key: 'heelAlarmDegrees', min: 1, max: 90, color: '#dc1212' },
             { label: t('depth'), key: 'depthAlarmMeters', min: 0.5, max: 30, step: 0.1, unit: ' m', color: '#dc1212' }
         ].map(s => (<View
             key={s.key}
@@ -112,6 +113,7 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
                 </Text>
             </View>
             <Slider
+                accessibilityLabel={s.label}
                 style={styles.slider}
                 minimumValue={s.min}
                 maximumValue={s.max}
@@ -123,6 +125,7 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
                 thumbTintColor={s.color}
                 maximumTrackTintColor="rgba(255,255,255,0.1)"
             />
+            {s.key === 'heelAlarmDegrees' && <Text style={styles.serverHint}>{t('heelAlarmHint')}</Text>}
         </View>))}
 
                     <View style={styles.divider}/>

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from '../model/settings';
 import { normalizeServerAddress } from '../../../services/signalk/serverAddress.js';
 import { normalizeHistoryHours } from '../model/twsHistory.js';
+import { normalizeHeelAlarmDegrees } from '../model/heelAlarm.js';
 const normalizeDepthAlarm = value => Number.isFinite(value) && value >= 0.5 && value <= 30
     ? Math.round(value * 10) / 10 : DEFAULT_SETTINGS.depthAlarmMeters;
 const normalizeNightIntensity = value => Number.isFinite(value)
@@ -25,6 +26,7 @@ export function useConsoleSettings() {
                     restored.historyHours = normalizeHistoryHours(restored.historyHours);
                     restored.sogHistoryHours = normalizeHistoryHours(restored.sogHistoryHours);
                     restored.depthAlarmMeters = normalizeDepthAlarm(restored.depthAlarmMeters);
+                    restored.heelAlarmDegrees = normalizeHeelAlarmDegrees(restored.heelAlarmDegrees);
                     restored.nightIntensity = normalizeNightIntensity(restored.nightIntensity);
                     restored.depthAlarmSound = typeof restored.depthAlarmSound === 'boolean' ? restored.depthAlarmSound : true;
                     restored.depthAlarmEnabled = typeof restored.depthAlarmEnabled === 'boolean' ? restored.depthAlarmEnabled : true;
@@ -43,6 +45,7 @@ export function useConsoleSettings() {
     }, []);
     function updateSetting(key, value) {
         setSettings(previous => ({ ...previous, [key]: key === 'depthAlarmMeters' ? normalizeDepthAlarm(value)
+            : key === 'heelAlarmDegrees' ? normalizeHeelAlarmDegrees(value)
             : key === 'nightIntensity' ? normalizeNightIntensity(value) : Math.round(value) }));
     }
     async function saveSetting(key, value) {
@@ -51,6 +54,7 @@ export function useConsoleSettings() {
             : key === 'language' ? normalizeLanguage(value)
             : ['depthAlarmSound', 'depthAlarmEnabled'].includes(key) ? Boolean(value)
             : key === 'depthAlarmMeters' ? normalizeDepthAlarm(value)
+            : key === 'heelAlarmDegrees' ? normalizeHeelAlarmDegrees(value)
             : key === 'nightIntensity' ? normalizeNightIntensity(value)
                 : ['historyHours', 'sogHistoryHours'].includes(key) ? normalizeHistoryHours(value) : Math.round(value) };
         try {

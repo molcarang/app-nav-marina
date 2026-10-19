@@ -3,10 +3,33 @@ import argparse
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 from pathlib import Path
 import secrets
+import signal
 from urllib.parse import urlsplit
 from updater import Updater
+
+
+def close_application(home, process_directory=Path('/proc')):
+    """Close only the main Chromium process using NavMarina's dedicated profile."""
+    profile = f"--user-data-dir={Path(home).resolve() / 'browser'}"
+    if not process_directory.is_dir():
+        return False
+    for process in process_directory.iterdir():
+        if not process.name.isdecimal() or int(process.name) <= 1 or int(process.name) == os.getpid():
+            continue
+        try:
+            arguments = (process / 'cmdline').read_bytes().decode('utf-8').split('\0')
+            if (Path(arguments[0]).name not in {'chromium', 'chromium-browser', 'chrome'}
+                    or profile not in arguments or '--app=http://127.0.0.1:8765' not in arguments
+                    or any(arg.startswith('--type=') for arg in arguments)):
+                continue
+            os.kill(int(process.name), signal.SIGTERM)
+            return True
+        except (OSError, UnicodeError):
+            continue
+    return False
 
 
 class DashboardHandler(SimpleHTTPRequestHandler):
@@ -39,7 +62,8 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_POST(self):
-        if urlsplit(self.path).path != "/api/updates":
+        path = urlsplit(self.path).path
+        if path not in {"/api/updates", "/api/app/exit"}:
             return self._json({"error": "Not found"}, 404)
         if not self._local_host() or self.headers.get("Origin") != "http://" + self.headers.get("Host", ""):
             return self._json({"error": "Invalid origin"}, 403)
@@ -51,6 +75,12 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             if not 0 < length <= 4096 or self.headers.get("Content-Type") != "application/json":
                 raise ValueError("Invalid request")
             body = json.loads(self.rfile.read(length))
+            if path == '/api/app/exit':
+                if body != {}:
+                    raise ValueError('Invalid exit request')
+                if not close_application(self.home):
+                    return self._json({'error': 'No managed application window found'}, 409)
+                return self._json({'state': 'closing'}, 202)
             release_id = body.get("releaseId")
             if type(release_id) is not int or release_id <= 0:
                 raise ValueError("Invalid release ID")

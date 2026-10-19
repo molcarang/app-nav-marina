@@ -11,6 +11,7 @@ import NavigationControls from '../components/NavigationControls';
 import ConsoleBackground from '../components/ConsoleBackground';
 import GpsPositionPanel, { GPS_PANEL_HEIGHT } from '../components/GpsPositionPanel';
 import WaypointPreviewPanel, { WAYPOINT_PREVIEW_HEIGHT } from '../components/WaypointPreviewPanel';
+import { isHeelAlarmActive } from '../model/heelAlarm.js';
 
 /** Dos mitades: compás a la izquierda y controles a la derecha. */
 export default function LandscapeNavigationPage(props) {
@@ -153,6 +154,8 @@ export default function LandscapeNavigationPage(props) {
                                 />
                                 <HeelPanel
                                     backgroundColor={props.theme.bg}
+                                    alarmActive={isHeelAlarmActive(navigation.vesselHeelDeg, settings.heelAlarmDegrees)}
+                                    alarmColor={props.theme.alarm}
                                     rudderAngle={navigation.rudderAngle}
                                     rudderLimit={settings.rudderLimit}
                                     heel={navigation.vesselHeelDeg}

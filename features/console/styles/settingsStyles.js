@@ -15,4 +15,13 @@ export const styles = StyleSheet.create({
     divider: { height: 1, backgroundColor: '#333', marginVertical: 15 },
     closeBtn: { backgroundColor: '#dc1212', padding: 15, borderRadius: 12, alignItems: 'center', marginTop: 10 },
     closeBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+    exitHeaderButton: { height: 36, paddingHorizontal: 8, borderWidth: 1, borderColor: '#943b42', borderRadius: 12,
+        alignItems: 'center', justifyContent: 'center', backgroundColor: '#10202c', flexShrink: 0, transform: [{ translateY: 5 }] },
+    exitHeaderText: { color: '#ef9ba1', fontSize: 12, fontFamily: 'NauticalFont' },
+    exitDialog: { width: '85%', maxWidth: 480, padding: 24, borderRadius: 16, backgroundColor: '#1a1a1a' },
+    exitTitle: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
+    exitWarning: { color: '#e4bb78', fontSize: 14, marginTop: 10 },
+    exitActions: { flexDirection: 'row', gap: 12, marginTop: 14 },
+    exitCancel: { flex: 1, minHeight: 44, backgroundColor: '#34434d', padding: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    exitConfirm: { flex: 1, minHeight: 44, backgroundColor: '#a42531', padding: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
 });

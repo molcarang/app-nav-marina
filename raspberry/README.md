@@ -101,3 +101,16 @@ antiguos que no incorporan este actualizador siguen ofreciendo descarga manual.
 Las pruebas automaticas cubren integridad, extraccion, autorizacion HTTP y
 conservacion de ajustes. La sustitucion de enlaces se comprueba cuando el sistema
 permite crear enlaces simbolicos; falta validar el flujo en la Raspberry real.
+
+## Salir de la aplicacion
+
+En la cabecera, Cerrar muestra una confirmacion para salir de NavMarina. Si hay fondeo
+activo, avisa de que al cerrar se detendra la vigilancia. El servidor local exige
+origen y token de sesion y cierra solamente el proceso principal Chromium con el
+perfil `~/.local/share/navmarina/browser` y la URL de la app. No cierra otros
+navegadores, el servidor local ni apaga la Raspberry. Los ajustes se conservan.
+
+Si se acaba de instalar esta funcion mediante el actualizador, reinicia una vez
+el servicio (`systemctl --user restart navmarina.service`) para cargar el nuevo
+servidor Python. Hasta entonces, o si se abre en una pestana web normal, se puede
+cerrar con la X de la ventana. Falta probar el cierre en la Raspberry fisica.

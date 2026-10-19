@@ -9,6 +9,7 @@ import { useControlScale } from '../../../hooks/useControlScale';
 import FullscreenButton from '../../../components/FullscreenButton';
 import AnchorButton from './AnchorButton';
 import SoftwareVersion from './SoftwareVersion';
+import AppExitButton from './AppExitButton';
 const HEADER_INDICATOR_HEIGHT = 36;
 export default function ConnectionHeader({ navigation, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds }) {
     const { t } = useTranslation();
@@ -23,24 +24,10 @@ export default function ConnectionHeader({ navigation, isConnected, isNightMode,
             <View accessible accessibilityLiveRegion="polite"
                 accessibilityLabel={t(isConnected ? 'connected' : 'disconnected')}
                 style={[badgeStyles.surface, surface, badgeStyles.badge, {
-                    paddingHorizontal: 4 * scale, gap: 4 * scale,
+                    width: 36 * scale, paddingHorizontal: 0, justifyContent: 'center',
                     borderColor: isConnected ? '#29634f' : '#71383f' }]}>
                 <View pointerEvents="none" style={badgeStyles.highlight} />
-                <View style={[badgeStyles.lightHalo, { width: 14 * scale, height: 14 * scale,
-                    backgroundColor: isConnected ? '#193e34' : '#44252d' }]}>
-                    <View style={[badgeStyles.light, { backgroundColor: accent, shadowColor: accent }]} />
-                </View>
-                <View>
-                    <Text accessible={false} numberOfLines={1}
-                        style={[badgeStyles.text, textSize, { opacity: 0, letterSpacing: 0 }]}>
-                        {t('disconnected')}
-                    </Text>
-                    <Text numberOfLines={1}
-                        style={[badgeStyles.text, textSize, { position: 'absolute', left: 0, right: 0,
-                            letterSpacing: 0, color: accent }]}>
-                        {t(isConnected ? 'connected' : 'disconnected')}
-                    </Text>
-                </View>
+                <MaterialIcons accessible={false} name={isConnected ? 'link' : 'link-off'} size={24 * scale} color={accent} />
             </View>
             {toggleNightMode && <TouchableOpacity onPress={toggleNightMode}
                 accessibilityRole="button" accessibilityLabel={t(nightEnabled ? 'switchDay' : 'switchNight')}
@@ -64,6 +51,7 @@ export default function ConnectionHeader({ navigation, isConnected, isNightMode,
                 />
                 <Text numberOfLines={1} adjustsFontSizeToFit style={[badgeStyles.settingsText, textSize]}>{t('settingsButton')}</Text>
             </TouchableOpacity>)}
+            <AppExitButton />
             <FullscreenButton onBounds={onFullscreenBounds} />
             {onToggleAis && <SoftwareVersion style={{ flexShrink: 1, transform: [{ translateY: 5 }] }} />}
             </View>
@@ -90,8 +78,4 @@ const badgeStyles = StyleSheet.create({
     badge: { flexDirection: 'row', alignItems: 'center', flexShrink: 0 },
     highlight: { position: 'absolute', top: 1, left: 12, right: 12, height: 1,
         backgroundColor: 'rgba(225,245,255,0.16)' },
-    lightHalo: { width: 18, height: 18, borderRadius: 9, flexShrink: 0, alignItems: 'center', justifyContent: 'center' },
-    light: { width: 8, height: 8, borderRadius: 4, shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.8, shadowRadius: 4 },
-    text: { fontFamily: 'NauticalFont', fontWeight: 'normal', fontSize: 11, letterSpacing: 0.5, flexShrink: 1 },
 });

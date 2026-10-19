@@ -24,6 +24,21 @@ Las conexiones de instrumentos, AIS y waypoint se reintentan cada cinco segundos
 lecturas; tras treinta segundos sin actualizaciones una lectura caduca. Este
 plazo se basa en recepción y no garantiza que el reloj del sensor esté sincronizado.
 
+El indicador de conexión representa el enlace con Signal K, no la conexión a
+Internet. Se comprueba el propio WebSocket al abrirlo y cada 5 s mediante una
+consulta de lectura `query: true` con un UUID nuevo. Signal K devuelve el estado
+de esa petición; el 404 esperado para un UUID desconocido confirma el viaje de
+ida y vuelta por el mismo enlace. No se envían escrituras ni órdenes al barco.
+Sin respuesta en 3 s, error, cierre o rechazo de permisos se invalida la conexión,
+aunque la página HTTP del servidor siga accesible. El evento `offline` adelanta
+la comprobación. Recibir datos no cancela una comprobación pendiente sin respuesta.
+Un servidor sin sensores activos permanece conectado si responde a estas consultas;
+la caducidad de lecturas es independiente.
+Un intento de conexión que no abre el socket caduca a los 8 s. En ambos casos se
+invalidan los eventos del socket anterior y se reintenta a los 5 s.
+
+Consulta de peticiones: https://signalk.org/specification/1.7.0/doc/request_response.html
+
 Los paths privados `simulation.gps.*`, `navigation.depthBelowTransducer`,
 `navigation.current.*` y `vessels.self.navigation.attitude.roll` no se consumen.
 El plugin `simulation/signalk-standard-demo` publica los instrumentos en formato

@@ -4,6 +4,7 @@ import { SIGNALK_PATHS, SUBSCRIPTION_PATHS } from './paths';
 import { readInstrumentDelta } from './instrumentDeltas';
 import { DEFAULT_SIGNALK_ADDRESS, getSignalKSocketUrl, SIGNALK_RECONNECT_DELAY_MS } from './serverAddress';
 import { createPendingUpdates } from './pendingUpdates';
+import { monitorSignalKConnection } from './connectionMonitor';
 
 /** Suscripción estándar: reconecta y caduca lecturas tras 30 segundos sin actualizar. */
 export const useSignalKData = (address = DEFAULT_SIGNALK_ADDRESS, enabled = true, onWindReading, onSogReading) => {
@@ -19,26 +20,59 @@ export const useSignalKData = (address = DEFAULT_SIGNALK_ADDRESS, enabled = true
         let socket;
         let retry;
         let pending;
+        let monitor;
         let self;
         const timestamps = new Map();
+        const disconnect = connection => {
+            if (!active || socket !== connection) return;
+            socket = null;
+            monitor?.dispose();
+            pending?.dispose();
+            timestamps.clear();
+            setSignalKData(INITIAL_DATA);
+            connection.onopen = connection.onmessage = connection.onerror = connection.onclose = null;
+            try { connection.close(); } catch { /* A stalled socket may not complete its close handshake. */ }
+            clearTimeout(retry);
+            retry = setTimeout(connect, SIGNALK_RECONNECT_DELAY_MS);
+        };
         const connect = () => {
             timestamps.clear();
+            self = undefined;
             pending = createPendingUpdates(updates => {
                 if (active) setSignalKData(previous => ({ ...previous, ...updates }));
             });
             const url = new URL(getSignalKSocketUrl(address));
             url.searchParams.set('subscribe', 'none');
-            socket = new WebSocket(url.toString());
+            try { socket = new WebSocket(url.toString()); }
+            catch {
+                pending.dispose();
+                setSignalKData(INITIAL_DATA);
+                retry = setTimeout(connect, SIGNALK_RECONNECT_DELAY_MS);
+                return;
+            }
+            const connection = socket;
+            monitor = monitorSignalKConnection(connection, () => disconnect(connection), {
+                onConfirmed: () => {
+                    if (active && socket === connection) setSignalKData(previous => ({ ...previous, isConnected: true }));
+                },
+            });
             socket.onopen = () => {
-                if (!active) return;
-                setSignalKData({ ...INITIAL_DATA, isConnected: true });
-                socket.send(JSON.stringify({ context: 'vessels.self', subscribe:
-                    SUBSCRIPTION_PATHS.map(path => ({ path, period: 500, format: 'delta' })) }));
+                if (!active || socket !== connection) return;
+                setSignalKData(INITIAL_DATA);
+                monitor.opened();
+                if (socket !== connection) return;
+                try {
+                    connection.send(JSON.stringify({ context: 'vessels.self', subscribe:
+                        SUBSCRIPTION_PATHS.map(path => ({ path, period: 500, format: 'delta' })) }));
+                } catch { disconnect(connection); }
             };
             socket.onmessage = event => {
-                if (!active) return;
+                if (!active || socket !== connection) return;
                 let message;
                 try { message = JSON.parse(event.data); } catch { return; }
+                if (!message || typeof message !== 'object' || Array.isArray(message)) return;
+                monitor.message(message);
+                if (!active || socket !== connection) return;
                 if (typeof message.self === 'string') self = message.self.startsWith('vessels.') ? message.self : `vessels.${message.self}`;
                 if (!Array.isArray(message.updates)) return;
                 const now = Date.now();
@@ -50,15 +84,7 @@ export const useSignalKData = (address = DEFAULT_SIGNALK_ADDRESS, enabled = true
                 if (Number.isFinite(sog) && sog >= 0) sogListener.current?.(sog * 1.94384, now);
                 if (Object.keys(updates).length) pending.add(updates);
             };
-            socket.onerror = () => { if (active) socket.close(); };
-            socket.onclose = () => {
-                if (!active) return;
-                pending.dispose();
-                timestamps.clear();
-                setSignalKData(INITIAL_DATA);
-                clearTimeout(retry);
-                retry = setTimeout(connect, SIGNALK_RECONNECT_DELAY_MS);
-            };
+            socket.onerror = socket.onclose = () => disconnect(connection);
         };
         connect();
         const expiry = setInterval(() => {
@@ -75,9 +101,12 @@ export const useSignalKData = (address = DEFAULT_SIGNALK_ADDRESS, enabled = true
             active = false;
             clearTimeout(retry);
             clearInterval(expiry);
-            pending.dispose();
-            socket.onopen = socket.onmessage = socket.onerror = socket.onclose = null;
-            socket.close();
+            monitor?.dispose();
+            pending?.dispose();
+            if (socket) {
+                socket.onopen = socket.onmessage = socket.onerror = socket.onclose = null;
+                socket.close();
+            }
         };
     }, [address, enabled]);
     return signalKData;
