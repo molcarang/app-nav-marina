@@ -64,10 +64,13 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: 'NauticalFont',
         textAlign: 'left',
-        flexShrink: 1,
+        flexShrink: 0,
         
     },
     rowValue: {
+        flex: 1,
+        minWidth: 0,
+        fontVariant: ['tabular-nums'],
         flexShrink: 1,
         fontSize: 16,
         fontWeight: 'normal',

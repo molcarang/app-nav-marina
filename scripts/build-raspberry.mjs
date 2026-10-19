@@ -1,4 +1,5 @@
 import { prepareBuildInfo } from './prepare-build-info.mjs';
+import { stabilizeWebHtml } from './stabilize-web-html.mjs';
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +10,7 @@ const result = spawnSync(process.execPath, ['node_modules/expo/bin/cli', 'export
     cwd: root, stdio: 'inherit', env: { ...process.env, NAVMARINA_RASPBERRY: '1', EXPO_PUBLIC_SIGNALK_ADDRESS: 'http://localhost:3000' },
 });
 if (result.status !== 0) process.exit(result.status || 1);
+stabilizeWebHtml(fileURLToPath(new URL(`../${output}/web`, import.meta.url)));
 mkdirSync(new URL(`../${output}`, import.meta.url), { recursive: true });
 cpSync(new URL('../assets/images/icon.png', import.meta.url), new URL(`../${output}/icon.png`, import.meta.url));
 for (const file of ['install.sh', 'server.py', 'updater.py', 'README.md']) {

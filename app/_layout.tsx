@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { useFonts } from 'expo-font';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 
@@ -19,6 +20,8 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [fontsLoaded, fontError] = useFonts({
     NauticalFont: require('../assets/fonts/Venus_Rising_Rg.otf'),
+    ...Feather.font,
+    ...MaterialIcons.font,
   });
   const [fontTimeout, setFontTimeout] = useState(false);
   useAndroidFullscreen(Boolean(fontsLoaded || fontError || fontTimeout));

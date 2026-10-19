@@ -1,4 +1,5 @@
 import { prepareBuildInfo } from './prepare-build-info.mjs';
+import { stabilizeWebHtml } from './stabilize-web-html.mjs';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -12,6 +13,7 @@ const result = spawnSync(process.execPath, [
   'node_modules/expo/bin/cli', 'export', '--platform', 'web', '--output-dir', output,
 ], { cwd: root, stdio: 'inherit', env: { ...process.env, NAVMARINA_PWA: '1' } });
 if (result.status !== 0) process.exit(result.status || 1);
+stabilizeWebHtml(output);
 
 function walk(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {

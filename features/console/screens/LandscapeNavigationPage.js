@@ -63,12 +63,17 @@ export default function LandscapeNavigationPage(props) {
             - columnsOrigin.y - 21,
     } : null;
     const heelWidth = Math.max(1, controlsWidth - 9);
-    // Sin la fila de modos, las tarjetas aprovechan el espacio libre sobre la escora.
-    // Se reservan márgenes, resumen superior y espacio inferior; en pantallas bajas hay scroll.
-    const baseCardHeight = Math.max(80, Math.min(itemWidth * 0.9, (area.height - controlsTop - heelWidth * HEEL_PANEL_ASPECT_RATIO - GPS_PANEL_HEIGHT * controlScale - WAYPOINT_PREVIEW_HEIGHT * controlScale - 8 - 112) / 2));
-    // Las dos filas de datos absorben exactamente la altura y el margen del waypoint.
-    // Así el borde inferior y los márgenes existentes no cambian al alternarlo.
-    const cardHeight = baseCardHeight + (hasActiveWaypoint ? 0 : (WAYPOINT_PREVIEW_HEIGHT + 5 + 5 + 3) * controlScale / 2);
+    // Alturas reales: resumen (45), márgenes de las dos filas (28) y escora (16).
+    const controlsSpacing = 45 + 28 + 16 + 8 * controlScale;
+    // El destino incluye su altura, padding de diseño y márgenes superior e inferior.
+    const waypointHeight = hasActiveWaypoint ? (WAYPOINT_PREVIEW_HEIGHT + 5 + 5 + 3) * controlScale : 0;
+    // Repartir todo el espacio restante entre las dos filas, dejando 8 px al final.
+    // En pantallas bajas se conserva el mínimo legible y el desplazamiento vertical.
+    const cardHeight = Math.max(80, (area.height - controlsTop - 8
+        - heelWidth * HEEL_PANEL_ASPECT_RATIO - GPS_PANEL_HEIGHT * controlScale
+        - waypointHeight - controlsSpacing) / 2);
+    const layoutReady = area.width > 0 && area.height > 0 && headerHeight > 0
+        && controlsHeight > 0 && bottomControlsHeight > 0;
 
     return (
         <View style={[localStyles.screen, { backgroundColor: isNightMode ? '#050000' : '#0a0a0a' }]}>
@@ -78,7 +83,7 @@ export default function LandscapeNavigationPage(props) {
                 <ConsoleBackground isNightMode={isNightMode} />
                 <View
                     ref={columnsRef}
-                    style={localStyles.columns}
+                    style={[localStyles.columns, { opacity: layoutReady ? 1 : 0 }]}
                     onLayout={({ nativeEvent }) => {
                         setArea(nativeEvent.layout);
                         columnsRef.current?.measureInWindow((x, y) => setColumnsOrigin({ x, y }));
@@ -159,15 +164,16 @@ export default function LandscapeNavigationPage(props) {
                                     heading={navigation.headingDeg}
                                     receivedAt={navigation.positionReceivedAt} isConnected={isConnected}
                                     isNightMode={isNightMode} backgroundColor={props.theme.bg} />
-                                {hasActiveWaypoint && <WaypointPreviewPanel width={heelWidth} waypoint={props.waypoint} />}
+                                <WaypointPreviewPanel width={heelWidth} waypoint={props.waypoint} />
                             </View>
                         )}
                     </ScrollView>
                     </View>
                     {versionGap && versionGap.width > 0 && <View pointerEvents="none"
                         style={{ position: 'absolute', zIndex: 3, ...versionGap, height: 42,
-                            paddingHorizontal: 8 * controlScale, justifyContent: 'center' }}>
-                        <SoftwareVersion style={{ textAlign: 'center', fontSize: summaryFontSize,
+                            paddingHorizontal: 8 * controlScale, alignItems: 'center', justifyContent: 'center' }}>
+                        <SoftwareVersion availableWidth={Math.max(0, versionGap.width - 16 * controlScale)}
+                            style={{ textAlign: 'center', fontSize: summaryFontSize,
                             lineHeight: Math.ceil(summaryFontSize * 1.35) }} />
                     </View>}
                 </View>

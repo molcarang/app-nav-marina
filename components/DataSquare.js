@@ -165,11 +165,12 @@ const DataSquare = ({
 
                 {/* CONTENIDO: ETIQUETA + DOT */}
                 <View style={styles.labelWrapper}>
-                    <Text style={[styles.label, { color: labelUnitColor, fontSize: fontBasis * 0.13 }]}>
+                    <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.label, { color: labelUnitColor, fontSize: fontBasis * 0.13 }]}>
                         {label}
                     </Text>
                     {showStatusDot && <View style={[styles.statusDot, { backgroundColor: statusDotColor }]} />}
-                    {soundMuted && <Feather name="bell-off" size={fontBasis * 0.15} color={labelUnitColor} />}
+                    {soundMuted && <Feather name="bell-off" size={fontBasis * 0.15} color={labelUnitColor}
+                        style={{ position: 'absolute', right: 0 }} />}
                 </View>
 
                 {/* VALOR PRINCIPAL (Escalado dinámico) */}
@@ -212,18 +213,25 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        width: '94%',
     },
     label: {
         fontFamily: FONT_FAMILY,
         fontWeight: '300',
-        marginRight: 6,
+        width: '100%',
+        textAlign: 'center',
+        paddingHorizontal: DOT_SIZE + 6,
     },
     statusDot: {
+        position: 'absolute',
+        right: 0,
         width: DOT_SIZE,
         height: DOT_SIZE,
         borderRadius: DOT_SIZE / 2,
     },
     value: {
+        width: '94%',
+        fontVariant: ['tabular-nums'],
         fontFamily: FONT_FAMILY,
         color: '#ffffff',
         fontWeight: 'normal',

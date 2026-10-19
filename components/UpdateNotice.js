@@ -105,7 +105,8 @@ export default function UpdateNotice() {
 }
 const styles = StyleSheet.create({
     banner: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', padding: 8, gap: 8,
-        backgroundColor: '#173e33', borderBottomWidth: 1, borderColor: '#45d39a' },
+        position: 'absolute', left: 12, right: 12, bottom: 12, zIndex: 20, elevation: 20,
+        backgroundColor: '#173e33', borderWidth: 1, borderRadius: 10, borderColor: '#45d39a' },
     message: { flex: 1, minWidth: 120 },
     text: { fontFamily: 'NauticalFont', color: '#c8eedf', fontSize: 11 },
     button: { minHeight: 44, paddingHorizontal: 10, justifyContent: 'center', borderRadius: 8,

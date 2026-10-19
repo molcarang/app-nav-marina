@@ -39,7 +39,9 @@ export default function GpsPositionPanel({ width, position, receivedAt, isConnec
                         {Number.isFinite(waterTemperatureCelsius) ? waterTemperatureCelsius.toFixed(1) : '—'} °C
                     </Text>
                 </View>
-                {!fresh && <Text numberOfLines={1} style={[styles.status, { color: accent }]}>{valid ? 'SIN ACTUALIZAR' : 'SIN DATOS'}</Text>}
+                <Text numberOfLines={1} style={[styles.status, { color: accent }]}>
+                    {fresh ? '\u00a0' : valid ? 'SIN ACTUALIZAR' : 'SIN DATOS'}
+                </Text>
             </View>
             <View pointerEvents="none" style={[styles.divider, { backgroundColor: isNightMode ? '#795353' : '#777' }]} />
             <View style={styles.rightArea}>
