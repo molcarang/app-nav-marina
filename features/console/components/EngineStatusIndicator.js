@@ -13,7 +13,7 @@ export default function EngineStatusIndicator({ connected, engineRunning, naviga
     return <>
         <StatusIndicator active={running} label={t(label)} icon={EngineRunningIcon}
             onPress={() => setDashboardOpen(true)} hint={t('openEngineDashboard')} />
-        {dashboardOpen && <EngineDashboard connected={connected} navigation={navigation} settings={settings}
+        {dashboardOpen && <EngineDashboard connected={connected} engineRunning={engineRunning} navigation={navigation} settings={settings}
             onClose={() => setDashboardOpen(false)} />}
     </>;
 }
