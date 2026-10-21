@@ -1,7 +1,4 @@
 {
-  "waterTemperature": {
-    "path": "environment.water.temperature"
-  },
   "apparentWindSpeed": {
     "path": "environment.wind.speedApparent",
     "minValue": 2.572222,
@@ -100,5 +97,20 @@
   },
   "autopilotState": {
     "path": "steering.autopilot.state"
+  },
+  "waterTemperature": {
+    "path": "environment.water.temperature"
+  },
+  "engineTemperature": {
+    "path": "propulsion.0.temperature"
+  },
+  "engineOilPressure": {
+    "path": "propulsion.0.oilPressure"
+  },
+  "fuelLevel": {
+    "path": "tanks.fuel.0.currentLevel"
+  },
+  "batteryVoltage": {
+    "path": "electrical.batteries.0.voltage"
   }
 }

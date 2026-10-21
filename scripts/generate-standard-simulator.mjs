@@ -5,7 +5,7 @@ import { SIGNALK_FIELDS } from '../services/signalk/paths.js';
 const fields = Object.fromEntries(Object.entries(SIGNALK_FIELDS)
     .filter(([, field]) => field.simulator)
     .map(([name, field]) => [name, { path: field.path, ...field.simulator }]));
-for (const name of ['position', 'attitude', 'current', 'courseOverGround', 'autopilotState']) {
+for (const name of ['position', 'attitude', 'current', 'courseOverGround', 'autopilotState', 'waterTemperature', 'engineTemperature', 'engineOilPressure', 'fuelLevel', 'batteryVoltage']) {
     fields[name] = { path: SIGNALK_FIELDS[name].path };
 }
 writeFileSync(new URL('../simulation/signalk-standard-demo/fields.json', import.meta.url),

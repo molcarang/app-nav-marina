@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { INITIAL_DATA, SUBSCRIPTION_PATHS } from '../services/signalk/paths.js';
+import { INITIAL_DATA, SUBSCRIPTION_PATHS, isInstrumentPath } from '../services/signalk/paths.js';
 import { readInstrumentDelta } from '../services/signalk/instrumentDeltas.js';
 import { deriveNavigationData } from '../features/console/model/navigationData.js';
 
-const path = 'notifications.electrical.batteries.house.lowVoltage';
+const path = 'notifications.propulsion.0.lowSystemVoltage';
 const alarm = data => deriveNavigationData(data).lowBatteryAlarm;
 
 test('batería baja: distingue alarma recibida, normal y ausencia sin inventar umbrales', () => {
@@ -17,17 +17,30 @@ test('batería baja: distingue alarma recibida, normal y ausencia sin inventar u
     assert.equal(alarm({ 'notifications.propulsion.main.chargeIndicator': { state: 'alarm' } }), null);
 });
 
-test('batería baja: agrega baterías y avisos de carga baja', () => {
-    const other = 'notifications.electrical.batteries.starter.lowStateOfCharge';
+test('batería baja: agrega avisos de baja tensión de varios motores', () => {
+    const other = 'notifications.propulsion.port.lowSystemVoltage';
     const base = { [path]: { state: 'normal' }, [other]: { state: 'alarm' } };
     assert.equal(alarm(base), true);
     assert.equal(alarm({ ...base, [other]: null }), null);
     assert.equal(alarm({ ...base, [other]: { state: 'normal' } }), false);
 });
 
+test('batería baja: descarta las dos rutas retiradas aunque publiquen alarmas', () => {
+    for (const suffix of ['lowVoltage', 'lowStateOfCharge']) {
+        const retiredPath = `notifications.electrical.batteries.house.${suffix}`;
+        assert.equal(isInstrumentPath(retiredPath), false);
+        assert.ok(!SUBSCRIPTION_PATHS.includes(`notifications.electrical.batteries.*.${suffix}`));
+        const delta = readInstrumentDelta({ context: 'vessels.self', updates: [{ values: [
+            { path: retiredPath, value: { state: 'alarm' } },
+        ] }] });
+        assert.deepEqual(delta, {});
+        assert.equal(alarm({ [retiredPath]: { state: 'alarm' } }), null);
+        assert.equal(alarm({ [path]: { state: 'normal' }, [retiredPath]: { state: 'alarm' } }), false);
+    }
+});
+
 test('batería baja: procesa deltas propios, cancelación y restablecimiento sin confundir otros barcos', () => {
-    assert.ok(SUBSCRIPTION_PATHS.includes('notifications.electrical.batteries.*.lowVoltage'));
-    assert.ok(SUBSCRIPTION_PATHS.includes('notifications.electrical.batteries.*.lowStateOfCharge'));
+    assert.ok(SUBSCRIPTION_PATHS.includes('notifications.propulsion.*.lowSystemVoltage'));
     const message = value => ({ context: 'vessels.self', updates: [{ values: [{ path, value }] }] });
     let data = { ...INITIAL_DATA, ...readInstrumentDelta(message({ state: 'alarm', method: ['visual'], message: 'Low battery' })) };
     assert.equal(alarm(data), true);

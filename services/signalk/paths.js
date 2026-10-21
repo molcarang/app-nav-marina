@@ -4,6 +4,10 @@
  */
 export const SIGNALK_FIELDS = {
     waterTemperature: { path: 'environment.water.temperature', initialValue: null },
+    engineTemperature: { path: 'propulsion.0.temperature', initialValue: null },
+    engineOilPressure: { path: 'propulsion.0.oilPressure', initialValue: null },
+    fuelLevel: { path: 'tanks.fuel.0.currentLevel', initialValue: null },
+    batteryVoltage: { path: 'electrical.batteries.0.voltage', initialValue: null },
     attitude: { path: 'navigation.attitude', initialValue: null },
     current: { path: 'environment.current', initialValue: null },
     headingMagnetic: { path: 'navigation.headingMagnetic', initialValue: null },
@@ -44,7 +48,7 @@ export const BATTERY_VOLTAGE_PATH_PATTERN = /^electrical\.batteries\.[^.]+\.volt
 export const WATER_TEMPERATURE_ALARM_PATH_PATTERN = /^notifications\.propulsion\.[^.]+\.(overTemperature|coolantTemperature|temperature)$/;
 export const OIL_PRESSURE_ALARM_PATH_PATTERN = /^notifications\.propulsion\.[^.]+\.(lowOilPressure|oilPressure)$/;
 export const ALTERNATOR_CHARGE_ALARM_PATH_PATTERN = /^notifications\.propulsion\.[^.]+\.(chargeIndicator|alternatorVoltage)$/;
-export const LOW_BATTERY_ALARM_PATH_PATTERN = /^notifications\.electrical\.batteries\.[^.]+\.(lowVoltage|lowStateOfCharge)$/;
+export const LOW_BATTERY_ALARM_PATH_PATTERN = /^notifications\.propulsion\.[^.]+\.lowSystemVoltage$/;
 export const SUBSCRIPTION_PATHS = [...new Set([
     ...Object.values(SIGNALK_PATHS).filter(path => !path.startsWith('simulation.')),
     'propulsion.*.revolutions',
@@ -61,8 +65,7 @@ export const SUBSCRIPTION_PATHS = [...new Set([
     'notifications.propulsion.*.oilPressure',
     'notifications.propulsion.*.chargeIndicator',
     'notifications.propulsion.*.alternatorVoltage',
-    'notifications.electrical.batteries.*.lowVoltage',
-    'notifications.electrical.batteries.*.lowStateOfCharge',
+    'notifications.propulsion.*.lowSystemVoltage',
     'environment.current.setMagnetic',
 ])];
 export const isInstrumentPath = path => SUBSCRIPTION_PATHS.includes(path) || ENGINE_PATH_PATTERN.test(path)

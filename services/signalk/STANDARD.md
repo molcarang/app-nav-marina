@@ -34,12 +34,13 @@ internas; `navigationData.js` convierte unidades y prepara la presentación.
   si ambos valores coinciden no tiene extensión. Los ajustes antiguos
   reciben los valores iniciales y los valores corruptos se normalizan.
   La aguja se limita al extremo de escala; sin RPM recientes queda gris al inicio.
-  No hay displays digitales en las cinco esferas. El tacómetro ya no muestra SOG;
-  la consola principal sigue recibiendo y mostrando esa velocidad.
+  Las cinco esferas incluyen un display digital: SOG en nudos en el tacómetro,
+  temperatura y combustible sin decimales, aceite y batería con un decimal.
+  Los displays muestran «—» sin datos o al desconectar, conservando cero como lectura válida.
   No fija un régimen máximo seguro
   del motor ni añade una alarma por RPM; la zona roja es una marca visual.
-- Temperatura del motor: `propulsion.*.coolantTemperature`, con respaldo a
-  `propulsion.*.temperature` para la misma unidad. Convierte kelvin a Celsius y,
+- Temperatura del motor: `propulsion.*.temperature` (PGN 127489), con respaldo a
+  `propulsion.*.coolantTemperature` para la misma unidad. Convierte kelvin a Celsius y,
   con varios motores, muestra la mayor temperatura disponible tras aplicar esa
   prioridad por unidad. No usa `environment.water.temperature` (agua del mar).
   La esfera pequeña superior izquierda del popup indica 0–120 °C con aguja;
@@ -76,17 +77,23 @@ internas; `navigationData.js` convierte unidades y prepara la presentación.
   popup, con los mismos estados y conservación que las otras alarmas de motor.
   Rojo ante alarma recibida, gris sin alarma o sin datos, sin sonido. No calcula
   el fallo a partir de un voltaje fijo ni interpreta RPM como confirmación de carga.
-- Batería baja: escucha las notificaciones explícitas
-  `notifications.electrical.batteries.*.lowVoltage` y
-  `notifications.electrical.batteries.*.lowStateOfCharge`. El servidor o su plugin
+- Batería baja: escucha únicamente la notificación explícita
+  `notifications.propulsion.*.lowSystemVoltage` (baja tensión del sistema del motor,
+  PGN 127489, Discrete Status 1, bit 5). Esta última no indica porcentaje de carga
+  ni identifica una batería concreta. El servidor o su plugin
   debe publicarlas; la app no deduce un límite de voltaje o carga. Mismos estados
-  y conservación que las otras alarmas, sin sonido. Basta una batería en alarma.
+  y conservación que las otras alarmas, sin sonido. Basta un motor en alarma.
   No interpreta una alarma genérica de voltaje como batería baja, pues también
   podría indicar sobretensión. Icono de batería en el popup, tras el alternador.
 - Nivel de combustible: `tanks.fuel.*.currentLevel`, ratio 0–1 convertido a
   porcentaje 0–100. Esfera superior derecha, con aguja.
   Rechaza valores fuera del ratio válido. Si recibe varios depósitos, muestra
   el menor nivel individual, sin calcular una reserva total ni promediar capacidades.
+- LED IGNITION del popup: parpadea en amarillo cada 600 ms con conexión,
+  `batteryVoltage > 0` y sin RPM positivas. Se apaga al recibir RPM mayores que 0,
+  independientemente del estado explícito del motor que controla RUNNING. Usa la misma lectura del reloj de
+  batería; se apaga también con 0 V, ausencia de voltaje, caducidad o desconexión. Es el
+  criterio de contacto solicitado para la app, sin una ruta de ignition independiente.
 - Voltaje de batería: `electrical.batteries.*.voltage`, en V, esfera inferior
   derecha con escala inicial 0–16 V y aguja. Si llegan
   varias baterías muestra la menor lectura válida. No sustituye voltaje de batería
