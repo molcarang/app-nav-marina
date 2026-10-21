@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { GAUGE_THEME } from '../../styles/GaugeTheme';
 import { GaugeDefs } from './shared/GaugeDefs';
 import { computeCommonDims, polarToCartesian } from './shared/gaugeUtils';
@@ -10,7 +10,7 @@ import { describeArc } from '../../utils/Utils';
 const BASE_DIMS = computeCommonDims(240);
 const { CENTER } = BASE_DIMS;
 
-export default function EngineInstrumentGauge({ size, bezelWidth, value, maximum, tickStep, majorStep, label, unit, description, icon: Icon, lowWarningThreshold }) {
+export default function EngineInstrumentGauge({ size, bezelWidth, value, maximum, tickStep, majorStep, label, unit, description, icon: Icon, lowWarningThreshold, decimals = 0 }) {
     const prefix = `engine-instrument-${useId().replace(/:/g, '')}-`;
     const paint = name => `url(#${prefix}${name})`;
     const angle = 288 + Math.max(0, Math.min(maximum, value ?? 0)) / maximum * 144;
@@ -76,6 +76,10 @@ export default function EngineInstrumentGauge({ size, bezelWidth, value, maximum
             <EngineGaugeNeedle center={CENTER} angle={angle} length={63}
                 halfWidth={5} hubRadius={6}
                 paint={paint} hasData />
+            <Rect x={84} y={136} width={72} height={24} rx={5} fill="#101820" stroke={paint('redMetalOuter')} strokeWidth={1} />
+            <SvgText x={CENTER} y={153} textAnchor="middle" fill="#fff" fontFamily="NauticalFont" fontSize={16}>
+                {Number.isFinite(value) ? value.toFixed(decimals) : '—'}
+            </SvgText>
             <Ellipse cx={90} cy={52} rx={41} ry={10} rotation={-32} origin="90,52" fill={paint('glassReflection')} opacity={0.5} />
             </G>
         </Svg>

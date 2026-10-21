@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { useTranslation } from '../../localization/LanguageProvider';
 import { GAUGE_THEME } from '../../styles/GaugeTheme';
 import { GaugeDefs } from './shared/GaugeDefs';
@@ -12,11 +12,13 @@ import { normalizeEngineRpmSettings } from '../../features/console/model/engineR
 const DIAL_SIZE = 400;
 const { CENTER, BEZEL_SIZE, RADIUS } = computeCommonDims(DIAL_SIZE);
 
-export default function EngineRpmGauge({ size, rpm, connected, settings }) {
+export default function EngineRpmGauge({ size, rpm, sogKnots, connected, settings }) {
     const { t } = useTranslation();
     const prefix = `rpm-${useId().replace(/:/g, '')}-`;
     const paint = name => `url(#${prefix}${name})`;
     const value = connected && Number.isFinite(rpm) && rpm >= 0 ? rpm : null;
+    const sogValue = connected && sogKnots != null && sogKnots !== ''
+        && Number.isFinite(Number(sogKnots)) && Number(sogKnots) >= 0 ? Number(sogKnots) : null;
     const { tachometerMaxRpm: maxRpm, tachometerRedZoneRpm: redZoneRpm } = normalizeEngineRpmSettings(settings);
     const angle = 225 + Math.min(maxRpm, value ?? 0) / maxRpm * 270;
     const minorStep = maxRpm <= 10000 ? 100 : 500;
@@ -35,7 +37,8 @@ export default function EngineRpmGauge({ size, rpm, connected, settings }) {
             end: polarToCartesian(CENTER, CENTER, 168, endAngle) };
     });
     const label = value === null ? t('engineRpmNoData') : t('engineRpmDescription', { value: Math.round(value) });
-    return <View accessible accessibilityRole="image" accessibilityLabel={label} style={{ width: size, height: size }}>
+    const sogLabel = sogValue === null ? t('engineSogNoData') : t('engineSogDescription', { value: sogValue.toFixed(1) });
+    return <View accessible accessibilityRole="image" accessibilityLabel={`${label}. ${sogLabel}`} style={{ width: size, height: size }}>
         <Svg accessible={false} aria-hidden width={size} height={size} viewBox="0 0 400 400">
             <Defs>
                 <GaugeDefs idPrefix={prefix} />
@@ -77,6 +80,11 @@ export default function EngineRpmGauge({ size, rpm, connected, settings }) {
             <SvgText x={CENTER} y={139} textAnchor="middle" fill="#aaa" fontFamily="NauticalFont" fontSize={10}>× 1000</SvgText>
             <EngineGaugeNeedle center={CENTER} angle={angle} length={109.8} halfWidth={7.2}
                 hubRadius={9.9} paint={paint} hasData={value !== null} />
+            <Rect x={148} y={232} width={104} height={48} rx={9} fill="#101820" stroke={paint('redMetalOuter')} strokeWidth={1.5} />
+            <SvgText x={CENTER} y={256} textAnchor="middle" fill="#fff" fontFamily="NauticalFont" fontSize={24}>
+                {sogValue === null ? '—' : sogValue.toFixed(1)}
+            </SvgText>
+            <SvgText x={CENTER} y={271} textAnchor="middle" fill="#aaa" fontFamily="NauticalFont" fontSize={9}>SOG · KTS</SvgText>
             <Ellipse cx={151} cy={87} rx={68} ry={17} rotation={-32} origin="151,87" fill={paint('glassReflection')} opacity={0.5} />
         </Svg>
     </View>;

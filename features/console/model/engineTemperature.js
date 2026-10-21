@@ -1,6 +1,6 @@
 import { ENGINE_TEMPERATURE_PATH_PATTERN } from '../../../services/signalk/paths.js';
 
-/** Prefer coolant temperature per engine; NMEA converters may publish engine temperature. */
+/** PGN 127489 publishes engine coolant temperature as propulsion.*.temperature. */
 export function deriveEngineTemperature(data) {
     const units = new Map();
     for (const [path, value] of Object.entries(data)) {
@@ -8,6 +8,6 @@ export function deriveEngineTemperature(data) {
         const [, id, field] = path.split('.');
         units.set(id, { ...units.get(id), [field]: value });
     }
-    const readings = [...units.values()].map(unit => unit.coolantTemperature ?? unit.temperature);
+    const readings = [...units.values()].map(unit => unit.temperature ?? unit.coolantTemperature);
     return readings.length ? Math.max(...readings) - 273.15 : null;
 }

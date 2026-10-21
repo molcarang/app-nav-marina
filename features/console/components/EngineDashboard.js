@@ -1,6 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useId } from 'react';
-import Svg, { Defs, LinearGradient, Path, Pattern, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { useTranslation } from '../../../localization/LanguageProvider';
 import { useControlScale } from '../../../hooks/useControlScale';
 import NightDimmer from '../../../components/NightDimmer';
@@ -67,19 +67,18 @@ function BlackAluminiumBackground({ borderRadius = 17 }) {
     return <View pointerEvents="none" accessible={false} style={[styles.metalBackground, { borderRadius }]}>
         <Svg width="100%" height="100%">
             <Defs>
-                <LinearGradient id={`${id}-metal`} x1="0%" y1="0%" x2="100%" y2="100%">
-                    <Stop offset="0" stopColor="#151719" />
-                    <Stop offset="0.42" stopColor="#303335" />
-                    <Stop offset="0.68" stopColor="#1c1e20" />
-                    <Stop offset="1" stopColor="#0e1012" />
+                <LinearGradient id={`${id}-metal`} x1="0%" y1="0%" x2="100%" y2="8%">
+                    <Stop offset="0" stopColor="#292c2e" />
+                    <Stop offset="0.13" stopColor="#17191b" />
+                    <Stop offset="0.28" stopColor="#3c4042" />
+                    <Stop offset="0.4" stopColor="#202325" />
+                    <Stop offset="0.53" stopColor="#35393b" />
+                    <Stop offset="0.66" stopColor="#181b1d" />
+                    <Stop offset="0.82" stopColor="#393d3f" />
+                    <Stop offset="1" stopColor="#171a1c" />
                 </LinearGradient>
-                <Pattern id={`${id}-grain`} width="160" height="8" patternUnits="userSpaceOnUse">
-                    <Path d="M0 0.5H160 M22 3.5H118 M0 6.5H72 M104 6.5H160" stroke="#fff" strokeOpacity="0.045" strokeWidth="0.6" />
-                    <Path d="M0 1.5H132 M54 4.5H160 M0 7.5H160" stroke="#000" strokeOpacity="0.22" strokeWidth="0.7" />
-                </Pattern>
             </Defs>
             <Rect width="100%" height="100%" fill={`url(#${id}-metal)`} />
-            <Rect width="100%" height="100%" fill={`url(#${id}-grain)`} />
         </Svg>
     </View>;
 }
@@ -125,9 +124,10 @@ export default function EngineDashboard({ connected, engineRunning, navigation, 
                     </Pressable>
                 {/* Five positions: main dial in the centre, small dials at the four corners. */}
                 <View style={{ alignSelf: 'center', width: BOARD_WIDTH * boardScale, height: BOARD_HEIGHT * boardScale }}>
-                    <EngineDashboardStatus scale={boardScale} connected={connected} engineRunning={engineRunning} />
+                    <EngineDashboardStatus scale={boardScale} connected={connected} engineRunning={engineRunning}
+                        engineRpm={navigation?.engineRpm} batteryVoltage={navigation?.batteryVoltage} />
                     <View style={{ position: 'absolute', left: (BOARD_WIDTH - 360) / 2 * boardScale, top: (BOARD_HEIGHT - 360) / 2 * boardScale }}>
-                        <EngineRpmGauge size={gaugeSize} rpm={navigation?.engineRpm} connected={connected} settings={settings} />
+                        <EngineRpmGauge size={gaugeSize} rpm={navigation?.engineRpm} sogKnots={navigation?.sogKnots} connected={connected} settings={settings} />
                     </View>
                     <View style={{ position: 'absolute', left: 0, top: 0 }}>
                         <EngineTemperatureGauge size={smallGaugeSize} bezelWidth={bezelWidth} temperatureCelsius={navigation?.engineTemperatureCelsius} connected={connected} />

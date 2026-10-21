@@ -8,5 +8,5 @@ export default function EngineBatteryVoltageGauge({ size, bezelWidth, batteryVol
     const description = value === null ? t('engineBatteryVoltageNoData')
         : t('engineBatteryVoltageDescription', { value: value.toFixed(1) });
     return <EngineInstrumentGauge size={size} bezelWidth={bezelWidth} value={value} maximum={16} tickStep={1} majorStep={4}
-        label={t('engineBatteryVoltageGaugeLabel')} unit="V" description={description} icon={LowBatteryIcon} />;
+        label={t('engineBatteryVoltageGaugeLabel')} unit="V" description={description} icon={LowBatteryIcon} decimals={1} />;
 }

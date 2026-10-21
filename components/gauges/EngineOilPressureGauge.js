@@ -8,5 +8,5 @@ export default function EngineOilPressureGauge({ size, bezelWidth, pressureBar, 
     const description = value === null ? t('engineOilPressureNoData')
         : t('engineOilPressureDescription', { value: value.toFixed(1) });
     return <EngineInstrumentGauge size={size} bezelWidth={bezelWidth} value={value} maximum={10} tickStep={0.5} majorStep={2}
-        label={t('engineOilPressureGaugeLabel')} unit="bar" description={description} icon={OilPressureIcon} />;
+        label={t('engineOilPressureGaugeLabel')} unit="bar" description={description} icon={OilPressureIcon} decimals={1} />;
 }
