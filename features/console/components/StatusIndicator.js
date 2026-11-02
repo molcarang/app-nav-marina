@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useControlScale } from '../../../hooks/useControlScale';
 
-export default function StatusIndicator({ active, label, icon: Icon, alarm = false, alarmColor = '#ff2020', onPress, hint }) {
+export default function StatusIndicator({ active, label, icon: Icon, alarm = false, alarmColor = '#ff2020', onPress, hint, frameWidth }) {
     const scale = useControlScale();
     const color = active ? (alarm ? alarmColor : '#ff9800') : '#68747e';
     const Container = onPress ? Pressable : View;
@@ -9,7 +9,7 @@ export default function StatusIndicator({ active, label, icon: Icon, alarm = fal
     return <Container accessible accessibilityRole={onPress ? 'button' : 'image'} accessibilityLiveRegion="polite"
         onPress={onPress} accessibilityLabel={label} accessibilityHint={hint}
         accessibilityState={{ disabled }} aria-disabled={disabled}
-        style={[styles.indicator, { width: 62.4 * scale, height: 54.6 * scale, borderWidth: alarm ? 3 * scale : 1 },
+        style={[styles.indicator, { width: 62.4 * scale, height: 54.6 * scale, borderWidth: frameWidth ?? (alarm ? 3 * scale : 1) },
             alarm ? { borderColor: active ? color : '#364149', backgroundColor: '#101820', shadowColor: '#000' }
                 : active ? { borderColor: color, backgroundColor: '#2b2115', shadowColor: color } : styles.inactive]}>
         <View pointerEvents="none" style={styles.highlight} />

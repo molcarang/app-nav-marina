@@ -1,0 +1,196 @@
+{
+  "board": "KinCony F16 / ESP32-S3",
+  "date": "27/10/2026",
+  "digital": [
+    [
+      "DI01",
+      "Autopiloto",
+      "0",
+      "bin_autopilot_in"
+    ],
+    [
+      "DI02",
+      "VHF",
+      "1",
+      "bin_vhf_in"
+    ],
+    [
+      "DI03",
+      "Sistema",
+      "2",
+      "bin_system_in"
+    ],
+    [
+      "DI04",
+      "AIS",
+      "3",
+      "bin_ais_in"
+    ],
+    [
+      "DI05",
+      "Agua",
+      "4",
+      "bin_water_in"
+    ],
+    [
+      "DI06",
+      "Sentina (bielge)",
+      "5",
+      "bin_bielge_in"
+    ],
+    [
+      "DI07",
+      "Frigorífico",
+      "6",
+      "bin_fridge_in"
+    ],
+    [
+      "DI08",
+      "Internet",
+      "7",
+      "bin_internet_in"
+    ],
+    [
+      "DI09",
+      "Audio / estéreo",
+      "8",
+      "bin_stereo_in"
+    ],
+    [
+      "DI10",
+      "USB",
+      "9",
+      "bin_usb_in"
+    ],
+    [
+      "DI11",
+      "Confort",
+      "10",
+      "bin_comfort_in"
+    ],
+    [
+      "DI12",
+      "Luces de navegación",
+      "11",
+      "bin_navigation_lights_in"
+    ],
+    [
+      "DI13",
+      "Luces de fondeo",
+      "12",
+      "bin_anchor_lights_in"
+    ],
+    [
+      "DI14",
+      "Luces de cubierta",
+      "13",
+      "bin_deck_lights_in"
+    ],
+    [
+      "DI15",
+      "Luces de cabina",
+      "14",
+      "bin_cabin_lights_in"
+    ],
+    [
+      "DI16",
+      "LEDs",
+      "15",
+      "bin_leds_in"
+    ]
+  ],
+  "additional_gpio": [
+    [
+      "f16-W1-io48",
+      "GPIO48",
+      "Sí",
+      "Sin función de barco asignada"
+    ],
+    [
+      "f16-W1-io47",
+      "GPIO47",
+      "Sí",
+      "Sin función de barco asignada"
+    ],
+    [
+      "f16-W1-io21",
+      "GPIO21",
+      "Sí",
+      "Sin función de barco asignada"
+    ],
+    [
+      "f16-W1-io15",
+      "GPIO15",
+      "Sí",
+      "Sin función de barco asignada"
+    ],
+    [
+      "f16-W1-io13",
+      "GPIO13",
+      "No",
+      "Sin función de barco asignada"
+    ],
+    [
+      "f16-W1-io14",
+      "GPIO14",
+      "No",
+      "Sin función de barco asignada"
+    ],
+    [
+      "f16-433M",
+      "GPIO40",
+      "No",
+      "Sin función de barco asignada"
+    ]
+  ],
+  "analog": [
+    [
+      "A1",
+      "GPIO5",
+      "0–5 V",
+      "sensor_adc_1",
+      "V (ADC)"
+    ],
+    [
+      "A2",
+      "GPIO7",
+      "0–5 V",
+      "sensor_adc_2",
+      "V (ADC)"
+    ],
+    [
+      "A3",
+      "GPIO6",
+      "4–20 mA",
+      "sensor_adc_3",
+      "mA; ×6,66666666"
+    ],
+    [
+      "A4",
+      "GPIO4",
+      "4–20 mA",
+      "sensor_adc_4",
+      "mA; ×6,66666666"
+    ]
+  ],
+  "input_expander": {
+    "address": 36,
+    "i2c_id": "bus_a",
+    "id": "pcf8574_hub_in_1",
+    "pcf8575": true
+  },
+  "sources": [
+    {
+      "path": "C:\\Users\\Pc\\Projects\\OpenBoat\\esphome\\includes\\openboat-f16\\open-boad-kincony-relay-binary-sensors.yaml",
+      "sha256": "d8d4eb1853fb41f54b9b6bb802148a76e685865eb83ab4c92abc47d3121b9d0b"
+    },
+    {
+      "path": "C:\\Users\\Pc\\Projects\\OpenBoat\\esphome\\includes\\openboat-f16\\open-boad-kincony-relay-sensors.yaml",
+      "sha256": "20390a1b4a13e2b15206190db9419a10dac4f86c5d13900c58ce878958dbf811"
+    },
+    {
+      "path": "C:\\Users\\Pc\\Projects\\OpenBoat\\esphome\\includes\\openboat-f16\\open-boad-kincony-relay-pcf8574.yaml",
+      "sha256": "50544968653aa70823ab8c1feaa49684cce39c4f2d307ea04bb2cef19e5a73a5"
+    }
+  ]
+}
