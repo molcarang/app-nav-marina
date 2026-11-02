@@ -22,6 +22,8 @@ export default function LandscapeNavigationPage(props) {
     const [controlsHeight, setControlsHeight] = useState(0);
     const [bottomControlsHeight, setBottomControlsHeight] = useState(0);
     const [headerHeight, setHeaderHeight] = useState(0);
+    const compassRef = useRef(null);
+    const [compassCenterY, setCompassCenterY] = useState(null);
     const [scrollOffset, setScrollOffset] = useState(0);
     const columnsRef = useRef(null);
     const scrollOffsetRef = useRef(0);
@@ -94,6 +96,8 @@ export default function LandscapeNavigationPage(props) {
                         <View style={localStyles.leftHeader}
                             onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}>
                 <ConnectionHeader
+                    showEngineAlarms
+                    compassCenterY={compassCenterY}
                     settings={settings}
                     navigation={navigation}
                     isConnected={isConnected}
@@ -104,7 +108,8 @@ export default function LandscapeNavigationPage(props) {
                     style={{ width: '100%', paddingHorizontal: 8 }}
                 />
                         </View>
-                        <View style={[localStyles.gaugeArea, { top: gaugeTop, bottom: gaugeBottom }]}>
+                        <View ref={compassRef} collapsable={false} style={[localStyles.gaugeArea, { top: gaugeTop, bottom: gaugeBottom }]}
+                            onLayout={() => compassRef.current?.measureInWindow((_x, y, _width, height) => setCompassCenterY(y + height / 2))}>
                         {area.width > 0 && (
                             <HeadingGauge
                                 showAis={props.aisVisible} aisRangeNm={props.aisRangeNm}
@@ -125,7 +130,8 @@ export default function LandscapeNavigationPage(props) {
                             />
                         )}
                         </View>
-                        <View style={{ position: 'absolute', left: 8, right: 8, bottom: aisBottom, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <View style={{ position: 'absolute', left: 8,
+                            right: 8, bottom: aisBottom, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <View style={{ width: '100%', gap: 8 * controlScale }}
                                 onLayout={({ nativeEvent }) => setBottomControlsHeight(nativeEvent.layout.height)}>
                                 <AnchorButton position={navigation.position} receivedAt={navigation.positionReceivedAt} connected={isConnected} />

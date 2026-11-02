@@ -1,4 +1,11 @@
 export default {
+  "settingsSection_general": "General y conexi\u00f3n",
+  "settingsSection_navigation": "Navegaci\u00f3n y escora",
+  "settingsSection_depth": "Profundidad y sonido",
+  "settingsSection_engine": "Motor y combustible",
+  "settingsSection_history": "Historiales",
+  "settingsSection_display": "Pantalla y modo nocturno",
+
   "aisStatus_inactive": "AIS desactivado",
   "aisStatus_active": "AIS activado",
   "aisStatus_disconnected": "AIS sin conexión",

@@ -4,11 +4,7 @@ import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { useTranslation } from '../../../localization/LanguageProvider';
 import { useControlScale } from '../../../hooks/useControlScale';
 import NightDimmer from '../../../components/NightDimmer';
-import WaterTemperatureAlarmIndicator from './WaterTemperatureAlarmIndicator';
-import OilPressureAlarmIndicator from './OilPressureAlarmIndicator';
-import AlternatorChargeAlarmIndicator from './AlternatorChargeAlarmIndicator';
-import LowBatteryAlarmIndicator from './LowBatteryAlarmIndicator';
-import LowFuelAlarmIndicator from './LowFuelAlarmIndicator';
+import EngineAlarmIndicators from './EngineAlarmIndicators';
 import EngineRpmGauge from '../../../components/gauges/EngineRpmGauge';
 import EngineTemperatureGauge from '../../../components/gauges/EngineTemperatureGauge';
 import EngineOilPressureGauge from '../../../components/gauges/EngineOilPressureGauge';
@@ -93,19 +89,6 @@ export default function EngineDashboard({ connected, engineRunning, navigation, 
     const gaugeSize = 360 * boardScale;
     const smallGaugeSize = 184 * boardScale;
     const bezelWidth = gaugeSize * 0.06;
-    const alarms = [
-        { id: 'coolant',
-            indicator: <WaterTemperatureAlarmIndicator connected={connected} temperatureAlarm={navigation?.waterTemperatureAlarm} /> },
-        { id: 'oil',
-            indicator: <OilPressureAlarmIndicator connected={connected} oilPressureAlarm={navigation?.oilPressureAlarm} /> },
-        { id: 'alternator',
-            indicator: <AlternatorChargeAlarmIndicator connected={connected} alternatorChargeAlarm={navigation?.alternatorChargeAlarm} /> },
-        { id: 'battery',
-            indicator: <LowBatteryAlarmIndicator connected={connected} lowBatteryAlarm={navigation?.lowBatteryAlarm} /> },
-        { id: 'fuel',
-            indicator: <LowFuelAlarmIndicator connected={connected} fuelPercent={navigation?.fuelLevelPercent}
-                threshold={settings?.lowFuelAlarmPercent} /> },
-    ];
     return <Modal transparent visible animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
         <View style={styles.overlay}>
             <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose}
@@ -148,9 +131,7 @@ export default function EngineDashboard({ connected, engineRunning, navigation, 
                         transform: [{ scale: 0.7 * boardScale / scale }] }]}>
                         <AluminiumAlarmFrame />
                         <Text accessibilityRole="header" style={[styles.alarmTitle, { fontSize: 12 * scale }]}>{t('engineAlarmPanelTitle')}</Text>
-                        <View style={[styles.alarms, { gap: 8 * scale }]}>
-                            {alarms.map(alarm => <View key={alarm.id}>{alarm.indicator}</View>)}
-                        </View>
+                        <EngineAlarmIndicators connected={connected} navigation={navigation} settings={settings} />
                         <AlarmPanelGlass />
                     </View>
                 </View>
@@ -167,5 +148,4 @@ const styles = StyleSheet.create({
     close: { position: 'absolute', zIndex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.25)' },
     alarmPanel: { flexShrink: 1, minWidth: 0, borderWidth: 1, borderColor: '#737373', borderRadius: 12, backgroundColor: '#191b1d' },
     alarmTitle: { fontFamily: 'NauticalFont', color: '#ffffff' },
-    alarms: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' },
 });

@@ -89,6 +89,19 @@ internas; `navigationData.js` convierte unidades y prepara la presentación.
   porcentaje 0–100. Esfera superior derecha, con aguja.
   Rechaza valores fuera del ratio válido. Si recibe varios depósitos, muestra
   el menor nivel individual, sin calcular una reserva total ni promediar capacidades.
+- En navegación, las cinco alarmas también aparecen en columna bajo el botón de
+  motor, con los mismos datos, colores y umbral de combustible que el popup.
+  La columna solo se muestra con conexión y `engineRunning === true`; desaparece
+  al parar el motor, perder su estado o desconectar. También se oculta mientras
+  el popup de motor está abierto y reaparece al cerrarlo si el motor sigue en marcha.
+  El popup conserva sus avisos
+  aunque el motor esté parado. Fondeo y AIS mantienen su posición original,
+  sin desplazarse al arrancar/parar el motor o perder la conexión. La columna de
+  cinco avisos se alinea con el centro real de la brújula: el centro del botón
+  del alternador coincide con el centro vertical del compás. El botón del motor
+  permanece en su posición original, debajo del indicador de conexión.
+  Reserva su posición aunque las alarmas se oculten; en pantallas bajas reduce
+  el tamaño de las alarmas para caber sobre Fondeo y AIS.
 - LED IGNITION del popup: parpadea en amarillo cada 600 ms con conexión,
   `batteryVoltage > 0` y sin RPM positivas. Se apaga al recibir RPM mayores que 0,
   independientemente del estado explícito del motor que controla RUNNING. Usa la misma lectura del reloj de

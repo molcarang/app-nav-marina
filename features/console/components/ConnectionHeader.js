@@ -1,8 +1,8 @@
 import { useTranslation } from '../../../localization/LanguageProvider';
-import { useContext } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { NightModeContext } from '../../../components/NightDimmer';
 import { MaterialIcons } from '@expo/vector-icons';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { styles } from '../styles/consoleStyles';
 import AisToggleButton from './AisToggleButton';
 import { useControlScale } from '../../../hooks/useControlScale';
@@ -12,17 +12,29 @@ import SoftwareVersion from './SoftwareVersion';
 import AppExitButton from './AppExitButton';
 import EngineStatusIndicator from './EngineStatusIndicator';
 const HEADER_INDICATOR_HEIGHT = 36;
-export default function ConnectionHeader({ navigation, settings, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds }) {
+export default function ConnectionHeader({ navigation, settings, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds, showEngineAlarms = false, compassCenterY }) {
     const { t } = useTranslation();
     const { enabled: nightEnabled, toggle: toggleNightMode } = useContext(NightModeContext);
     const scale = useControlScale();
+    const { width, height } = useWindowDimensions();
+    const motorOriginRef = useRef(null);
+    const [motorOriginY, setMotorOriginY] = useState(0);
+    const measureMotorOrigin = () => motorOriginRef.current?.measureInWindow((_x, y) => setMotorOriginY(y));
+    useEffect(() => {
+        const frame = requestAnimationFrame(() => motorOriginRef.current?.measureInWindow((_x, y) => setMotorOriginY(y)));
+        return () => cancelAnimationFrame(frame);
+    }, [width, height]);
+    const alarmScale = Math.max(0.4, Math.min(1, (height - 300 * scale) / (305 * scale)));
+    const motorTop = 42 * scale + 5;
+    const alarmTop = (compassCenterY ?? height / 2) - 305 * alarmScale * scale / 2 - motorOriginY - motorTop;
     const surface = { height: 36 * scale, paddingHorizontal: 12 * scale };
     const textSize = { fontSize: 12 * scale };
     const accent = isConnected ? '#45d39a' : '#ef6b72';
     return (
-        <View style={[styles.headerRow, badgeStyles.header, onToggleAis && { flexWrap: 'wrap' }, style]}>
+        <View style={[styles.headerRow, badgeStyles.header, showEngineAlarms && { zIndex: 2 }, onToggleAis && { flexWrap: 'wrap' }, style]}>
             <View style={[badgeStyles.connectionGroup, !settingsInline && { flex: 1 }, onToggleAis && { marginBottom: 42 * scale }]}>
-            <View style={{ width: 36 * scale, height: 36 * scale, alignSelf: 'center', zIndex: 3 }}>
+            <View ref={motorOriginRef} collapsable={false} onLayout={measureMotorOrigin}
+                style={{ width: 36 * scale, height: 36 * scale, alignSelf: 'center', zIndex: 3 }}>
             <View accessible accessibilityLiveRegion="polite"
                 accessibilityLabel={t(isConnected ? 'connected' : 'disconnected')}
                 style={[badgeStyles.surface, surface, badgeStyles.badge, {
@@ -31,8 +43,10 @@ export default function ConnectionHeader({ navigation, settings, isConnected, is
                 <View pointerEvents="none" style={badgeStyles.highlight} />
                 <MaterialIcons accessible={false} name={isConnected ? 'link' : 'link-off'} size={24 * scale} color={accent} />
             </View>
-            <View style={{ position: 'absolute', left: 0, top: 42 * scale + 5, flexDirection: 'row', gap: 8 * scale }}>
-                <EngineStatusIndicator connected={isConnected} engineRunning={navigation?.engineRunning} navigation={navigation} settings={settings} />
+            <View style={{ position: 'absolute', left: 0, top: motorTop, flexDirection: 'column', gap: 8 * scale }}>
+                <EngineStatusIndicator connected={isConnected} engineRunning={navigation?.engineRunning} navigation={navigation}
+                    settings={settings} showEngineAlarms={showEngineAlarms}
+                    alarmScale={alarmScale} alarmTop={alarmTop} />
             </View>
             </View>
             {toggleNightMode && <TouchableOpacity onPress={toggleNightMode}
@@ -62,7 +76,8 @@ export default function ConnectionHeader({ navigation, settings, isConnected, is
             {onToggleAis && <SoftwareVersion style={{ flexShrink: 1, transform: [{ translateY: 5 }] }} />}
             </View>
             {/* In portrait, use the gap above the compass for the taller motor indicator. */}
-            {onToggleAis && <View style={{ width: '100%', gap: 8 * scale, alignItems: 'flex-start', transform: [{ translateY: 12.6 * scale }] }}>
+            {onToggleAis && <View style={{ width: '100%', gap: 8 * scale, alignItems: 'flex-start',
+                transform: [{ translateY: 12.6 * scale }] }}>
                 <AnchorButton position={navigation?.position} receivedAt={navigation?.positionReceivedAt} connected={isConnected} />
                 <AisToggleButton targets={aisTargets} position={navigation?.position} positionReceivedAt={navigation?.positionReceivedAt} connected={isConnected && aisStatus === 'connected'} visibleCount={aisVisibleCount} auto={aisAuto} onToggleAuto={onToggleAisAuto} rangeNm={aisRangeNm} onRangeChange={onAisRangeChange} visible={aisVisible} onPress={onToggleAis} />
             </View>}
