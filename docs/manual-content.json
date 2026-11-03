@@ -1,5 +1,5 @@
 {
-  "title": "NavMarina · Manual de usuario",
+  "title": "OpenBoat · Manual de usuario",
   "edition": "19 de octubre de 2026",
   "scope": "Edición basada en el código actual del proyecto · Aplicación web y paquete Raspberry",
   "pages": [
@@ -9,7 +9,7 @@
       "figure": "overview",
       "caption": "Esquema de orientación. Los gráficos de este manual son ilustrativos: no son capturas ni contienen lecturas reales.",
       "sections": [
-        {"heading": "Qué versión describe", "text": "Describe las funciones presentes en el proyecto a fecha de esta edición. Algunas pueden requerir instalar una versión más reciente en tu equipo. En Raspberry, NavMarina utiliza Chromium en modo aplicación: se abre desde el icono del menú, sin pestañas ni barra de direcciones."},
+        {"heading": "Qué versión describe", "text": "Describe las funciones presentes en el proyecto a fecha de esta edición. Algunas pueden requerir instalar una versión más reciente en tu equipo. En Raspberry, OpenBoat utiliza Chromium en modo aplicación: se abre desde el icono del menú, sin pestañas ni barra de direcciones."},
         {"heading": "Cómo utilizar el manual", "text": "Empieza por la conexión y el mapa de pantalla. Después consulta el apartado correspondiente a la función que quieras utilizar. Las etiquetas de los botones se muestran en español; el idioma puede cambiarse desde Ajustes."}
       ],
       "table": {"headers": ["Contenido", "Página"], "rows": [["Primer arranque y conexión", "2"], ["Mapa de pantalla e instrumentos", "3–4"], ["Historial y contactos AIS", "5–6"], ["Navegación a waypoint", "7"], ["Preparación y vigilancia de fondeo", "8–9"], ["Ajustes y avisos de profundidad", "10"], ["Actualizaciones y solución de problemas", "11–12"]]},
@@ -17,11 +17,11 @@
     },
     {
       "title": "Primer arranque y conexión",
-      "intro": "NavMarina recibe los datos de Signal K. El icono de enlace es verde cuando hay conexión con el servidor y rojo, con el enlace cortado, cuando se pierde. Cada instrumento depende además de que su fuente esté enviando lecturas válidas.",
+      "intro": "OpenBoat recibe los datos de Signal K. El icono de enlace es verde cuando hay conexión con el servidor y rojo, con el enlace cortado, cuando se pierde. Cada instrumento depende además de que su fuente esté enviando lecturas válidas.",
       "figure": "dataflow",
       "caption": "Los instrumentos pueden proceder de sensores o del simulador. La navegación al waypoint la aporta el sistema conectado, por ejemplo OpenCPN.",
-      "steps": ["Abre NavMarina desde su icono en la Raspberry o desde la dirección web donde se haya publicado.", "Pulsa Ajustes e introduce la dirección de tu servidor Signal K.", "Pulsa GUARDAR Y CONECTAR. Comprueba el indicador de conexión y que LAT/LON y los instrumentos reciben datos.", "Pulsa PROBAR SONIDO en Ajustes y comprueba el volumen y la salida de audio del equipo.", "Activa pantalla completa si lo deseas. En Raspberry, Escape permite salir de ella con un teclado."],
-      "table": {"headers": ["Dónde está Signal K", "Dirección de ejemplo"], "rows": [["En la misma Raspberry que ejecuta NavMarina", "http://localhost:3000"], ["En otro equipo de la red", "http://192.168.1.10:3000"], ["En un servidor protegido con HTTPS", "La dirección HTTPS de ese servidor"]]},
+      "steps": ["Abre OpenBoat desde su icono en la Raspberry o desde la dirección web donde se haya publicado.", "Pulsa Ajustes e introduce la dirección de tu servidor Signal K.", "Pulsa GUARDAR Y CONECTAR. Comprueba el indicador de conexión y que LAT/LON y los instrumentos reciben datos.", "Pulsa PROBAR SONIDO en Ajustes y comprueba el volumen y la salida de audio del equipo.", "Activa pantalla completa si lo deseas. En Raspberry, Escape permite salir de ella con un teclado."],
+      "table": {"headers": ["Dónde está Signal K", "Dirección de ejemplo"], "rows": [["En la misma Raspberry que ejecuta OpenBoat", "http://localhost:3000"], ["En otro equipo de la red", "http://192.168.1.10:3000"], ["En un servidor protegido con HTTPS", "La dirección HTTPS de ese servidor"]]},
       "sections": [{"heading": "Sin Internet o sin datos", "text": "El paquete Raspberry abre su interfaz desde el propio equipo. Los datos en vivo necesitan acceso a Signal K, aunque no haya Internet. Si Signal K está en la misma Raspberry, quitar el Wi-Fi puede mantener el enlace local y el icono verde. En la web, la apertura sin conexión depende de que la PWA se haya cargado y guardado previamente. Una web HTTPS necesita una conexión compatible con Signal K; si no conecta, revisa la dirección con quien administre el servidor."}],
       "note": "En una tablet, localhost se refiere a la tablet, no a la Raspberry. El simulador Standard Demo genera instrumentos de prueba; AIS Demo genera contactos simulados."
     },
@@ -32,7 +32,7 @@
       "caption": "Distribución horizontal simplificada. Los números se corresponden con la tabla; el waypoint aparece cuando se recibe un destino válido.",
       "table": {"headers": ["Zona", "Qué encontrarás"], "rows": [["1 · Cabecera", "Conexión, modo día/noche, Ajustes y pantalla completa."], ["2 · Compás", "Rumbo, referencias de viento, corriente y contactos AIS cuando están activados."], ["3 · Instrumentos", "TWS, SOG, TWA, COG, SONDA y AWA; máximos y estado recibido del piloto."], ["4 · Fondeo y AIS", "Activación y estado de fondeo; Datos AIS, AUTO, Contactos y alcance."], ["5 · Paneles inferiores", "Escora, timón, coordenadas y temperatura del agua."], ["6 · Waypoint", "Destino, distancia, tiempo, demora verdadera y desviación de ruta."]]},
       "sections": [{"heading": "Interacción básica", "text": "Un toque o clic activa los botones. En TWS y SOG, dos toques rápidos abren el historial. Las pulsaciones largas tienen funciones específicas: 3 segundos reinician máximo e historial; 2 segundos sobre Fondeo desactivan su vigilancia."}, {"heading": "Motor en marcha", "text": "El botón bajo la conexión es amarillo con marcha confirmada y gris en los demás casos. Púlsalo para abrir el panel, incluso parado o desconectado. Los cuatro avisos superiores se iluminan en rojo al recibir alarmas, sin sonido. Las cinco esferas son analógicas: escalas y agujas, sin displays digitales. La central indica RPM. En Ajustes puedes guardar el máximo de escala y el inicio de zona roja (5.000 y 4.000 RPM iniciales); el inicio rojo no puede superar el máximo. Las esferas de la izquierda indican temperatura en °C (arriba, escala 0–120) y presión de aceite en bar (abajo, escala 0–10). A la derecha: combustible en % (arriba) y batería en V (abajo, escala 0–16). Con varias fuentes, combustible y voltaje muestran el menor valor recibido. Todo se actualiza con el panel abierto. Sin datos: aguja gris en reposo. Con datos válidos, incluso cero: roja. Pulsa Cerrar o fuera del popup para volver."}],
-      "note": "El estado del piloto es una lectura recibida. NavMarina no envía órdenes al piloto ni activa una ruta en OpenCPN."
+      "note": "El estado del piloto es una lectura recibida. OpenBoat no envía órdenes al piloto ni activa una ruta en OpenCPN."
     },
     {
       "title": "Entender los instrumentos",
@@ -64,12 +64,12 @@
     },
     {
       "title": "Navegación a un waypoint",
-      "intro": "El destino se activa en OpenCPN u otro sistema que publique su navegación en Signal K. NavMarina recibe ese destino y presenta sus datos; no crea ni activa rutas desde su panel.",
+      "intro": "El destino se activa en OpenCPN u otro sistema que publique su navegación en Signal K. OpenBoat recibe ese destino y presenta sus datos; no crea ni activa rutas desde su panel.",
       "figure": "waypoint",
       "caption": "La desviación XTE es la separación lateral respecto al tramo de ruta. La demora señala desde el barco hacia el waypoint.",
       "table": {"headers": ["Dato", "Significado"], "rows": [["Destino", "Nombre o identificador del siguiente waypoint, cuando se recibe."], ["Distancia · NM", "Separación al destino. Puede calcularse con las posiciones si no llega una distancia reciente."], ["Tiempo restante", "Estimación según la distancia y la velocidad de acercamiento recibida. Sin velocidad de acercamiento positiva, se muestra sin dato."], ["Demora · T", "Dirección hacia el destino respecto al norte verdadero. Puede calcularse usando las posiciones."], ["Desviación de ruta · XTE", "Separación lateral del tramo, recibida de Signal K. La escala gráfica representa ±0,1 NM."]]},
       "sections": [
-        {"heading": "Por qué puede faltar la desviación", "text": "XTE no se calcula actualmente en NavMarina. Si Signal K lo entrega a null, no llega o deja de actualizarse durante 30 segundos, la app muestra un guion. Esto es distinto de 0,00 NM, que sí es un valor. Distancia y demora pueden seguir visibles gracias a su cálculo de respaldo."},
+        {"heading": "Por qué puede faltar la desviación", "text": "XTE no se calcula actualmente en OpenBoat. Si Signal K lo entrega a null, no llega o deja de actualizarse durante 30 segundos, la app muestra un guion. Esto es distinto de 0,00 NM, que sí es un valor. Distancia y demora pueden seguir visibles gracias a su cálculo de respaldo."},
         {"heading": "Mantener y cancelar el destino", "text": "El destino se mantiene aunque no se publique de nuevo constantemente. Cambia al recibir otro destino y se oculta al recibir su cancelación o perder la conexión de navegación. Cancela o cambia la navegación desde el sistema que la originó."}
       ],
       "note": "Si falta XTE, comprueba en Signal K los campos crossTrackError de courseRhumbline y courseGreatCircle. El simulador de instrumentos no genera rutas ni desviación XTE."
@@ -108,18 +108,18 @@
         {"heading": "Alarma de escora", "text": "Ajusta su límite entre 1 y 90° en Ajustes. Si no hay un valor guardado válido se usan 30°. El barco del medidor parpadea alternando blanco y rojo al alcanzar o superar el límite, a babor o estribor. Al bajar del límite deja de parpadear y recupera sus colores habituales. Este aviso no emite sonido."},
         {"heading": "Comprobar el sonido", "text": "Pulsa PROBAR SONIDO en Ajustes. En web puede ser necesario tocar la pantalla para habilitar el audio. Revisa el volumen y la salida HDMI, altavoz o auriculares del equipo si no lo oyes. El interruptor de sonido de profundidad no es un control del aviso de fondeo."},
         {"heading": "Modo noche", "text": "Se puede alternar desde la cabecera o en Ajustes. La intensidad se guarda; comprueba el estado de día/noche al volver a abrir. Este ajuste oscurece la aplicación, no modifica necesariamente el brillo físico de la pantalla."},
-        {"heading": "Salir de NavMarina", "text": "CERRAR en la cabecera pide confirmación para salir y, si hay fondeo activo, avisa de que se detendrá su vigilancia. CERRAR dentro de Ajustes solo vuelve a la consola. En Raspberry salir cierra la ventana de la app; si el navegador impide el cierre, utiliza la X de la ventana o pestaña."}
+        {"heading": "Salir de OpenBoat", "text": "CERRAR en la cabecera pide confirmación para salir y, si hay fondeo activo, avisa de que se detendrá su vigilancia. CERRAR dentro de Ajustes solo vuelve a la consola. En Raspberry salir cierra la ventana de la app; si el navegador impide el cierre, utiliza la X de la ventana o pestaña."}
       ]
     },
     {
-      "title": "Actualizar NavMarina en Raspberry",
+      "title": "Actualizar OpenBoat en Raspberry",
       "intro": "La app comprueba las versiones publicadas al arrancar. La comprobación requiere Internet; no se repite periódicamente mientras permanece abierta. La instalación comienza solo cuando el usuario la confirma.",
       "figure": "updates",
       "caption": "El usuario decide tanto el inicio de la instalación como el momento de abrir la nueva versión.",
-      "steps": ["Abre o recarga NavMarina después de que se publique una versión. Si no hay Internet, la app continúa funcionando.", "Si aparece el aviso, pulsa Actualizar o Más tarde. Más tarde lo oculta durante esa sesión.", "Para continuar, confirma Instalar ahora. Se mostrarán las fases de descarga, verificación e instalación.", "Espera a que termine. No apagues la Raspberry ni cierres la sesión durante la instalación.", "Pulsa Abrir nueva versión para recargar la pantalla cuando lo decidas."],
+      "steps": ["Abre o recarga OpenBoat después de que se publique una versión. Si no hay Internet, la app continúa funcionando.", "Si aparece el aviso, pulsa Actualizar o Más tarde. Más tarde lo oculta durante esa sesión.", "Para continuar, confirma Instalar ahora. Se mostrarán las fases de descarga, verificación e instalación.", "Espera a que termine. No apagues la Raspberry ni cierres la sesión durante la instalación.", "Pulsa Abrir nueva versión para recargar la pantalla cuando lo decidas."],
       "sections": [
         {"heading": "Qué se conserva", "text": "Los ajustes del perfil del navegador se mantienen. El paquete se descarga y verifica antes de seleccionar la nueva versión; si falla la descarga o la validación, se sigue usando la anterior. Ante un error puedes reintentar más tarde."},
-        {"heading": "Primera instalación del actualizador", "text": "Las instalaciones antiguas necesitan instalar una vez el paquete Raspberry nuevo manualmente: cierra NavMarina, extrae el ZIP y ejecuta bash install.sh desde su carpeta, con el mismo usuario del escritorio y sin sudo. Después vuelve a abrir el icono del menú."},
+        {"heading": "Primera instalación del actualizador", "text": "Las instalaciones antiguas necesitan instalar una vez el paquete Raspberry nuevo manualmente: cierra OpenBoat, extrae el ZIP y ejecuta bash install.sh desde su carpeta, con el mismo usuario del escritorio y sin sudo. Después vuelve a abrir el icono del menú."},
         {"heading": "Si utilizas la versión web", "text": "El aviso ofrece Descargar. La publicación del ZIP en el servidor web la realiza su administrador; el navegador no instala ese ZIP como si fuera el paquete Raspberry."}
       ],
       "note": "Este manual describe el actualizador incluido en el proyecto. La comprobación física de una actualización completa en la Raspberry real debe realizarse al desplegarlo por primera vez."

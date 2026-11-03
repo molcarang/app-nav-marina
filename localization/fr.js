@@ -1,4 +1,10 @@
 export default {
+  "startupPreparing": "Pr\u00e9paration des instruments...",
+  "startupConnecting": "Connexion \u00e0 Signal K...",
+  "startupConnected": "Connect\u00e9 \u00e0 Signal K",
+  "startupOffline": "Signal K hors ligne. Ouverture des instruments...",
+  "startupEnter": "Ouvrir OpenBoat",
+
   "settingsSection_general": "G\u00e9n\u00e9ral et connexion",
   "settingsSection_navigation": "Navigation et g\u00eete",
   "settingsSection_depth": "Profondeur et son",
@@ -117,8 +123,8 @@ export default {
   "intensityHint": "S’applique à l’activation du mode nuit. Un pourcentage plus faible assombrit davantage l’écran.",
   "night": "Mode nuit",
   "close": "FERMER",
-  "exitApplication": "Quitter NavMarina",
-  "exitConfirm": "Voulez-vous quitter NavMarina ?",
+  "exitApplication": "Quitter OpenBoat",
+  "exitConfirm": "Voulez-vous quitter OpenBoat ?",
   "exitAnchorWarning": "Quitter arrêtera la surveillance du mouillage.",
   "exitCancel": "ANNULER",
   "exitConfirmButton": "QUITTER",

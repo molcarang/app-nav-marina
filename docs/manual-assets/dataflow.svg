@@ -19,7 +19,7 @@
 			<path d="M 147,140 L 179,140 Z" style="stroke: rgb(7%,49%,52%); stroke-linecap: butt; stroke-width: 2;"/>
 			<polygon points="179 140, 172.6969 143.0448, 172.6969 136.9552" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
 			<rect x="358" y="117" width="125" height="48" rx="8" ry="8" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(83%,93%,89%); fill-rule: evenodd;"/>
-			<text x="387.1295" y="138" style="font-family: Helvetica-Bold; font-size: 13px;fill: rgb(12%,51%,36%); stroke:none;" transform="translate(0,276) scale(1,-1)">NavMarina</text>
+			<text x="388.943" y="138" style="font-family: Helvetica-Bold; font-size: 13px;fill: rgb(12%,51%,36%); stroke:none;" transform="translate(0,276) scale(1,-1)">OpenBoat</text>
 			<path d="M 317,140 L 350,140 Z" style="stroke: rgb(7%,49%,52%); stroke-linecap: butt; stroke-width: 2;"/>
 			<polygon points="350 140, 343.6969 143.0448, 343.6969 136.9552" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(7%,49%,52%); fill-rule: evenodd;"/>
 			<rect x="186" y="16" width="125" height="44" rx="8" ry="8" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(87%,91%,95%); fill-rule: evenodd;"/>

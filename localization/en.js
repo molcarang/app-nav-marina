@@ -1,4 +1,10 @@
 export default {
+  "startupPreparing": "Preparing instruments...",
+  "startupConnecting": "Connecting to Signal K...",
+  "startupConnected": "Connected to Signal K",
+  "startupOffline": "Signal K offline. Opening instruments...",
+  "startupEnter": "Enter OpenBoat",
+
   "settingsSection_general": "General and connection",
   "settingsSection_navigation": "Navigation and heel",
   "settingsSection_depth": "Depth and sound",
@@ -117,8 +123,8 @@ export default {
   "intensityHint": "Applies when night mode is enabled. A lower percentage makes the screen darker.",
   "night": "Night mode",
   "close": "CLOSE",
-  "exitApplication": "Exit NavMarina",
-  "exitConfirm": "Do you want to exit NavMarina?",
+  "exitApplication": "Exit OpenBoat",
+  "exitConfirm": "Do you want to exit OpenBoat?",
   "exitAnchorWarning": "Exiting will stop the anchor watch.",
   "exitCancel": "CANCEL",
   "exitConfirmButton": "EXIT",

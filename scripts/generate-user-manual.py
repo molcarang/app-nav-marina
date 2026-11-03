@@ -78,7 +78,7 @@ def make_figure(name):
     box(d, 0, 0, 500, 190)
     if name in ["overview", "screen"]:
         box(d, 12, 12, 476, 166, NAVY)
-        text(d, 28, 157, "NavMarina", 13, "#FFFFFF", True)
+        text(d, 28, 157, "OpenBoat", 13, "#FFFFFF", True)
         text(d, 145, 157, "CONECTADO", 9, "#76DEB6")
         text(d, 333, 157, "NOCHE   AJUSTES   [ ]", 9, "#BBD2DD")
         d.add(Circle(128, 94, 47, fillColor=colour("#1D4862"), strokeColor=colour("#8FB2C7")))
@@ -107,7 +107,7 @@ def make_figure(name):
         text(d, 248, 133, "Signal K", 15, "#FFFFFF", True, "middle")
         arrow(d, 147, 140, 179, 140)
         box(d, 358, 117, 125, 48, "#D4EEE4")
-        text(d, 420, 138, "NavMarina", 13, GREEN, True, "middle")
+        text(d, 420, 138, "OpenBoat", 13, GREEN, True, "middle")
         arrow(d, 317, 140, 350, 140)
         box(d, 186, 16, 125, 44, "#E0E9F4")
         text(d, 248, 33, "OpenCPN", 13, BLUE, True, "middle")
@@ -269,7 +269,7 @@ def pdf_manual():
         canvas.rect(0, A4[1] - 28, A4[0], 28, fill=1, stroke=0)
         canvas.setFont("Helvetica-Bold", 9)
         canvas.setFillColor(colors.white)
-        canvas.drawString(44, A4[1] - 18, "NAVMARINA")
+        canvas.drawString(44, A4[1] - 18, "OPENBOAT")
         canvas.setFont("Helvetica", 8)
         canvas.drawRightString(A4[0] - 44, A4[1] - 18, "Manual de usuario · Español")
         canvas.setStrokeColor(colour("#CADBE3"))
@@ -277,12 +277,12 @@ def pdf_manual():
         canvas.setFillColor(colour(GRAY))
         canvas.setFont("Helvetica", 8)
         canvas.drawString(44, 22, DATA["edition"])
-        canvas.drawRightString(A4[0] - 44, 22, f"NavMarina  |  {document.page}")
+        canvas.drawRightString(A4[0] - 44, 22, f"OpenBoat  |  {document.page}")
         canvas.restoreState()
 
-    filename = OUT / "Manual-de-usuario-NavMarina.pdf"
+    filename = OUT / "Manual-de-usuario-OpenBoat.pdf"
     document = SimpleDocTemplate(str(filename), pagesize=A4, leftMargin=44, rightMargin=44,
-                                 topMargin=46, bottomMargin=48, title=DATA["title"], author="NavMarina")
+                                 topMargin=46, bottomMargin=48, title=DATA["title"], author="OpenBoat")
     document.build(paragraphs, onFirstPage=frame, onLaterPages=frame)
     return filename
 
@@ -304,7 +304,7 @@ def docx_manual():
         style.font.color.rgb = RGBColor.from_string(color)
         style.paragraph_format.space_before, style.paragraph_format.space_after = Pt(8), Pt(5)
     header = section.header.paragraphs[0]
-    header.text = "NAVMARINA  ·  MANUAL DE USUARIO"
+    header.text = "OPENBOAT  ·  MANUAL DE USUARIO"
     header.runs[0].font.size = Pt(8)
     header.runs[0].font.color.rgb = RGBColor.from_string("59717D")
     footer = section.footer.paragraphs[0]
@@ -315,7 +315,7 @@ def docx_manual():
     footer.runs[0].font.size = Pt(8)
     document.core_properties.title = DATA["title"]
     document.core_properties.subject = "Uso de la consola web y Raspberry con gráficos explicativos"
-    document.core_properties.author = "NavMarina"
+    document.core_properties.author = "OpenBoat"
 
     for number, page in enumerate(DATA["pages"], 1):
         if number > 1:
@@ -371,7 +371,7 @@ def docx_manual():
             shade = OxmlElement("w:shd")
             shade.set(qn("w:fill"), "EDF3F6")
             p._p.get_or_add_pPr().append(shade)
-    filename = OUT / "Manual-de-usuario-NavMarina.docx"
+    filename = OUT / "Manual-de-usuario-OpenBoat.docx"
     document.save(filename)
     return filename
 

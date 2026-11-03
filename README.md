@@ -1,11 +1,27 @@
-# Welcome to your Expo app 👋
+# OpenBoat 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Nombre de la aplicación
+
+La aplicación se presenta como **OpenBoat** en web, instalaciones móviles y accesos
+directos de Raspberry. Para actualizar el acceso directo existente de Raspberry,
+ejecuta de nuevo `bash install.sh` con el paquete nuevo, sin sudo.
+
+El repositorio GitHub `molcarang/app-nav-marina`, el proyecto Expo vinculado, el
+identificador Android y los nombres técnicos `navmarina` de servicio, perfil y
+paquetes de actualización se conservan para mantener las instalaciones y sus ajustes.
+El cambio del nombre visible no renombra esos servicios externos.
+
+Al abrir OpenBoat aparece una pantalla de bienvenida con la imagen de arranque
+y el estado real de conexión a Signal K. Con conexión, deja paso a
+los instrumentos tras un mínimo de 2,8 segundos; sin conexión, continúa a los
+8,5 segundos. No vuelve a aparecer al reconectar.
+
 ## Documentación del proyecto
 
-- [Manual de usuario ilustrado — PDF](docs/Manual-de-usuario-NavMarina.pdf).
-- [Manual de usuario — Word editable](docs/Manual-de-usuario-NavMarina.docx).
+- [Manual de usuario ilustrado — PDF](docs/Manual-de-usuario-OpenBoat.pdf).
+- [Manual de usuario — Word editable](docs/Manual-de-usuario-OpenBoat.docx).
 - [Guía de instalación y configuración de OpenCPN, OpenPlotter y Signal K](GUIA-INSTALACION-OPENCPN.md).
 
 - [Arquitectura y explicación de las partes del proyecto](ARQUITECTURA.md).

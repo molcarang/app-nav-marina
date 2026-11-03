@@ -1,7 +1,7 @@
 import UpdateNotice from '../../components/UpdateNotice';
 import { useVisibleAisCount } from './hooks/useVisibleAisCount';
 import { useAisAutoRange } from './hooks/useAisAutoRange';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSignalKData } from '../../services/signalk/useSignalKData';
 import { useWaypointData } from '../../services/signalk/useWaypointData';
@@ -21,10 +21,13 @@ import { styles } from './styles/consoleStyles';
 import { getConsoleTheme } from './styles/consoleTheme';
 import NightDimmer, { NightModeContext } from '../../components/NightDimmer';
 import { LanguageProvider } from '../../localization/LanguageProvider';
+import StartupLauncher from '../../components/StartupLauncher';
 /** Coordina datos y acciones. Cada página se ocupa de su presentación. */
 export default function ConsoleScreen() {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const { settings, isLoaded, updateSetting, saveSetting } = useConsoleSettings();
+    const [starting, setStarting] = useState(true);
+    const finishStartup = useCallback(() => setStarting(false), []);
     const [aisVisible, setAisVisible] = useState(false);
     const ais = useAisData(settings.signalKAddress, isLoaded);
     const { history: twsHistory, clearHistory: clearTwsHistory, recordReading } = useInstrumentHistory(
@@ -119,6 +122,7 @@ export default function ConsoleScreen() {
                 onNightModeChange={setNightMode}
                 onClose={() => setSettingsOpen(false)}
             />
+            {starting && <StartupLauncher ready={isLoaded} connected={data.isConnected} onFinish={finishStartup} />}
         </View>
         </NightModeContext.Provider>
         </AnchorWatchContext.Provider>

@@ -1,4 +1,10 @@
 export default {
+  "startupPreparing": "Preparando instrumentos...",
+  "startupConnecting": "Conectando con Signal K...",
+  "startupConnected": "Conectado a Signal K",
+  "startupOffline": "Signal K sin conexi\u00f3n. Abriendo instrumentos...",
+  "startupEnter": "Entrar en OpenBoat",
+
   "settingsSection_general": "General y conexi\u00f3n",
   "settingsSection_navigation": "Navegaci\u00f3n y escora",
   "settingsSection_depth": "Profundidad y sonido",
@@ -117,7 +123,7 @@ export default {
   "intensityHint": "Se aplica al activar el modo noche. Un porcentaje menor oscurece más la pantalla.",
   "night": "Modo Noche",
   "close": "CERRAR",
-  "exitApplication": "Salir de NavMarina",
+  "exitApplication": "Salir de OpenBoat",
   "exitConfirm": "¿Está seguro de que desea salir de la aplicación?",
   "exitAnchorWarning": "Al salir se detendrá la vigilancia de fondeo.",
   "exitCancel": "CANCELAR",
