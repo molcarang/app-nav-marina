@@ -1,8 +1,8 @@
 export default {
   "startupPreparing": "Preparando instrumentos...",
-  "startupConnecting": "Conectando con Signal K...",
-  "startupConnected": "Conectado a Signal K",
-  "startupOffline": "Signal K sin conexi\u00f3n. Abriendo instrumentos...",
+  "startupConnecting": "Estableciendo conexi\u00f3n...",
+  "startupConnected": "Conexi\u00f3n establecida",
+  "startupOffline": "Sin conexi\u00f3n. Abriendo instrumentos...",
   "startupEnter": "Entrar en OpenBoat",
 
   "settingsSection_general": "General y conexi\u00f3n",

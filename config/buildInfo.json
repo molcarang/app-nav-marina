@@ -4,5 +4,6 @@
   "buildNumber": 0,
   "channel": "main",
   "commit": null,
-  "target": "web"
+  "target": "raspberry",
+  "updaterProtocol": 1
 }
