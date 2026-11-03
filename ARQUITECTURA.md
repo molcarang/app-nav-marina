@@ -1,4 +1,4 @@
-﻿# Arquitectura de app-nav-marina
+﻿# Arquitectura de OpenBoat
 
 Guía de la estructura reorganizada el 22/09/2026. La aplicación es una consola React Native/Expo que recibe telemetría de un servidor Signal K externo. El servidor y su simulador no se ejecutan dentro de esta app.
 

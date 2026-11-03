@@ -1,4 +1,4 @@
-# Paths y datos de ejemplo para app-nav-marina
+# Paths y datos de ejemplo para OpenBoat
 
 Inventario obtenido de `services/signalk/paths.js` y `features/console/model/navigationData.js` el 22/09/2026. Son ejemplos nuevos para reconstruir la simulación, no los valores originales perdidos.
 

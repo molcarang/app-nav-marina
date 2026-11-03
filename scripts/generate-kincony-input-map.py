@@ -108,7 +108,7 @@ def page():
     word.add_page_break()
 
 title("KinCony F16 · Mapeo de entradas")
-paragraph(f"OpenBoat / NavMarina · Documento de referencia · {DATE}")
+paragraph(f"OpenBoat · Documento de referencia · {DATE}")
 paragraph("Basado en los archivos ESPHome locales del proyecto OpenBoat. Describe la configuración encontrada; no certifica el cableado real ni que esta versión esté instalada en la placa.")
 heading("1. Entradas digitales DI01–DI16")
 paragraph("Todas usan el expansor PCF8575, dirección I²C 0x24, identificado como pcf8574_hub_in_1. El campo number es el pin del expansor (0–15), no un GPIO del ESP32.")
@@ -140,7 +140,7 @@ title("Alcance y trazabilidad")
 heading("4. Qué está definido y qué falta confirmar")
 paragraph("Las 16 entradas digitales tienen nombres de servicios del barco. Las siete entradas GPIO adicionales y las cuatro analógicas conservan nombres genéricos; no se les asigna aquí una función que no figure en el YAML.")
 paragraph("El archivo local openboat_engine_hours.yaml, en Descargas, referencia binary_sensor.open_boad_kincony_relay_bin_engine_on_in para contar horas de motor. No se ha encontrado una definición bin_engine_on_in ni un borne asociado en los archivos de entradas F16 revisados. Por tanto, su entrada física queda pendiente de confirmar.")
-paragraph("El mapeo de los relojes y alarmas del motor en NavMarina es independiente de este listado de bornes. Los archivos F16 revisados no declaran un puente de estas entradas hacia PGN NMEA 2000 o rutas de Signal K. No se debe asumir, por ejemplo, que bin_water_in sea la alarma de temperatura del refrigerante.")
+paragraph("El mapeo de los relojes y alarmas del motor en OpenBoat es independiente de este listado de bornes. Los archivos F16 revisados no declaran un puente de estas entradas hacia PGN NMEA 2000 o rutas de Signal K. No se debe asumir, por ejemplo, que bin_water_in sea la alarma de temperatura del refrigerante.")
 heading("5. Archivos utilizados")
 paragraph("Configuración principal: C:/Users/Pc/Projects/OpenBoat/esphome/open-boad-kincony-relay.yaml. Sus inclusiones apuntan a esphome/includes/openboat-f16/.")
 for kind, path in source_files.items():

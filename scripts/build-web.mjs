@@ -25,14 +25,14 @@ function walk(directory) {
 const head = `<link rel="manifest" href="/manifest.webmanifest" />
 <meta name="theme-color" content="#071827" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="NavMarina" />
+<meta name="apple-mobile-web-app-title" content="OpenBoat" />
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 <script src="/pwa-register.js" defer></script>`;
 
 const files = walk(output).filter((path) => !path.endsWith(`${sep}sw.js`)).sort();
 for (const path of files.filter((path) => path.endsWith('.html'))) {
   const html = readFileSync(path, 'utf8')
-    .replace(/<title>.*?<\/title>/s, '<title>NavMarina</title>')
+    .replace(/<title>.*?<\/title>/s, '<title>OpenBoat</title>')
     .replace('</head>', `${head}</head>`);
   writeFileSync(path, html);
 }

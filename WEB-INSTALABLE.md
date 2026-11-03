@@ -1,4 +1,4 @@
-# NavMarina web instalable
+# OpenBoat web instalable
 
 ## Generar
 
@@ -22,7 +22,7 @@ versión anterior durante el despliegue para las ventanas que sigan abiertas.
 1. Abre la dirección HTTPS en Chrome.
 2. En el menú del navegador, selecciona **Instalar aplicación** o **Añadir a la
    pantalla de inicio** y confirma.
-3. Abre **NavMarina** desde su icono. Admite orientación vertical y horizontal.
+3. Abre **OpenBoat** desde su icono. Admite orientación vertical y horizontal.
 4. Configura la dirección de Signal K en los ajustes.
 
 Para probar en el mismo ordenador puedes servir `dist/` desde `localhost`.
@@ -43,6 +43,6 @@ puedes servir ambos mediante un proxy HTTPS en la red local. Conserva la direcci
 de Signal K correcta para la tablet: `localhost` se refiere a la propia tablet.
 
 Las actualizaciones se descargan en segundo plano. Cierra todas las ventanas de
-NavMarina, incluida la instalada, y vuelve a abrir para activar una versión nueva.
+OpenBoat, incluida la instalada, y vuelve a abrir para activar una versión nueva.
 Los ajustes locales se conservan. Comprueba en la tablet instalación, giro,
 reapertura sin conexión, reconexión a Signal K y prueba de sonido de las alarmas.

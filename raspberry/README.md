@@ -1,4 +1,4 @@
-# NavMarina para Raspberry Pi 5
+# OpenBoat para Raspberry Pi 5
 
 Dashboard web local para OpenPlotter con escritorio y pantalla táctil 1920×1080.
 No requiere Expo Go, Metro, Node.js en la Raspberry ni conexión a Internet durante
@@ -15,12 +15,11 @@ el uso. Chromium y Python 3 deben estar instalados previamente.
 
    Hazlo con el usuario del escritorio, **sin sudo**. Si faltan dependencias:
    `sudo apt install chromium python3` (esto sí requiere conexión a los repositorios).
-3. Abre **NavMarina** desde el escritorio o el menú. Si el escritorio pregunta,
+3. Abre **OpenBoat** desde el escritorio o el menú. Si el escritorio pregunta,
    permite ejecutar el acceso directo. El navegador se abre como ventana de app,
-   maximizada y con un perfil separado del navegador habitual.
-4. Pulsa el icono de pantalla completa de la cabecera. Vuelve a pulsarlo para
-   recuperar la ventana y cerrarla mediante la X del escritorio. Con teclado,
-   también puedes salir de pantalla completa con Escape.
+   a pantalla completa y con un perfil separado del navegador habitual.
+4. Para salir, usa Cerrar en la cabecera. Con teclado también puedes usar F11
+   para alternar la pantalla completa de Chromium.
 5. En Settings comprueba que Signal K apunta a `http://localhost:3000`.
    Esta dirección supone que Signal K se ejecuta en la misma Raspberry.
 
@@ -54,7 +53,7 @@ journalctl --user -u navmarina.service -n 50
 ```
 
 Para actualizar, cierra la ventana, extrae el nuevo paquete y ejecuta su instalador.
-Vuelve a abrir NavMarina. El perfil y los ajustes se conservan.
+Vuelve a abrir OpenBoat. El perfil y los ajustes se conservan.
 
 Para detener/desactivar el servidor:
 
@@ -77,7 +76,7 @@ Instala manualmente una vez este paquete nuevo con `bash install.sh`, sin sudo.
 Este paso migra el servidor local y conserva el perfil Chromium y sus ajustes.
 Python debe ser 3.9 o posterior. El servicio se reinicia al ejecutar el instalador.
 
-A partir de entonces, al detectar una nueva release, NavMarina ofrece Actualizar
+A partir de entonces, al detectar una nueva release, OpenBoat ofrece Actualizar
 y Mas tarde. Actualizar solicita confirmacion con Instalar ahora. El servidor
 local descarga el ZIP Raspberry y SHA256SUMS desde la release seleccionada del
 repositorio, comprueba integridad, canal y version, extrae en una carpeta temporal
@@ -104,7 +103,7 @@ permite crear enlaces simbolicos; falta validar el flujo en la Raspberry real.
 
 ## Salir de la aplicacion
 
-En la cabecera, Cerrar muestra una confirmacion para salir de NavMarina. Si hay fondeo
+En la cabecera, Cerrar muestra una confirmacion para salir de OpenBoat. Si hay fondeo
 activo, avisa de que al cerrar se detendra la vigilancia. El servidor local exige
 origen y token de sesion y cierra solamente el proceso principal Chromium con el
 perfil `~/.local/share/navmarina/browser` y la URL de la app. No cierra otros

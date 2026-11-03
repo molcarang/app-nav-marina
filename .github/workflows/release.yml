@@ -1,4 +1,4 @@
-name: Build and publish NavMarina
+name: Build and publish OpenBoat
 
 on:
   pull_request:
@@ -41,6 +41,6 @@ jobs:
           tag="navmarina-${NAVMARINA_CHANNEL}-${NAVMARINA_BUILD_NUMBER}-${GITHUB_RUN_ATTEMPT}"
           flags=()
           if [ "$NAVMARINA_CHANNEL" != "main" ]; then flags+=(--prerelease); fi
-          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft "${flags[@]}" --title "NavMarina ${NAVMARINA_CHANNEL} build ${NAVMARINA_BUILD_NUMBER}" --notes-file artifacts/release.json
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft "${flags[@]}" --title "OpenBoat ${NAVMARINA_CHANNEL} build ${NAVMARINA_BUILD_NUMBER}" --notes-file artifacts/release.json
           gh release upload "$tag" --repo "$GITHUB_REPOSITORY" artifacts/navmarina-web.zip artifacts/navmarina-raspberry.zip artifacts/SHA256SUMS
           gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest=false

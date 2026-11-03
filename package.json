@@ -1,5 +1,5 @@
 {
-  "name": "app-nav-marina",
+  "name": "openboat",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {

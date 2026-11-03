@@ -25,7 +25,7 @@ mv -Tf "$target/.current-install-$$" "$target/current"
 cp "$source_dir/icon.png" "$target/icon.png"
 cat > "$HOME/.config/systemd/user/navmarina.service" <<'UNIT'
 [Unit]
-Description=NavMarina local dashboard
+Description=OpenBoat local dashboard
 [Service]
 ExecStart=/usr/bin/python3 %h/.local/share/navmarina/current/server.py --home %h/.local/share/navmarina
 Restart=on-failure
@@ -33,7 +33,7 @@ RestartSec=3
 [Install]
 WantedBy=default.target
 UNIT
-cat > "$HOME/.local/bin/navmarina" <<'LAUNCH'
+cat > "$HOME/.local/bin/openboat" <<'LAUNCH'
 #!/usr/bin/env bash
 set -euo pipefail
 systemctl --user start navmarina.service
@@ -42,24 +42,28 @@ for attempt in {1..30}; do
   sleep 1
 done
 browser="$(command -v chromium || command -v chromium-browser)"
-exec "$browser" --user-data-dir="$HOME/.local/share/navmarina/browser" --app=http://127.0.0.1:8765 --start-maximized --no-first-run --autoplay-policy=no-user-gesture-required
+exec "$browser" --user-data-dir="$HOME/.local/share/navmarina/browser" --app=http://127.0.0.1:8765 --start-fullscreen --no-first-run --autoplay-policy=no-user-gesture-required
 LAUNCH
-chmod +x "$HOME/.local/bin/navmarina"
-cat > "$HOME/.local/share/applications/navmarina.desktop" <<DESKTOP
+chmod +x "$HOME/.local/bin/openboat"
+# Retain the previous command as an alias for existing launchers.
+ln -sfn "$HOME/.local/bin/openboat" "$HOME/.local/bin/navmarina"
+cat > "$HOME/.local/share/applications/openboat.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
-Name=NavMarina
+Name=OpenBoat
 Comment=Marine dashboard
-Exec="$HOME/.local/bin/navmarina"
+Exec="$HOME/.local/bin/openboat"
 Icon=$target/icon.png
 Terminal=false
 Categories=Utility;
 DESKTOP
 desktop="$(xdg-user-dir DESKTOP 2>/dev/null || printf '%s/Desktop' "$HOME")"
 mkdir -p "$desktop"
-cp "$HOME/.local/share/applications/navmarina.desktop" "$desktop/navmarina.desktop"
-chmod +x "$desktop/navmarina.desktop"
+cp "$HOME/.local/share/applications/openboat.desktop" "$desktop/openboat.desktop"
+chmod +x "$desktop/openboat.desktop"
+# Replace the old desktop entries without changing the browser profile or service.
+rm -f -- "$HOME/.local/share/applications/navmarina.desktop" "$desktop/navmarina.desktop"
 systemctl --user daemon-reload
 systemctl --user enable navmarina.service
 systemctl --user restart navmarina.service
-echo "Installed. Open NavMarina from the desktop or application menu."
+echo "Installed. Open OpenBoat from the desktop or application menu."
