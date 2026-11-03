@@ -13,7 +13,7 @@ identificador Android y los nombres técnicos `navmarina` de servicio, perfil y
 paquetes de actualización se conservan para mantener las instalaciones y sus ajustes.
 El cambio del nombre visible no renombra esos servicios externos.
 
-Al abrir OpenBoat aparece una pantalla de bienvenida con la imagen de arranque
+Al abrir OpenBoat aparece una pantalla de bienvenida con un vídeo en bucle y sin sonido
 y el estado real de conexión a Signal K. Con conexión, deja paso a
 los instrumentos tras un mínimo de 2,8 segundos; sin conexión, continúa a los
 8,5 segundos. No vuelve a aparecer al reconectar.
