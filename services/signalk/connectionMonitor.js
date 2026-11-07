@@ -29,7 +29,7 @@ export function monitorSignalKConnection(socket, onLost, {
         disposed = true;
         clearInterval(timer);
         cancelProbe();
-        eventTarget?.removeEventListener('offline', check);
+        eventTarget?.removeEventListener?.('offline', check);
     };
     const lose = () => {
         if (disposed) return;
@@ -57,7 +57,8 @@ export function monitorSignalKConnection(socket, onLost, {
             if (Date.now() - started >= CONNECTION_OPEN_TIMEOUT_MS) lose();
         } else if (Date.now() - lastProbe >= CONNECTION_CHECK_INTERVAL_MS) check();
     }, 1000);
-    eventTarget?.addEventListener('offline', check);
+    // React Native exposes window as a global alias without browser event methods.
+    eventTarget?.addEventListener?.('offline', check);
     return {
         opened() { if (!disposed && !opened) { opened = true; check(); } },
         message(message) {

@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 const root = new URL('../', import.meta.url);
 const info = JSON.parse(readFileSync(new URL('config/buildInfo.json', root), 'utf8'));
 if (!info.buildNumber || !info.commit) throw new Error('Release requires CI build metadata');
-const files = ['navmarina-web.zip', 'navmarina-raspberry.zip'];
+const files = ['navmarina-web.zip', 'navmarina-raspberry.zip', 'navmarina-android.apk'];
 for (const name of files) {
     if (!existsSync(new URL(`artifacts/${name}`, root))) throw new Error(`Missing release package: ${name}`);
 }

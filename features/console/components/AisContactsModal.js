@@ -3,6 +3,7 @@ import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react
 import { useTranslation } from '../../../localization/LanguageProvider';
 import { visibleAisContacts } from '../model/aisContacts';
 import { isValidPosition } from '../model/gpsPosition';
+import { AIS_RISK_COLORS } from '../model/aisCollisionRisk';
 
 export default function AisContactsModal({ visible, onClose, targets, position, receivedAt, connected, rangeNm }) {
     const { t } = useTranslation();
@@ -30,8 +31,12 @@ export default function AisContactsModal({ visible, onClose, targets, position, 
                         : !fresh ? 'aisContactsGpsNeeded' : 'aisContactsEmpty')}</Text>}
                     renderItem={({ item }) => <View style={styles.row}>
                         <View style={styles.identity}>
-                            <Text numberOfLines={1} style={styles.name}>{item.name || t('aisContactUnnamed')}</Text>
+                            <Text numberOfLines={1} style={[styles.name, { color: AIS_RISK_COLORS[item.collision?.level ?? 'unknown'] }]}>{item.name || t('aisContactUnnamed')}</Text>
                             <Text selectable style={styles.subtitle}>{item.mmsi ? `MMSI: ${item.mmsi}` : `ID: ${item.id.replace(/^vessels\./, '')}`}</Text>
+                            <Text style={styles.subtitle}>{t(`aisRisk_${item.collision?.level ?? 'unknown'}`)}
+                                {Number.isFinite(item.collision?.cpaNm) && ` · CPA ${item.collision.cpaNm.toFixed(2)} NM`}
+                                {item.collision?.tcpaMinutes >= 0 && Number.isFinite(item.collision.tcpaMinutes) && ` · ${item.collision.tcpaMinutes.toFixed(1)} min`}
+                            </Text>
                         </View>
                         <Text style={styles.distance}>{item.distanceNm.toFixed(2)} NM</Text>
                     </View>} />

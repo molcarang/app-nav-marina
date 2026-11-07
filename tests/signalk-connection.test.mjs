@@ -2,9 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { monitorSignalKConnection } from '../services/signalk/connectionMonitor.js';
 
-function setup(t, reply = true) {
+function setup(t, reply = true, events = new EventTarget()) {
     t.mock.timers.enable({ apis: ['Date', 'setTimeout', 'setInterval'] });
-    const events = new EventTarget();
     let lost = 0;
     let confirmed = 0;
     let monitor;
@@ -22,6 +21,23 @@ function setup(t, reply = true) {
     t.after(() => monitor.dispose());
     return { socket, monitor, events, lost: () => lost, confirmed: () => confirmed };
 }
+
+for (const events of [{}, null]) test(`conexión: sin eventos de navegador (${events === null ? 'sin window' : 'Android'}) mantiene las comprobaciones y se desmonta`, t => {
+    const { monitor, socket, lost, confirmed } = setup(t, true, events);
+    monitor.opened();
+    assert.equal(confirmed(), 1);
+    t.mock.timers.tick(5000);
+    assert.equal(socket.messages.length, 2);
+    assert.equal(lost(), 0);
+    socket.reply = false;
+    t.mock.timers.tick(5000);
+    t.mock.timers.tick(3000);
+    assert.equal(lost(), 1);
+    const count = socket.messages.length;
+    monitor.dispose();
+    t.mock.timers.tick(20000);
+    assert.equal(socket.messages.length, count);
+});
 
 test('conexión: abrir TCP no confirma Signal K hasta recibir una respuesta válida', t => {
     const { monitor, socket, confirmed } = setup(t, false);

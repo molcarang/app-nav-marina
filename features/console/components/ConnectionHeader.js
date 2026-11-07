@@ -12,7 +12,7 @@ import SoftwareVersion from './SoftwareVersion';
 import AppExitButton from './AppExitButton';
 import EngineStatusIndicator from './EngineStatusIndicator';
 const HEADER_INDICATOR_HEIGHT = 36;
-export default function ConnectionHeader({ navigation, settings, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds, showEngineAlarms = false, compassCenterY }) {
+export default function ConnectionHeader({ navigation, settings, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds, showEngineAlarms = false, compassCenterY, aisAlarm }) {
     const { t } = useTranslation();
     const { enabled: nightEnabled, toggle: toggleNightMode } = useContext(NightModeContext);
     const scale = useControlScale();
@@ -79,7 +79,7 @@ export default function ConnectionHeader({ navigation, settings, isConnected, is
             {onToggleAis && <View style={{ width: '100%', gap: 8 * scale, alignItems: 'flex-start',
                 transform: [{ translateY: 12.6 * scale }] }}>
                 <AnchorButton position={navigation?.position} receivedAt={navigation?.positionReceivedAt} connected={isConnected} />
-                <AisToggleButton targets={aisTargets} position={navigation?.position} positionReceivedAt={navigation?.positionReceivedAt} connected={isConnected && aisStatus === 'connected'} visibleCount={aisVisibleCount} auto={aisAuto} onToggleAuto={onToggleAisAuto} rangeNm={aisRangeNm} onRangeChange={onAisRangeChange} visible={aisVisible} onPress={onToggleAis} />
+                <AisToggleButton alarm={aisAlarm} targets={aisTargets} position={navigation?.position} positionReceivedAt={navigation?.positionReceivedAt} connected={isConnected && aisStatus === 'connected'} visibleCount={aisVisibleCount} auto={aisAuto} onToggleAuto={onToggleAisAuto} rangeNm={aisRangeNm} onRangeChange={onAisRangeChange} visible={aisVisible} onPress={onToggleAis} />
             </View>}
         </View>
     );

@@ -2,6 +2,7 @@ import { useTranslation } from '../../localization/LanguageProvider';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import NightDimmer from '../NightDimmer';
 import { formatCoordinate } from '../../features/console/model/gpsPosition';
+import { AIS_RISK_COLORS } from '../../features/console/model/aisCollisionRisk';
 
 export default function AisVesselPopup({ vessel, onClose }) {
     const { t } = useTranslation();
@@ -9,9 +10,16 @@ export default function AisVesselPopup({ vessel, onClose }) {
     const speed = vessel['navigation.speedOverGround'];
     const course = vessel['navigation.courseOverGroundTrue'];
     const position = vessel['navigation.position'];
+    const risk = vessel.collision;
+    const level = risk?.level ?? 'unknown';
     const rows = [
         ['MMSI', vessel.mmsi || vessel.id.match(/mmsi:(\d+)$/)?.[1] || '—'],
         [t('distance'), `${vessel.distanceNm.toFixed(2)} NM`],
+        [t('aisRiskStatus'), t(`aisRisk_${level}`)],
+        ['CPA', Number.isFinite(risk?.cpaNm) ? `${risk.cpaNm.toFixed(2)} NM` : '—'],
+        ['TCPA', risk?.reason === 'receding' ? t('aisRiskReceding')
+            : Number.isFinite(risk?.tcpaMinutes) ? `${risk.tcpaMinutes.toFixed(1)} min`
+                : risk?.reason === 'proximity' ? t('aisRiskProximity') : '—'],
         [t('speed'), Number.isFinite(speed) ? `${(speed * 1.94384).toFixed(1)} kn` : '—'],
         [t('course'), Number.isFinite(course) ? `${Math.round(((course * 180 / Math.PI) % 360 + 360) % 360) % 360}°` : '—'],
         ['LAT', formatCoordinate(position?.latitude, true)],
@@ -21,7 +29,7 @@ export default function AisVesselPopup({ vessel, onClose }) {
         <View style={styles.overlay}>
             <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} accessibilityLabel={t('closeAis')} />
             <View style={styles.panel} accessibilityViewIsModal>
-                <Text style={styles.title}>{vessel.name || t('vessel')}</Text>
+                <Text style={[styles.title, { color: AIS_RISK_COLORS[level] }]}>{vessel.name || t('vessel')}</Text>
                 {rows.map(([label, value]) => <View key={label} style={styles.row}>
                     <Text style={styles.label}>{label}</Text>
                     <Text style={styles.value}>{value}</Text>

@@ -8,6 +8,7 @@ import { normalizeHistoryHours } from '../model/twsHistory.js';
 import { normalizeHeelAlarmDegrees } from '../model/heelAlarm.js';
 import { normalizeLowFuelPercent } from '../model/lowFuelAlarm.js';
 import { normalizeEngineRpmSettings } from '../model/engineRpmSettings.js';
+import { normalizeAisCollisionSettings } from '../model/aisCollisionRisk.js';
 const normalizeDepthAlarm = value => Number.isFinite(value) && value >= 0.5 && value <= 30
     ? Math.round(value * 10) / 10 : DEFAULT_SETTINGS.depthAlarmMeters;
 const normalizeNightIntensity = value => Number.isFinite(value)
@@ -31,6 +32,7 @@ export function useConsoleSettings() {
                     restored.heelAlarmDegrees = normalizeHeelAlarmDegrees(restored.heelAlarmDegrees);
                     restored.lowFuelAlarmPercent = normalizeLowFuelPercent(restored.lowFuelAlarmPercent);
                     Object.assign(restored, normalizeEngineRpmSettings(restored));
+                    Object.assign(restored, normalizeAisCollisionSettings(restored));
                     restored.nightIntensity = normalizeNightIntensity(restored.nightIntensity);
                     restored.depthAlarmSound = typeof restored.depthAlarmSound === 'boolean' ? restored.depthAlarmSound : true;
                     restored.depthAlarmEnabled = typeof restored.depthAlarmEnabled === 'boolean' ? restored.depthAlarmEnabled : true;
@@ -54,7 +56,9 @@ export function useConsoleSettings() {
             : key === 'nightIntensity' ? normalizeNightIntensity(value) : Math.round(value) }));
     }
     async function saveSetting(key, value) {
-        const next = key === 'engineRpmSettings'
+        const next = key === 'aisCollisionSettings'
+            ? { ...settings, ...normalizeAisCollisionSettings(value) }
+            : key === 'engineRpmSettings'
             ? { ...settings, ...normalizeEngineRpmSettings(value) }
             : { ...settings, [key]: key === 'signalKAddress' ? normalizeServerAddress(value)
             : key === 'aisRangeNm' ? normalizeAisRange(value)
@@ -66,6 +70,7 @@ export function useConsoleSettings() {
             : key === 'nightIntensity' ? normalizeNightIntensity(value)
                 : ['historyHours', 'sogHistoryHours'].includes(key) ? normalizeHistoryHours(value) : Math.round(value) };
         Object.assign(next, normalizeEngineRpmSettings(next));
+        Object.assign(next, normalizeAisCollisionSettings(next));
         try {
             await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next));
             setSettings(next);

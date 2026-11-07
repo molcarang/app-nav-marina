@@ -22,6 +22,9 @@ import { getConsoleTheme } from './styles/consoleTheme';
 import NightDimmer, { NightModeContext } from '../../components/NightDimmer';
 import { LanguageProvider } from '../../localization/LanguageProvider';
 import StartupLauncher from '../../components/StartupLauncher';
+import { useAisCollisionRisk } from './hooks/useAisCollisionRisk';
+import AisCollisionNotice from './components/AisCollisionNotice';
+import { useAisCollisionAlarm } from './hooks/useAisCollisionAlarm';
 /** Coordina datos y acciones. Cada página se ocupa de su presentación. */
 export default function ConsoleScreen() {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -38,6 +41,8 @@ export default function ConsoleScreen() {
     );
     const data = useSignalKData(settings.signalKAddress, isLoaded, recordReading, recordSogReading);
     const navigation = useMemo(() => deriveNavigationData(data), [data]);
+    const evaluatedAisTargets = useAisCollisionRisk(ais.targets, data, settings, data.isConnected && ais.status === 'connected');
+    const aisAlarm = useAisCollisionAlarm(evaluatedAisTargets);
     const anchorWatch = useAnchorWatch(navigation.position, navigation.positionReceivedAt, data.isConnected);
     useAnchorAlarmSound(anchorWatch.status === 'outside' || anchorWatch.status === 'gpsLost');
     const [aisAuto, setAisAuto] = useState(false);
@@ -55,7 +60,9 @@ export default function ConsoleScreen() {
     const depthSoundActive = isLoaded && data.isConnected && settings.depthAlarmEnabled && settings.depthAlarmSound
         && navigation.depthMeters > 0 && navigation.depthMeters < settings.depthAlarmMeters;
     const { testSound: testDepthSound, silenceForMinute, remainingSeconds } = useDepthAlarmSound(depthSoundActive);
-    const { maxSOG, maxTWS, resetSOG, resetTWS } = useSessionMaxima(navigation.sogKnots, navigation.twsKnots);
+    const { maxSOG, maxTWS, maxHeel, maxHeelSide, resetSOG, resetTWS, resetHeel } = useSessionMaxima(
+        navigation.sogKnots, navigation.twsKnots, navigation.vesselHeelDeg,
+    );
     const resetTwsWithHistory = () => { resetTWS(); clearTwsHistory(); };
     const resetSogWithHistory = () => { resetSOG(); clearSogHistory(); };
     const [isSettingsOpen, setSettingsOpen] = useState(false);
@@ -64,11 +71,11 @@ export default function ConsoleScreen() {
     const gaugeSize = Math.min(Math.min(windowWidth * 0.90, windowHeight * 0.45) * 1.3915, windowWidth * 0.94);
     const isLandscape = windowWidth > windowHeight;
     const pageProps = {
-        waypoint,
+        waypoint, aisAlarm, maxHeel, maxHeelSide, onResetHeel: resetHeel,
         aisVisibleCount, aisRangeNm, aisAuto, onToggleAisAuto: toggleAisAuto,
         onAisRangeChange: value => { setAisAuto(false); saveSetting('aisRangeNm', value); },
         navigation, settings, maxSOG, isConnected: data.isConnected,
-        aisVisible, aisTargets: ais.targets, aisStatus: ais.status, onToggleAis: () => setAisVisible(previous => !previous),
+        aisVisible, aisTargets: evaluatedAisTargets, aisStatus: ais.status, onToggleAis: () => setAisVisible(previous => !previous),
         isNightMode: false, theme, windowWidth, gaugeSize, twsHistory, sogHistory,
         onSilenceDepth: depthSoundActive && remainingSeconds === 0 ? silenceForMinute : undefined,
         depthSoundMuted: depthSoundActive && remainingSeconds > 0,
@@ -79,6 +86,7 @@ export default function ConsoleScreen() {
         <NightModeContext.Provider value={{ enabled: isNightMode, intensity: settings.nightIntensity, toggle: () => setNightMode(previous => !previous) }}>
         <View style={styles.mainContainer}>
             <UpdateNotice />
+            <AisCollisionNotice targets={evaluatedAisTargets} />
             {isLandscape ? (
                 <LandscapeNavigationPage
                     {...pageProps}

@@ -21,6 +21,7 @@ import AisRadarSweep from './AisRadarSweep';
 import AisTargets from './AisTargets';
 import AisVesselPopup from './AisVesselPopup';
 import AisTouchOverlay from './AisTouchOverlay';
+import WindFlow from './WindFlow';
 
 const HeadingGauge = React.memo(({
     size,
@@ -51,9 +52,12 @@ const HeadingGauge = React.memo(({
         awa: awa || 0, // Recuperado
         twd: twd || 0,
         currentFlow: 0,
+        windFlow: 0,
+        trueWindFlow: 0,
         radarPhase: 0
     });
     const requestRef = useRef();
+    const windAnimation = useRef({ phase: 0, truePhase: 0, time: null });
     const [selectedVessel, setSelectedVessel] = useState(null);
     useEffect(() => {
         if (!selectedVessel) return;
@@ -66,7 +70,18 @@ const HeadingGauge = React.memo(({
 
     useEffect(() => {
         let mounted = true;
+        const wind = windAnimation.current;
         const animate = (time) => {
+            if (Number.isFinite(time)) {
+                const elapsed = wind.time === null ? 0 : Math.min(100, Math.max(0, time - wind.time));
+                const knots = Number.isFinite(awsKnots) ? Math.max(0, Math.min(40, awsKnots)) : 0;
+                const trueKnots = Number.isFinite(twsKnots) ? Math.max(0, Math.min(40, twsKnots)) : 0;
+                wind.phase = (wind.phase + elapsed / 1500 * (0.35 + knots / 15)) % 1;
+                wind.truePhase = (wind.truePhase + elapsed / 1500 * (0.35 + trueKnots / 15)) % 1;
+                wind.time = time;
+            }
+            const nextWindFlow = wind.phase;
+            const nextTrueWindFlow = wind.truePhase;
             setDisplay(prev => {
                 const nextHeading = lerpAngle(prev.heading, parseFloat(value) || 0, 0.1);
                 const nextTwa = typeof twaCog === 'number' ? lerpAngle(prev.twa, twaCog, 0.1) : prev.twa;
@@ -81,9 +96,11 @@ const HeadingGauge = React.memo(({
                     Math.abs(nextAwa - prev.awa) > 0.01 ||
                     Math.abs(nextTwd - prev.twd) > 0.01 ||
                     Math.abs(nextFlow - prev.currentFlow) > 0.01 ||
+                    Math.abs(nextWindFlow - prev.windFlow) > 0.005 ||
+                    Math.abs(nextTrueWindFlow - prev.trueWindFlow) > 0.005 ||
                     Math.abs(nextRadarPhase - prev.radarPhase) > 0.002
                 ) {
-                    return { heading: nextHeading, twa: nextTwa, awa: nextAwa, twd: nextTwd, currentFlow: nextFlow, radarPhase: nextRadarPhase };
+                    return { heading: nextHeading, twa: nextTwa, awa: nextAwa, twd: nextTwd, currentFlow: nextFlow, windFlow: nextWindFlow, trueWindFlow: nextTrueWindFlow, radarPhase: nextRadarPhase };
                 }
                 return prev;
             });
@@ -93,8 +110,9 @@ const HeadingGauge = React.memo(({
         return () => {
             mounted = false;
             cancelAnimationFrame(requestRef.current);
+            wind.time = null;
         };
-    }, [value, twaCog, awa, twd, showAis]);
+    }, [value, twaCog, awa, twd, showAis, awsKnots, twsKnots]);
 
     const dims = useMemo(() => {
         const base = computeCommonDims(COMPASS_SIZE);
@@ -109,6 +127,10 @@ const HeadingGauge = React.memo(({
     const rotationAngle = -display.heading;
     // Margen exterior para que las flechas giren fuera del bisel sin recortarse.
     const windMargin = COMPASS_SIZE * 0.11;
+    // Extend the wind outside the bezel without shrinking the compass itself.
+    const flowOverflow = COMPASS_SIZE * 0.15;
+    const svgMargin = windMargin + flowOverflow * (1 + 2 * windMargin / COMPASS_SIZE);
+    const svgSize = COMPASS_SIZE + 2 * flowOverflow;
     const windBaseY = -windMargin + 3;
     const windTipY = -3;
     const windHalfWidth = COMPASS_SIZE * 0.055;
@@ -141,7 +163,8 @@ const HeadingGauge = React.memo(({
 
     return (
         <View style={[styles.outerContainer, { width: COMPASS_SIZE, height: COMPASS_SIZE }]}>
-            <Svg width={COMPASS_SIZE} height={COMPASS_SIZE} viewBox={`${-windMargin} ${-windMargin} ${COMPASS_SIZE + windMargin * 2} ${COMPASS_SIZE + windMargin * 2}`}>
+            <Svg width={svgSize} height={svgSize} style={{ flexShrink: 0 }}
+                viewBox={`${-svgMargin} ${-svgMargin} ${COMPASS_SIZE + svgMargin * 2} ${COMPASS_SIZE + svgMargin * 2}`}>
                 <Defs>
                     <GaugeDefs />
                 </Defs>
@@ -153,6 +176,15 @@ const HeadingGauge = React.memo(({
                     <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.CENTER - (dims.BEZEL_SIZE / 2)} fill="none" stroke="url(#bezelRidge)" strokeWidth="1.5" opacity={0.6} />
                     <Circle cx={dims.CENTER} cy={dims.CENTER} r={dims.RADIUS} fill={GAUGE_THEME.colors.bg} />
                 </G>
+
+                {isConnected && Number.isFinite(awa) && Number.isFinite(awsKnots) && awsKnots > 0 && (
+                    <WindFlow center={dims.CENTER} size={COMPASS_SIZE} margin={windMargin}
+                        angle={display.awa} speed={awsKnots} phase={display.windFlow} isNightMode={isNightMode} />
+                )}
+                {isConnected && Number.isFinite(twaCog) && Number.isFinite(twsKnots) && twsKnots > 0 && (
+                    <WindFlow variant="true" center={dims.CENTER} size={COMPASS_SIZE} margin={windMargin}
+                        angle={display.twa} speed={twsKnots} phase={display.trueWindFlow} isNightMode={isNightMode} />
+                )}
 
                 {showAis && <AisRadarSweep center={dims.CENTER} radius={currentMaxRadius * 0.9}
                     size={COMPASS_SIZE} phase={display.radarPhase} isNightMode={isNightMode} />}

@@ -32,7 +32,7 @@ features/console/                 Funcionalidad de la consola náutica
     ConsoleSettingsModal.js       Controles de configuración
   hooks/
     useConsoleSettings.js         Carga, edición y guardado de ajustes
-    useSessionMaxima.js            Máximos SOG/TWS y acciones de reinicio
+    useSessionMaxima.js            Máximos SOG/TWS/escora y acciones de reinicio
   model/
     navigationData.js             Funciones de conversión y rendimiento
     autopilot.js                  Etiqueta y color del piloto
@@ -154,7 +154,7 @@ StaticGauge y DataField son piezas auxiliares sin uso en la consola actual. Data
 | Estado | Responsable | Persistente |
 | --- | --- | --- |
 | Lecturas y conexión | useSignalKData | No |
-| Máximos SOG/TWS | useSessionMaxima | No |
+| Máximos SOG/TWS/escora | useSessionMaxima | No |
 | Ajustes | useConsoleSettings | Sí, AsyncStorage |
 | Modal y modo nocturno | ConsoleScreen | No |
 | Historial | DataSquare | No |
@@ -165,6 +165,8 @@ StaticGauge y DataField son piezas auxiliares sin uso en la consola actual. Data
 `useConsoleSettings` carga los ajustes, mezcla los guardados con los iniciales y expone `updateSetting` y `saveSetting`. Los sliders actualizan durante el arrastre y guardan al soltar. Los fallos de almacenamiento se registran en consola.
 
 `useSessionMaxima` usa actualizaciones funcionales. Reiniciar un máximo lo deja a cero hasta que cambian las lecturas observadas, como antes.
+
+La escora máxima usa el valor absoluto en grados de ambos costados y descarta lecturas ausentes o no finitas. El indicador del panel de escora se reinicia manteniéndolo pulsado durante 2 segundos. El máximo se conserva al girar la pantalla y dura hasta el reinicio manual o el final de la sesión.
 
 `useWindTactic` calcula una media circular con senos y cosenos. Cinco minutos equivalen a 300 muestras suponiendo 1 Hz; no conserva tiempos reales.
 

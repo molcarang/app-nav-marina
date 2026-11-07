@@ -20,6 +20,8 @@ los instrumentos tras un mínimo de 2,8 segundos; sin conexión, continúa a los
 
 ## Documentación del proyecto
 
+- [Configurar la copia automática de releases a Google Drive](GOOGLE-DRIVE-RELEASES.md).
+
 - [Manual de usuario ilustrado — PDF](docs/Manual-de-usuario-OpenBoat.pdf).
 - [Manual de usuario — Word editable](docs/Manual-de-usuario-OpenBoat.docx).
 - [Guía de instalación y configuración de OpenCPN, OpenPlotter y Signal K](GUIA-INSTALACION-OPENCPN.md).
@@ -89,15 +91,25 @@ Los PR de forks externos no publican releases con este workflow.
 Los paquetes se publican en GitHub Releases, sin meter binarios en el historial
 del codigo. La release permanece en borrador hasta completar la subida.
 
-Cada publicacion incluye `navmarina-web.zip`, `navmarina-raspberry.zip` y
+Cada publicacion incluye `navmarina-web.zip`, `navmarina-raspberry.zip`, `navmarina-android.apk` y
 `SHA256SUMS`. El numero de compilacion de GitHub Actions identifica cada version,
 aunque no cambie la version comercial de `app.json`. `config/buildInfo.json`
 contiene los datos que se incluyen dentro de cada paquete. Las compilaciones
 manuales fuera de CI usan el numero 0 y el canal estable por defecto.
 
-Por ahora el flujo publica unicamente web y Raspberry. No compila ni publica
-APK, no necesita `EXPO_TOKEN` y el aviso de actualizaciones esta deshabilitado en
-la app nativa. La configuracion Android se conserva para retomarla mas adelante.
+El flujo compila el APK firmado con Expo EAS usando el perfil `preview` de
+`eas.json`, espera a que termine y lo publica junto con web y Raspberry.
+Si falla Android, no se publica una release incompleta. El aviso de actualizaciones
+permanece deshabilitado en la app nativa; el APK se descarga e instala manualmente.
+
+Para activar la compilacion Android, configura el secreto `EXPO_TOKEN` del
+repositorio GitHub con un token de una cuenta con acceso al proyecto Expo.
+La firma Android debe estar configurada previamente en EAS, conservando la clave
+de las instalaciones existentes para poder actualizarlas. Si falta, ejecuta una vez
+`npx eas-cli build --platform android --profile preview` desde una sesion autenticada
+y completa la configuracion de credenciales antes de usar CI.
+El APK incluye el mismo numero de compilacion y commit que los otros paquetes,
+y su SHA-256 aparece en `SHA256SUMS`.
 
 Al arrancar, el cliente consulta las ultimas 100 releases publicas por HTTPS,
 sin tokens en la app, con un limite de espera de 8 segundos. Solo avisa si hay

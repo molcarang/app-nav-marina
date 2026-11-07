@@ -12,7 +12,7 @@ test('los gradientes no contienen texto que Android intente clonar como componen
     const exports = {};
     vm.runInNewContext(code, { exports, React,
         require: () => ({ LinearGradient: 'LinearGradient', RadialGradient: 'RadialGradient', Stop: 'Stop' }) });
-    const gradients = React.Children.toArray(exports.GaugeDefs().props.children);
+    const gradients = React.Children.toArray(exports.GaugeDefs({}).props.children);
     assert.ok(gradients.length > 0);
     for (const gradient of gradients) {
         const stops = React.Children.toArray(gradient.props.children);

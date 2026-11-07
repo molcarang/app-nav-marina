@@ -153,3 +153,71 @@ No se lee la ruta completa ni se envían órdenes a un piloto. La API v2 exclusi
 sin deltas v1 equivalentes no forma parte de esta implementación.
 
 Referencia: https://signalk.org/specification/1.7.0/doc/vesselsBranch.html
+
+### Nombres de contactos AIS
+
+La suscripción AIS incluye el path raíz vacío, además de las rutas de navegación,
+`name` y `mmsi`. La identidad puede llegar como un delta raíz
+`{ "path": "", "value": { "name": "BARCO", "mmsi": "224123450" } }`.
+Si falta el nombre, se consulta el barco por REST, con dos consultas simultáneas
+como máximo y reintentos espaciados 30 s. Se recupera únicamente la identidad:
+la posición y sus marcas de tiempo no se restauran desde esa consulta. Los deltas
+de identidad en vivo tienen prioridad sobre respuestas REST más antiguas.
+Las consultas se cancelan al desconectar o cambiar de servidor. La identidad se
+comparte entre CONTACTOS, la ficha al pulsar un barco y los avisos de aproximación.
+
+## Avisos visuales AIS por CPA/TCPA
+
+Se configuran en **Ajustes → AIS y riesgo de aproximación**, con guardado conjunto
+de los límites. Valores iniciales de prueba: naranja CPA ≤ 0,50 NM y TCPA ≤ 15 min;
+rojo CPA ≤ 0,20 NM y TCPA ≤ 5 min. Se deben cumplir distancia y tiempo, con TCPA
+no negativo. El rojo tiene prioridad y sus límites no pueden superar al naranja.
+Son parámetros ajustables de la app, no separaciones de seguridad universales.
+
+El cálculo usa posición, COG y SOG, nunca rumbo de proa como sustituto del COG.
+Conserva la fecha de origen de cada campo cuando Signal K la proporciona; si no,
+usa la de recepción. Caducidad propia de 30 s y de contactos de 90 s. Un mensaje
+de posición no refresca la velocidad ni el COG. Los datos incompletos o antiguos
+dan estado desconocido, en gris. Con velocidad ≤ 0,15 m/s no se exige COG.
+
+La aproximación de plano local se limita a 24 NM y latitudes medias de hasta 85°;
+fuera de ese dominio se indica desconocido. Las posiciones se llevan al instante
+actual con su COG/SOG. Con velocidad relativa < 0,05 m/s se muestra proximidad
+actual y TCPA no disponible. Un TCPA negativo significa paso mínimo ya superado.
+
+Verde fijo significa que no se activa el aviso configurado, no garantiza seguridad.
+Naranja es aviso; rojo parpadea cada 0,75 s. Se elimina el parpadeo antiguo basado
+solo en distancia. Las subidas de nivel son inmediatas y las bajadas esperan 8 s;
+caducar datos o desactivar avisos cancela el aviso inmediatamente.
+El popup evalúa todos los contactos recibidos aunque AIS esté oculto o el contacto
+quede fuera del zoom. Muestra nombre, nivel, CPA y TCPA, con botón Cerrar y soporte
+del botón Atrás de Android. Cerrar reconoce los avisos actuales sin silenciar el
+sonido. No reaparece por cambios de CPA/TCPA dentro de la misma zona ni por una
+bajada de rojo a naranja. Reaparece ante otro barco en alarma, una subida a rojo o
+una nueva entrada tras salir de alarma. Desaparece si terminan todos los avisos.
+La ficha individual conserva CPA, TCPA y el estado de evaluación.
+
+Se supone rumbo y velocidad constantes. No se generan órdenes ni recomendaciones
+de maniobra. Pruebas numéricas en `tests/ais-collision-risk.test.mjs`.
+
+### Sonido y silencio AIS
+
+Naranja reproduce un pitido de 160 ms; rojo, uno de 650 ms. Ambos usan un ciclo
+completo de 1 segundo, incluido el silencio restante. Si coinciden varios contactos,
+solo suena el nivel más alto, con prioridad del rojo. Los archivos WAV se regeneran
+con `node scripts/generate-ais-alarm-sounds.mjs`.
+
+La campana aparece después del botón + del alcance mientras haya algún aviso AIS.
+Si el radar está oculto, sigue disponible junto al botón DATOS AIS. Al pulsarla se
+silencian los avisos AIS y la campana aparece tachada; otra pulsación reactiva el
+sonido. El silencio reconoce los barcos y niveles de alarma presentes al pulsar.
+La entrada de otro barco en alarma o la subida de naranja a rojo de cualquiera de
+los barcos reactiva el sonido, incluso si el nivel máximo del conjunto no cambia.
+La bajada de rojo a naranja mantiene el silencio y actualiza el nivel reconocido:
+si vuelve a subir a rojo, vuelve a sonar. La salida de un barco no rompe el silencio
+de los restantes; si vuelve a entrar, se considera una nueva alarma. Variar CPA o
+TCPA dentro de la misma zona, cambiar nombres, zoom u orientación conserva el silencio.
+Cuando terminan todos los avisos, se oculta la campana y se elimina el silencio,
+preparando el siguiente episodio con sonido. No se guarda ese silencio como ajuste.
+Se comparte el manejo de audio del resto de alarmas: en primer plano, y en web
+habilitado con la interacción del usuario. Pruebas en `tests/ais-collision-alarm.test.mjs`.

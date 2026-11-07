@@ -12,7 +12,9 @@ jobs:
   release:
     if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
+    outputs:
+      tag: ${{ steps.publish.outputs.tag }}
     env:
       NAVMARINA_BUILD_NUMBER: ${{ github.run_number }}
       NAVMARINA_CHANNEL: main
@@ -24,7 +26,21 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Check Expo authentication
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Configure the EXPO_TOKEN repository secret to build Android."
+            exit 1
+          fi
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
       - run: npm test
+      - name: Check Google Drive upload helper
+        run: python3 -m unittest discover -s tests -p google_drive_release_test.py
       - name: Build web and Raspberry packages
         run: |
           npm run build:web
@@ -33,14 +49,50 @@ jobs:
           zip -qr ../artifacts/navmarina-web.zip .
           cd ../artifacts
           zip -qr navmarina-raspberry.zip navmarina-raspberry
+      - name: Build signed Android APK
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          node scripts/prepare-build-info.mjs android
+          eas build --platform android --profile preview --non-interactive --wait --json > artifacts/eas-build.json
+          node scripts/download-android-build.mjs
       - name: Prepare release metadata and checksums
         run: node scripts/prepare-release.mjs
       - name: Publish complete release
+        id: publish
         shell: bash
         run: |
           tag="navmarina-${NAVMARINA_CHANNEL}-${NAVMARINA_BUILD_NUMBER}-${GITHUB_RUN_ATTEMPT}"
           flags=()
           if [ "$NAVMARINA_CHANNEL" != "main" ]; then flags+=(--prerelease); fi
           gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft "${flags[@]}" --title "OpenBoat ${NAVMARINA_CHANNEL} build ${NAVMARINA_BUILD_NUMBER}" --notes-file artifacts/release.json
-          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" artifacts/navmarina-web.zip artifacts/navmarina-raspberry.zip artifacts/SHA256SUMS
+          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" artifacts/navmarina-web.zip artifacts/navmarina-raspberry.zip artifacts/navmarina-android.apk artifacts/SHA256SUMS
           gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest=false
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  google-drive:
+    name: Copy release files to Google Drive
+    needs: release
+    if: vars.GDRIVE_UPLOAD_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ needs.release.outputs.tag }}
+      GDRIVE_FOLDER_ID: ${{ vars.GDRIVE_FOLDER_ID || '14OemrNJZEA2VZ3F7Uf6JCbaWVcc3ZEN0' }}
+      GDRIVE_UPLOAD_FILES: ${{ vars.GDRIVE_UPLOAD_FILES || 'raspberry' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download published Raspberry package
+        if: env.GDRIVE_UPLOAD_FILES == 'raspberry' || env.GDRIVE_UPLOAD_FILES == 'both'
+        run: gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern navmarina-raspberry.zip --pattern SHA256SUMS --dir artifacts
+      - name: Install rclone
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends rclone
+      - name: Copy selected files
+        env:
+          GDRIVE_RCLONE_CONFIG: ${{ secrets.GDRIVE_RCLONE_CONFIG }}
+        run: python3 scripts/upload-release-to-drive.py
