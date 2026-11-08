@@ -25,6 +25,7 @@ export const SIGNALK_FIELDS = {
     currentSet: { "path": "environment.current.setTrue", "initialValue": null, "simulator": { "minValue": 1.919862, "maxValue": 2.268928, "dataPeriod": 60, "outputPeriod": 0.5 } },
     rudderAngle: { "path": "steering.rudderAngle", "initialValue": null, "simulator": { "minValue": -0.174533, "maxValue": 0.174533, "dataPeriod": 60, "outputPeriod": 0.5 } },
     engineRevolutions: { "path": "propulsion.0.revolutions", "initialValue": null, "simulator": { "minValue": 0, "maxValue": 0, "dataPeriod": 60, "outputPeriod": 0.5 } },
+    engineRunTime: { path: 'propulsion.0.runTime', initialValue: null },
     apparentWindAngle: { "path": "environment.wind.angleApparent", "initialValue": null, "simulator": { "minValue": 0.349066, "maxValue": 0.698132, "dataPeriod": 60, "outputPeriod": 0.5 } },
     autopilotState: { "path": "steering.autopilot.state", "initialValue": null },
     heel: { "path": "navigation.attitude.roll", "initialValue": null, "simulator": { "minValue": -0.261799, "maxValue": 0.261799, "dataPeriod": 60, "outputPeriod": 0.5 } },
@@ -40,6 +41,7 @@ export const INITIAL_DATA = {
 };
 
 export const ENGINE_PATH_PATTERN = /^propulsion\.[^.]+\.revolutions$/;
+export const ENGINE_RUNTIME_PATH_PATTERN = /^propulsion\.[^.]+\.runTime$/;
 export const ENGINE_STATE_PATH_PATTERN = /^propulsion\.[^.]+\.state$/;
 export const ENGINE_TEMPERATURE_PATH_PATTERN = /^propulsion\.[^.]+\.(coolantTemperature|temperature)$/;
 export const ENGINE_OIL_PRESSURE_PATH_PATTERN = /^propulsion\.[^.]+\.oilPressure$/;
@@ -52,6 +54,7 @@ export const LOW_BATTERY_ALARM_PATH_PATTERN = /^notifications\.propulsion\.[^.]+
 export const SUBSCRIPTION_PATHS = [...new Set([
     ...Object.values(SIGNALK_PATHS).filter(path => !path.startsWith('simulation.')),
     'propulsion.*.revolutions',
+    'propulsion.*.runTime',
     'propulsion.*.state',
     'propulsion.*.coolantTemperature',
     'propulsion.*.temperature',
@@ -69,6 +72,7 @@ export const SUBSCRIPTION_PATHS = [...new Set([
     'environment.current.setMagnetic',
 ])];
 export const isInstrumentPath = path => SUBSCRIPTION_PATHS.includes(path) || ENGINE_PATH_PATTERN.test(path)
+    || ENGINE_RUNTIME_PATH_PATTERN.test(path)
     || ENGINE_STATE_PATH_PATTERN.test(path) || WATER_TEMPERATURE_ALARM_PATH_PATTERN.test(path)
     || OIL_PRESSURE_ALARM_PATH_PATTERN.test(path) || ALTERNATOR_CHARGE_ALARM_PATH_PATTERN.test(path)
     || LOW_BATTERY_ALARM_PATH_PATTERN.test(path) || ENGINE_TEMPERATURE_PATH_PATTERN.test(path)

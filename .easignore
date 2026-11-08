@@ -45,6 +45,7 @@ app-example
 # Build artifacts and npm-only dependency installation
 dist-android-check/
 artifacts/
+simulation/
 *.apk
 *.aab
 yarn.lock

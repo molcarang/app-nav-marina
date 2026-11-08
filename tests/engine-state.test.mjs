@@ -43,3 +43,15 @@ test('motor: acepta estados de Signal K del barco propio y sus cancelaciones', (
     assert.equal(deriveNavigationData(data).engineRunning, null);
     assert.deepEqual(readInstrumentDelta({ ...message('started'), context: 'vessels.other' }, 'vessels.own'), {});
 });
+
+test('motor: recibe runTime en segundos y conserva la marca de recepción', () => {
+    assert.ok(SUBSCRIPTION_PATHS.includes('propulsion.*.runTime'));
+    const message = { context: 'vessels.self', updates: [{ values: [
+        { path: 'propulsion.0.runTime', value: 9248400 },
+    ] }] };
+    const data = readInstrumentDelta(message, undefined, 4321);
+    const navigation = deriveNavigationData(data);
+    assert.equal(navigation.engineRunTimeSeconds, 9248400);
+    assert.equal(navigation.engineRunTimeReceivedAt, 4321);
+    assert.equal(deriveNavigationData({ 'propulsion.0.runTime': -1 }).engineRunTimeSeconds, null);
+});

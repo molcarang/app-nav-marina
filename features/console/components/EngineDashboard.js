@@ -12,6 +12,8 @@ import EngineFuelGauge from '../../../components/gauges/EngineFuelGauge';
 import EngineBatteryVoltageGauge from '../../../components/gauges/EngineBatteryVoltageGauge';
 import EngineDashboardFrame from './EngineDashboardFrame';
 import EngineDashboardStatus from './EngineDashboardStatus';
+import EngineConsumptionPanel, { CONSUMPTION_PANEL_HEIGHT, CONSUMPTION_PANEL_WIDTH } from './EngineConsumptionPanel';
+import EngineHoursPanel from './EngineHoursPanel';
 
 const BOARD_WIDTH = 664;
 const BOARD_HEIGHT = 536;
@@ -86,16 +88,20 @@ export default function EngineDashboard({ connected, engineRunning, navigation, 
     const panelWidth = Math.min(width - 32, (BOARD_WIDTH + 40) * scale);
     const boardScale = Math.max(0.01, Math.min(scale, (panelWidth - 40 * scale) / BOARD_WIDTH,
         (height - 32 - 40 * scale - 2) / BOARD_HEIGHT));
+    const panelHeight = BOARD_HEIGHT * boardScale + 40 * scale + 2;
+    const panelZoom = Math.min(1.15, (width - 32) / panelWidth, (height - 32) / panelHeight);
     const gaugeSize = 360 * boardScale;
     const smallGaugeSize = 184 * boardScale;
     const bezelWidth = gaugeSize * 0.06;
+    const showConsumption = connected && Number.isFinite(navigation?.engineRpm) && navigation.engineRpm > 0;
     return <Modal transparent visible animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
         <View style={styles.overlay}>
             <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose}
                 accessibilityRole="button" accessibilityLabel={t('closeEngineDashboard')} />
             <View role="dialog" aria-modal accessibilityViewIsModal accessibilityLabel={t('engineDashboardTitle')}
                 onAccessibilityEscape={onClose}
-                style={[styles.panel, { width: panelWidth, padding: 20 * scale }]}>
+                style={[styles.panel, { width: panelWidth, padding: 20 * scale,
+                    transform: [{ scale: panelZoom }] }]}>
                 <BlackAluminiumBackground />
                 <EngineDashboardFrame scale={scale} />
                     <Pressable accessibilityRole="button" accessibilityLabel={t('closeEngineDashboard')}
@@ -124,6 +130,14 @@ export default function EngineDashboard({ connected, engineRunning, navigation, 
                     </View>
                     <View style={{ position: 'absolute', right: 0, bottom: 0 }}>
                         <EngineBatteryVoltageGauge size={smallGaugeSize} bezelWidth={bezelWidth} batteryVoltage={navigation?.batteryVoltage} connected={connected} />
+                    </View>
+                    {showConsumption && <View style={{ position: 'absolute', right: (smallGaugeSize - CONSUMPTION_PANEL_WIDTH * boardScale) / 2 - 20 / panelZoom,
+                        top: (BOARD_HEIGHT - CONSUMPTION_PANEL_HEIGHT) / 2 * boardScale }}>
+                        <EngineConsumptionPanel scale={boardScale} currentLitresPerHour={navigation?.engineConsumptionLitresPerHour} />
+                    </View>}
+                    <View style={{ position: 'absolute', left: (smallGaugeSize - CONSUMPTION_PANEL_WIDTH * boardScale) / 2 - 20 / panelZoom,
+                        top: (BOARD_HEIGHT - CONSUMPTION_PANEL_HEIGHT) / 2 * boardScale }}>
+                        <EngineHoursPanel scale={boardScale} />
                     </View>
                     <View style={[styles.alarmPanel, { position: 'absolute', bottom: 0,
                         left: (BOARD_WIDTH * boardScale - 370 * scale) / 2, width: 370 * scale,

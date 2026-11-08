@@ -32,7 +32,8 @@ export function deriveNavigationData(data) {
     const twa = twaRad === null ? null : normalizeAngle(radToDeg(twaRad));
     const awaRad = number(data[P.apparentWindAngle]);
     const awa = awaRad === null ? null : normalizeAngle(radToDeg(awaRad));
-    const { engineRpm, engineRunning } = deriveEngineState(data);
+    const { engineRpm, engineRunning, engineRpmReceivedAt, engineRunTimeSeconds,
+        engineRunTimeReceivedAt } = deriveEngineState(data);
     const rudder = degrees(number(data[P.rudderAngle]));
     const waterKelvin = positive(data[P.waterTemperature]);
     return {
@@ -49,13 +50,19 @@ export function deriveNavigationData(data) {
         awsKnots: positive(data[P.apparentWindSpeed]) === null ? 0 : Number(mpsToKnots(data[P.apparentWindSpeed])),
         twdDeg: bearing(twd),
         twdDigital: twd === null ? '—' : bearing(twd).toFixed(0) + '°',
-        twaCog: twa === null ? null : -twa,
+        apparentWindDirectionDeg: bearing(heading !== null && awaRad !== null ? heading + awaRad : null),
+        trueWindDirectionDeg: bearing(heading !== null && twaRad !== null ? heading + twaRad : twd),
+        // El compás gira en sentido horario: positivo a estribor, igual que AWA.
+        twaCog: twa,
         twa,
         sogKnots: knots(positive(data[P.speedOverGround])),
         depthMeters: positive(data[P.depth]),
         waterTemperatureCelsius: waterKelvin === null ? null : waterKelvin - 273.15,
         rudderAngle: rudder === null ? null : Math.round(rudder),
         engineRpm,
+        engineRpmReceivedAt,
+        engineRunTimeSeconds,
+        engineRunTimeReceivedAt,
         engineRunning,
         engineTemperatureCelsius: deriveEngineTemperature(data),
         engineOilPressureBar: deriveEngineOilPressure(data),

@@ -4,6 +4,15 @@ El catálogo `paths.js` usa rutas relativas al contexto `vessels.self`.
 `instrumentDeltas.js` transforma objetos y actualizaciones parciales a lecturas
 internas; `navigationData.js` convierte unidades y prepara la presentación.
 
+Los números de TWS, SOG, COG, profundidad, AWA y TWA se actualizan visualmente
+cada 2 s por defecto. Ajustes → Navegación → Actualización de lecturas permite
+0–5 s; 0 mantiene tiempo real. Se publica la última muestra, sin promediar ni
+acumular una cola. La primera lectura y la pérdida/recuperación de datos son
+inmediatas. Las direcciones norte y los costados se actualizan junto a sus ángulos.
+Este intervalo solo se aplica en `NavigationControls`: la recepción, las agujas,
+las alarmas, AIS/CPA/TCPA, los máximos y el historial siguen con las lecturas en vivo.
+El número de profundidad evita la espera mientras hay alarma y al salir de ella.
+
 - GPS: `navigation.position`, objeto con latitude/longitude en grados.
 - Profundidad: `environment.depth.belowTransducer`, metros bajo el transductor.
 - Escora: `navigation.attitude`, propiedad roll en radianes.
@@ -14,6 +23,15 @@ internas; `navigationData.js` convierte unidades y prepara la presentación.
 - COG: `navigation.courseOverGroundTrue`.
 - Viento: `environment.wind.speedTrue`, `speedApparent`, `directionTrue`,
   `angleApparent`, `angleTrueWater`. Velocidades m/s, ángulos radianes.
+  AWA y TWA son relativos a proa: positivos a estribor y negativos a babor,
+  tanto en los números como en las flechas y flujos del compás. El TWA se toma
+  de `angleTrueWater` o, si falta, de `directionTrue` menos el rumbo verdadero.
+  El campo histórico `twaCog` conserva este mismo ángulo; no usa COG ni invierte el signo.
+  Los cuadros AWA y TWA añaden una lectura pequeña «N VERD.» de la dirección
+  de procedencia respecto al norte verdadero: rumbo verdadero más el ángulo
+  relativo, normalizados a 0–359°. TWA admite `directionTrue` como respaldo
+  si no se puede calcular esa dirección. Sin referencia suficiente aparece «—».
+  Nunca se usa COG como sustituto del rumbo para estas direcciones.
 - Timón: `steering.rudderAngle`, radianes.
 - Motor: suscripciones `propulsion.*.revolutions` (Hz multiplicados por 60) y
   `propulsion.*.state` (`started`, `stopped`, `unusable`). Para cada motor, un estado
@@ -34,8 +52,67 @@ internas; `navigationData.js` convierte unidades y prepara la presentación.
   si ambos valores coinciden no tiene extensión. Los ajustes antiguos
   reciben los valores iniciales y los valores corruptos se normalizan.
   La aguja se limita al extremo de escala; sin RPM recientes queda gris al inicio.
-  Las cinco esferas incluyen un display digital: SOG en nudos en el tacómetro,
+  Las cinco esferas incluyen un display digital: RPM enteras y SOG en nudos en el tacómetro,
   temperatura y combustible sin decimales, aceite y batería con un decimal.
+  El hueco derecho entre combustible y batería contiene un panel de consumo
+  actual estimado (L/h) y acumulado (L). El consumo actual se calcula con las
+  RPM en vivo y la tabla guardada. El acumulado conserva litros entre arranques
+  y reinicios de la app, hasta mantener pulsada su lectura durante 2 segundos.
+  Solo se muestra con conexión y RPM válidas mayores que cero; se oculta con
+  0 RPM, al caducar o faltar las RPM y al desconectar, aunque el estado
+  explícito del motor siga indicando `started`.
+  Ajustes → Motor permite editar y guardar `engineConsumptionTable`, una tabla
+  local de pares `{ rpm, litresPerHour }`. Se pueden añadir y eliminar filas,
+  usar coma o punto decimal en L/h y guardar la tabla vacía para borrarla.
+  Se ordena por RPM al guardar; rechaza RPM repetidas, campos incompletos,
+  RPM no enteras o fuera de 0–20000 y consumos negativos o no finitos.
+  Se conserva en AsyncStorage con los demás ajustes. Se precargan una sola vez
+  los máximos de la tabla facilitada por el usuario: 1600/1,2; 1800/1,5; 2000/1,9;
+  2200/2,4; 2400/3,0; 2600/3,7; 2800/4,5; 3000/5,4 y 3200/6,5 (RPM/L/h).
+  La carga inicial añade o sustituye esas RPM y conserva otras filas existentes.
+  `engineConsumptionReferenceVersion` impide reponer las filas si luego se editan
+  o se eliminan, incluso al vaciar la tabla. Una tabla corrupta ya inicializada
+  se descarta completa al cargar.
+  Se interpola linealmente entre dos filas y se respetan los valores exactos
+  de la tabla. Fuera de sus extremos estima proporcionalmente a la entrada
+  más cercana: `L/h de referencia × RPM actuales / RPM de referencia`.
+  Con la tabla inicial, 500 RPM → 0,375 L/h (0,38 en pantalla) y
+  3500 RPM → 7,109375 L/h (7,11 en pantalla). Son estimaciones, sin insertar
+  filas nuevas ni modificar los valores guardados.
+  Si se añade un dato de ralentí, este pasa a formar parte de la curva.
+  Sin tabla válida o sin una referencia utilizable, muestra «—».
+  `useEngineConsumption` vive en `ConsoleScreen`,
+  incluso con el panel cerrado o al girar la pantalla. Calcula al recibir
+  datos válidos y luego cada 5 s con las últimas RPM, sin reiniciar el intervalo
+  por cada lectura. Recalcula al editar la tabla y retira la estimación al parar,
+  perder datos o desconectar. El intervalo visual de los cuadros no le afecta.
+  `useEngineConsumptionTotal` integra el último consumo calculado en L/h por
+  el tiempo real transcurrido, dividido entre 3600. Usa la hora local de recepción
+  de las RPM de la unidad seleccionada por el tacómetro, incluso si su valor
+  no cambia. No avanza más allá de la última observación confirmada; un cero
+  recibido cierra la fracción final hasta la hora de parada. Pausa ante datos
+  ausentes, desconexión, segundo plano o cambio de servidor, sin rellenar huecos.
+  Solo persiste `{ schema: 1, litres }` en `@engine_consumption_total_v1`, nunca
+  una hora desde la que sumar tiempo con la app cerrada. Guarda cada 5 s,
+  en transiciones, al reiniciar manualmente y al salir normalmente. Las escrituras
+  se serializan para que una escritura anterior no deshaga un reinicio.
+  Conserva la precisión completa y muestra dos decimales. Un cierre forzado
+  puede perder la fracción todavía no guardada desde la última escritura.
+  El hueco izquierdo contiene un horómetro local de cuatro ruedas enteras y una
+  rueda roja de décimas. `useEngineHours` integra tiempo con el mismo criterio de
+  RPM recientes, conexión y primer plano, y persiste `{ schema: 1, hours }` en
+  `@engine_hours_total_v1`. El panel permanece visible con el motor parado.
+  La app se suscribe a `propulsion.*.runTime`, expresado en segundos, y lo usa
+  como total principal. Cada publicación sustituye el total local y se persiste
+  como respaldo; mientras la ruta está disponible no se suma tiempo localmente.
+  Si falta o caduca, el contador local continúa desde la última lectura guardada
+  usando RPM. Entre publicaciones, la rueda roja se desplaza a la posición decimal
+  recibida con una animación de 520 ms; por tanto, la frecuencia de sus cambios
+  sigue el intervalo configurado en Hour Meter.
+  En el servidor del barco, Hour Meter debe vigilar `propulsion.0.revolutions` y
+  publicar `propulsion.0.runTime`, en segundos. La configuración completa está en
+  `GUIA-INSTALACION-OPENCPN.md`, apartado 4.D. Antes de activarlo se comprueba en
+  Data Browser que ninguna fuente del motor publique ya ese mismo path.
   Los displays muestran «—» sin datos o al desconectar, conservando cero como lectura válida.
   No fija un régimen máximo seguro
   del motor ni añade una alarma por RPM; la zona roja es una marca visual.

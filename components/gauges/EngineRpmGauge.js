@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText, TSpan } from 'react-native-svg';
 import { useTranslation } from '../../localization/LanguageProvider';
 import { GAUGE_THEME } from '../../styles/GaugeTheme';
 import { GaugeDefs } from './shared/GaugeDefs';
@@ -78,13 +78,18 @@ export default function EngineRpmGauge({ size, rpm, sogKnots, connected, setting
             })}
             <SvgText x={CENTER} y={119} textAnchor="middle" fill="#ff9800" fontFamily="NauticalFont" fontSize={16}>RPM</SvgText>
             <SvgText x={CENTER} y={139} textAnchor="middle" fill="#aaa" fontFamily="NauticalFont" fontSize={10}>× 1000</SvgText>
-            <EngineGaugeNeedle center={CENTER} angle={angle} length={109.8} halfWidth={7.2}
-                hubRadius={9.9} paint={paint} hasData={value !== null} />
+            <Rect x={132} y={328} width={136} height={29} rx={6} fill="#101820" stroke={paint('redMetalOuter')} strokeWidth={1.5} />
+            <SvgText x={CENTER} y={349} textAnchor="middle" fill="#fff" fontFamily="NauticalFont" fontSize={value !== null && value >= 10000 ? 15 : 20}>
+                {value === null ? '—' : Math.round(value)}
+                <TSpan fontSize={11}> RPM</TSpan>
+            </SvgText>
             <Rect x={148} y={232} width={104} height={48} rx={9} fill="#101820" stroke={paint('redMetalOuter')} strokeWidth={1.5} />
             <SvgText x={CENTER} y={256} textAnchor="middle" fill="#fff" fontFamily="NauticalFont" fontSize={24}>
                 {sogValue === null ? '—' : sogValue.toFixed(1)}
             </SvgText>
             <SvgText x={CENTER} y={271} textAnchor="middle" fill="#aaa" fontFamily="NauticalFont" fontSize={9}>SOG · KTS</SvgText>
+            <EngineGaugeNeedle center={CENTER} angle={angle} length={109.8} halfWidth={7.2}
+                hubRadius={9.9} paint={paint} hasData={value !== null} />
             <Ellipse cx={151} cy={87} rx={68} ry={17} rotation={-32} origin="151,87" fill={paint('glassReflection')} opacity={0.5} />
         </Svg>
     </View>;
