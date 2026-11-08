@@ -6,7 +6,7 @@ import ConsolePage from '../components/ConsolePage';
 import ConnectionHeader from '../components/ConnectionHeader';
 import { styles } from '../styles/consoleStyles';
 /** Primera página: rumbo, viento, profundidad y máximos. */
-export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, isConnected, isNightMode, theme, windowWidth, gaugeSize, onOpenSettings, onResetSOG, onResetTWS, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted, aisVisibleCount, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, aisStatus, onToggleAis, aisTargets }) {
+export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, isConnected, isNightMode, theme, windowWidth, gaugeSize, onOpenSettings, onResetSOG, onResetTWS, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted, aisVisibleCount, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, aisStatus, onToggleAis, aisTargets, aisAlarm }) {
     const [panelWidth, setPanelWidth] = useState(0);
     const compassRef = useRef(null);
     const [compassCenterY, setCompassCenterY] = useState(null);
@@ -19,6 +19,7 @@ export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, i
         >
             <View style={styles.dataGrid} onLayout={({ nativeEvent }) => setPanelWidth(nativeEvent.layout.width)}>
                 <ConnectionHeader showEngineAlarms navigation={navigation} settings={settings} aisTargets={aisTargets}
+                    aisAlarm={aisAlarm}
                     compassCenterY={compassCenterY}
                     aisVisibleCount={aisVisibleCount} aisAuto={aisAuto} onToggleAisAuto={onToggleAisAuto} aisRangeNm={aisRangeNm} onAisRangeChange={onAisRangeChange} aisVisible={aisVisible} aisStatus={aisStatus} onToggleAis={onToggleAis}
                     isConnected={isConnected}

@@ -2,6 +2,7 @@ import { useTranslation } from '../../localization/LanguageProvider';
 import { Circle, G, Polygon } from 'react-native-svg';
 import { Platform } from 'react-native';
 import { projectAisPosition } from './shared/aisProjection';
+import { AIS_RISK_COLORS } from '../../features/console/model/aisCollisionRisk';
 
 export default function AisTargets({ targets = {}, position, heading, center, radius, size, positionReceivedAt, connected, rangeNm = 6, animationPhase = 0, onSelect }) {
     const { t } = useTranslation();
@@ -13,9 +14,10 @@ export default function AisTargets({ targets = {}, position, heading, center, ra
             if (!Number.isFinite(target.positionReceivedAt) || now - target.positionReceivedAt >= 300000) return null;
             const point = projectAisPosition(position, target['navigation.position'], heading, radius, rangeNm);
             if (!point) return null;
-            // Un ciclo cada 1,5 s dentro de 4 NM; cada 0,75 s dentro de 2 NM.
-            const phase = (animationPhase * (point.distanceNm < 2 ? 2 : 1)) % 1;
-            const opacity = point.distanceNm < 4 && phase >= 0.5 ? 0.2 : 1;
+            const level = target.collision?.level ?? 'unknown';
+            const color = AIS_RISK_COLORS[level];
+            const phase = (animationPhase * 2) % 1;
+            const opacity = level === 'danger' && phase >= 0.5 ? 0.25 : 1;
             const course = Number.isFinite(target['navigation.headingTrue']) ? target['navigation.headingTrue'] : target['navigation.courseOverGroundTrue'];
             return <G key={id} opacity={opacity} transform={`translate(${center + point.x}, ${center + point.y})`}
                 onPress={() => onSelect?.({ ...target, id, distanceNm: point.distanceNm })}
@@ -25,8 +27,8 @@ export default function AisTargets({ targets = {}, position, heading, center, ra
                 <Circle r={Math.max(marker * 1.2, 22 * 1.22)} fill="transparent" />
                 {Number.isFinite(course) ? <Polygon
                     points={`0,${-marker} ${marker * 0.7},${marker} 0,${marker * 0.5} ${-marker * 0.7},${marker}`}
-                    rotation={course * 180 / Math.PI - heading} fill="#45d39a" stroke="#082c24" strokeWidth={1.2} />
-                    : <Circle r={marker * 0.7} fill="#45d39a" stroke="#082c24" strokeWidth={1.2} />}
+                    rotation={course * 180 / Math.PI - heading} fill={color} stroke="#082c24" strokeWidth={1.2} />
+                    : <Circle r={marker * 0.7} fill={color} stroke="#082c24" strokeWidth={1.2} />}
             </G>;
         })}
     </G>;

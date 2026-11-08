@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText, TSpan } from 'react-native-svg';
 import { GAUGE_THEME } from '../../styles/GaugeTheme';
 import { GaugeDefs } from './shared/GaugeDefs';
 import { computeCommonDims, polarToCartesian } from './shared/gaugeUtils';
@@ -76,9 +76,10 @@ export default function EngineInstrumentGauge({ size, bezelWidth, value, maximum
             <EngineGaugeNeedle center={CENTER} angle={angle} length={63}
                 halfWidth={5} hubRadius={6}
                 paint={paint} hasData />
-            <Rect x={84} y={136} width={72} height={24} rx={5} fill="#101820" stroke={paint('redMetalOuter')} strokeWidth={1} />
+            <Rect x={76} y={136} width={88} height={24} rx={5} fill="#101820" stroke={paint('redMetalOuter')} strokeWidth={1} />
             <SvgText x={CENTER} y={153} textAnchor="middle" fill="#fff" fontFamily="NauticalFont" fontSize={16}>
                 {Number.isFinite(value) ? value.toFixed(decimals) : '—'}
+                <TSpan fontSize={10}>{` ${unit}`}</TSpan>
             </SvgText>
             <Ellipse cx={90} cy={52} rx={41} ry={10} rotation={-32} origin="90,52" fill={paint('glassReflection')} opacity={0.5} />
             </G>

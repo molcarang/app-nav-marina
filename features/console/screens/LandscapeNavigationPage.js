@@ -135,7 +135,7 @@ export default function LandscapeNavigationPage(props) {
                             <View style={{ width: '100%', gap: 8 * controlScale }}
                                 onLayout={({ nativeEvent }) => setBottomControlsHeight(nativeEvent.layout.height)}>
                                 <AnchorButton position={navigation.position} receivedAt={navigation.positionReceivedAt} connected={isConnected} />
-                                <AisToggleButton targets={props.aisTargets} position={navigation.position} positionReceivedAt={navigation.positionReceivedAt} connected={isConnected && props.aisStatus === 'connected'} visibleCount={props.aisVisibleCount} fullWidth auto={props.aisAuto} onToggleAuto={props.onToggleAisAuto} rangeNm={props.aisRangeNm} onRangeChange={props.onAisRangeChange} visible={props.aisVisible} onPress={props.onToggleAis} />
+                                <AisToggleButton alarm={props.aisAlarm} targets={props.aisTargets} position={navigation.position} positionReceivedAt={navigation.positionReceivedAt} connected={isConnected && props.aisStatus === 'connected'} visibleCount={props.aisVisibleCount} fullWidth auto={props.aisAuto} onToggleAuto={props.onToggleAisAuto} rangeNm={props.aisRangeNm} onRangeChange={props.onAisRangeChange} visible={props.aisVisible} onPress={props.onToggleAis} />
                             </View>
                         </View>
                     </View>
@@ -167,6 +167,9 @@ export default function LandscapeNavigationPage(props) {
                                     rudderAngle={navigation.rudderAngle}
                                     rudderLimit={settings.rudderLimit}
                                     heel={navigation.vesselHeelDeg}
+                                    maxHeel={props.maxHeel}
+                                    maxHeelSide={props.maxHeelSide}
+                                    onResetHeel={props.onResetHeel}
                                     width={heelWidth}
                                     isNightMode={isNightMode}
                                 />

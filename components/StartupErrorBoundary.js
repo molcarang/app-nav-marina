@@ -12,7 +12,7 @@ export default class StartupErrorBoundary extends Component {
 
     componentDidCatch(error, info) {
         this.setState({ componentStack: info.componentStack || '' });
-        console.warn('[Arranque] Error de renderizado:', error.message, info.componentStack);
+        console.warn('[Arranque] Error de renderizado:', error.stack || error.message, info.componentStack);
     }
 
     render() {
@@ -34,6 +34,10 @@ function StartupError({ error, componentStack }) {
         return <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
             <Text style={styles.title}>{t('startupError')}</Text>
             <Text selectable style={styles.message}>{error.message}</Text>
+            {error.stack ? <>
+                <Text style={styles.title}>{t('errorCallStack')}</Text>
+                <Text selectable style={styles.stack}>{error.stack}</Text>
+            </> : null}
             <Text style={styles.title}>{t('errorComponents')}</Text>
             <Text selectable style={styles.stack}>{componentStack || t('diagnostics')}</Text>
         </ScrollView>;

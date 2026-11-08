@@ -118,7 +118,7 @@ const DataSquare = ({
                 onPressIn={() => { pressStarted.current = Date.now(); resetTriggered.current = false; }}
                 onPress={handleTap}
                 onLongPress={onReset ? handleReset : undefined}
-                delayLongPress={3000}
+                delayLongPress={2000}
                 disabled={!onReset && !showHistoryPopup && !onPress}
                 accessibilityRole={onReset || showHistoryPopup || onPress ? 'button' : undefined}
                 accessibilityLabel={onPress ? `${label}, ${value} ${unit}. ${t(soundMuted ? 'muted' : 'muteMinute')}` : undefined}

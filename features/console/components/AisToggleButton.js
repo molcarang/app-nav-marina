@@ -5,8 +5,9 @@ import { useControlScale } from '../../../hooks/useControlScale';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { AIS_RANGES_NM, normalizeAisRange } from '../../../components/gauges/shared/aisRange';
 import AisRadarBackground from './AisRadarBackground';
+import AisAlarmBell from './AisAlarmBell';
 
-export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRangeChange, auto = false, onToggleAuto, fullWidth = false, visibleCount = 0, targets, position, positionReceivedAt, connected }) {
+export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRangeChange, auto = false, onToggleAuto, fullWidth = false, visibleCount = 0, targets, position, positionReceivedAt, connected, alarm }) {
     const { t } = useTranslation();
     const scale = useControlScale();
     const [contactsOpen, setContactsOpen] = useState(false);
@@ -18,7 +19,7 @@ export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRange
         targets={targets} position={position} receivedAt={positionReceivedAt} connected={connected} rangeNm={range} />
     <View style={[
         styles.container,
-        { gap: (visible ? 16 : 10) * scale, width: '100%' },
+        { gap: (visible && !alarm?.level ? 16 : 10) * scale, width: '100%' },
         visible && [styles.panel, { padding: 8 * scale, borderRadius: 16 * scale,
             height: 60 * scale + 2, flexWrap: 'nowrap' }],
         visible && fullWidth && { width: '100%' },
@@ -53,7 +54,7 @@ export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRange
                 const disabled = !auto && (button.next < 0 || button.next >= AIS_RANGES_NM.length);
                 return <View key={button.title} style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1, minWidth: 0 }}>
                     {button.title === 'aisZoomIn' && <Text numberOfLines={1} adjustsFontSizeToFit accessibilityLabel={t('aisRange', { range })}
-                        style={[styles.text, { color, fontSize: 12 * scale, flexShrink: 1, width: 76 * scale, textAlign: 'center', marginHorizontal: 4 * scale }]}>{range} NM</Text>}
+                        style={[styles.text, { color, fontSize: 12 * scale, flexShrink: 1, width: (alarm?.level ? 64 : 76) * scale, textAlign: 'center', marginHorizontal: 4 * scale }]}>{range} NM</Text>}
                     <TouchableOpacity accessibilityRole="button"
                     accessibilityLabel={t(button.title)} accessibilityState={{ disabled }} disabled={disabled}
                     onPress={() => onRangeChange(AIS_RANGES_NM[Math.max(0, Math.min(AIS_RANGES_NM.length - 1, button.next))])}
@@ -62,8 +63,10 @@ export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRange
                     <Text style={[styles.text, { color, fontSize: 20 * scale }]}>{button.label}</Text>
                 </TouchableOpacity></View>;
             })}
+            <AisAlarmBell alarm={alarm} />
             </View>
         </View>}
+        {(!visible || !onRangeChange) && <AisAlarmBell alarm={alarm} />}
     </View>
     </>;
 }

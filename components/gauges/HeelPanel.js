@@ -1,5 +1,5 @@
 import { useTranslation } from '../../localization/LanguageProvider';
-import { View } from 'react-native';
+import { Text as NativeText, TouchableOpacity, View } from 'react-native';
 import Svg, { G, Line, Path, Rect, Text } from 'react-native-svg';
 import RudderNeedle from './RudderNeedle';
 import SteelBall from './SteelBall';
@@ -10,7 +10,7 @@ import { describeArc, polarToCartesian } from '../../utils/Utils';
 export const HEEL_PANEL_ASPECT_RATIO = 300 / 800;
 
 /** Escora en grados. La escala se limita a ±30°, la cifra conserva el valor real. */
-export default function HeelPanel({ heel, width, isNightMode = false, rudderAngle, rudderLimit, backgroundColor,
+export default function HeelPanel({ heel, maxHeel, maxHeelSide, onResetHeel, width, isNightMode = false, rudderAngle, rudderLimit, backgroundColor,
     alarmActive = false, alarmColor = 'rgba(210, 0, 0, 0.95)' }) {
     const { t } = useTranslation();
     const valid = Number.isFinite(heel);
@@ -32,14 +32,20 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
     const ball = polarToCartesian(600, 40, channelRadius, markerAngle);
     const glassColor = isNightMode ? '#b58a8a' : '#c6edff';
     const glassHighlight = isNightMode ? '#d3a6a6' : '#f4fcff';
+    const maximum = Number.isFinite(maxHeel) ? `${Math.round(maxHeel)}°` : '—';
+    const maximumColor = maxHeelSide === 'port' ? portColor : maxHeelSide === 'starboard' ? starboardColor : foreground;
+    const maximumBackground = maxHeelSide === 'port'
+        ? (isNightMode ? 'rgba(168, 50, 50, 0.15)' : 'rgba(220, 18, 18, 0.15)')
+        : maxHeelSide === 'starboard'
+            ? (isNightMode ? 'rgba(40, 122, 56, 0.15)' : 'rgba(0, 255, 0, 0.12)')
+            : (isNightMode ? 'rgba(35, 8, 8, 0.8)' : 'rgba(7, 24, 34, 0.8)');
 
     return (
         <View
             style={{ width, marginTop: 3, marginBottom: 13 }}
-            accessible
-            accessibilityLabel={t('heelDescription', { angle: valid ? displayedAngle : t('noData'), side, rudder: Number.isFinite(rudderAngle) ? `${Math.round(rudderAngle)}°` : t('noData') })}
         >
-            <Svg width={width} height={width * HEEL_PANEL_ASPECT_RATIO} viewBox="0 0 800 300">
+            <Svg width={width} height={width * HEEL_PANEL_ASPECT_RATIO} viewBox="0 0 800 300"
+                accessible accessibilityLabel={t('heelDescription', { angle: valid ? displayedAngle : t('noData'), side, rudder: Number.isFinite(rudderAngle) ? `${Math.round(rudderAngle)}°` : t('noData') })}>
                 <Rect x={2} y={2} width={796} height={296} rx={18} fill={backgroundColor ?? (isNightMode ? 'rgba(30, 0, 0, 0.8)' : 'rgba(45, 45, 45, 0.75)')} stroke={muted} strokeWidth={2} />
                 <NauticalPanelBackground isNightMode={isNightMode} />
                 <G transform="translate(11.24, 17.6) scale(1.144)">
@@ -108,6 +114,25 @@ export default function HeelPanel({ heel, width, isNightMode = false, rudderAngl
                 <Text x={772} y={316} textAnchor="end" fill={starboardColor} fontSize={16} fontFamily="NauticalFont" letterSpacing={2}>{t('starboard')}</Text>
                 </G>
             </Svg>
+            <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t('heelMaximum', { angle: maximum })}
+                accessibilityHint={t('heelMaximumResetHint')}
+                onLongPress={onResetHeel}
+                delayLongPress={2000}
+                disabled={!onResetHeel}
+                activeOpacity={0.6}
+                style={{ position: 'absolute', top: width * 0.018, right: width * 0.02,
+                    minWidth: 64, minHeight: 44, paddingHorizontal: 7, justifyContent: 'center',
+                    alignItems: 'center', borderRadius: 8,
+                    backgroundColor: maximumBackground,
+                    borderWidth: 1, borderColor: maxHeelSide ? maximumColor : muted }}
+            >
+                <NativeText style={{ color: maximumColor, fontFamily: 'NauticalFont',
+                    fontSize: Math.max(11, Math.min(12, width * 0.02)) }}>
+                    {t('maximum')} {maximum}
+                </NativeText>
+            </TouchableOpacity>
         </View>
     );
 }

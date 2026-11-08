@@ -9,6 +9,7 @@ import { styles as baseStyles } from '../styles/settingsStyles';
 import HistoryRetentionSetting from './HistoryRetentionSetting';
 import EngineRpmSettings from './EngineRpmSettings';
 import NightDimmer from '../../../components/NightDimmer';
+import AisCollisionSettings from './AisCollisionSettings';
 /** Presenta ajustes; el hook se ocupa de guardarlos. */
 export default function ConsoleSettingsModal({ visible, settings, isNightMode, onChange, onSave, onNightModeChange, onClose, onTestDepthSound }) {
     const styles = useResponsiveStyles(baseStyles);
@@ -254,6 +255,18 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
                         />
                     </View>
 
+                        </View>
+                    </View>
+                    <View style={styles.section}>
+                        <TouchableOpacity accessibilityRole="button" accessibilityLabel={t('settingsSection_ais')}
+                            accessibilityState={{ expanded: expandedSection === 'ais' }}
+                            onPress={() => toggleSection('ais')}
+                            style={[styles.sectionHeader, expandedSection === 'ais' && styles.sectionHeaderExpanded]}>
+                            <Text style={styles.sectionTitle}>{t('settingsSection_ais')}</Text>
+                            <Text style={styles.sectionChevron}>{expandedSection === 'ais' ? '\u2212' : '+'}</Text>
+                        </TouchableOpacity>
+                        <View style={[styles.sectionBody, expandedSection !== 'ais' && styles.sectionHidden]}>
+                            <AisCollisionSettings settings={settings} visible={visible} onSave={onSave} />
                         </View>
                     </View>
                     </ScrollView>
