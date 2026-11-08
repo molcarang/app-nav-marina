@@ -46,7 +46,7 @@ test('convierte unidades y conserva los signos de viento y escora', () => {
     assert.equal(navigation.rudderAngle, 10);
     assert.equal(navigation.engineRpm, 1800);
     assert.ok(Math.abs(navigation.vesselHeelDeg + 15) < 0.001);
-    assert.ok(Math.abs(navigation.twaCog + 45) < 0.001);
+    assert.ok(Math.abs(navigation.twaCog - 45) < 0.001);
 });
 
 test('normaliza el ángulo relativo al cruzar el norte', () => {
@@ -55,7 +55,7 @@ test('normaliza el ángulo relativo al cruzar el norte', () => {
         [SIGNALK_PATHS.heading]: 359 * Math.PI / 180,
         [SIGNALK_PATHS.windDirection]: Math.PI / 180,
     });
-    assert.ok(Math.abs(navigation.twaCog + 2) < 0.001);
+    assert.ok(Math.abs(navigation.twaCog - 2) < 0.001);
 });
 
 test('VMG conserva magnitud y VMC conserva signo', () => {

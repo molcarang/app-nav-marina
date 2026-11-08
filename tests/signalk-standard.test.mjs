@@ -14,6 +14,7 @@ test('delta estándar: GPS, profundidad, objetos de escora y corriente, motor co
         { path: 'navigation.attitude', value: { roll: Math.PI / 18, pitch: 0 } },
         { path: 'environment.current', value: { drift: 1, setTrue: Math.PI / 2 } },
         { path: 'propulsion.port.revolutions', value: 15 },
+        { path: 'propulsion.port.runTime', value: 36000 },
         { path: 'navigation.headingTrue', value: Math.PI / 4 },
         { path: 'navigation.courseOverGroundTrue', value: Math.PI / 2 },
     ]);
@@ -25,6 +26,8 @@ test('delta estándar: GPS, profundidad, objetos de escora y corriente, motor co
     assert.ok(Math.abs(result.setDeg - 90) < 0.001);
     assert.equal(result.driftKnots, 1.94384);
     assert.equal(result.engineRpm, 900);
+    assert.equal(result.engineRunTimeSeconds, 36000);
+    assert.equal(result.engineRunTimeReceivedAt, 1234);
     assert.equal(result.navigationMode, 'ENGINE');
     assert.equal(result.headingDigital, '45.0');
     assert.equal(result.cogDigital, '90.0');

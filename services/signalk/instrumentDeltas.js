@@ -1,4 +1,4 @@
-import { isInstrumentPath, SIGNALK_PATHS as P } from './paths.js';
+import { ENGINE_PATH_PATTERN, ENGINE_RUNTIME_PATH_PATTERN, isInstrumentPath, SIGNALK_PATHS as P } from './paths.js';
 import { dataTimestamp, MOTION_TIME_KEYS } from './dataTimestamp.js';
 
 // Normaliza objetos y deltas parciales hacia las mismas lecturas internas.
@@ -25,6 +25,8 @@ export function readInstrumentDelta(message, self, receivedAt = Date.now()) {
                 result[item.path] = item.value;
             }
             if (item.path === P.position) result.positionReceivedAt = receivedAt;
+            if (ENGINE_PATH_PATTERN.test(item.path)) result[`${item.path}.receivedAt`] = receivedAt;
+            if (ENGINE_RUNTIME_PATH_PATTERN.test(item.path)) result[`${item.path}.receivedAt`] = receivedAt;
             if (MOTION_TIME_KEYS[item.path]) result[MOTION_TIME_KEYS[item.path]] = dataTimestamp(update, receivedAt);
         }
     }

@@ -1,0 +1,11 @@
+[
+  { "rpm": 1600, "minimumLitresPerHour": 0.8, "maximumLitresPerHour": 1.2 },
+  { "rpm": 1800, "minimumLitresPerHour": 1.1, "maximumLitresPerHour": 1.5 },
+  { "rpm": 2000, "minimumLitresPerHour": 1.4, "maximumLitresPerHour": 1.9 },
+  { "rpm": 2200, "minimumLitresPerHour": 1.9, "maximumLitresPerHour": 2.4 },
+  { "rpm": 2400, "minimumLitresPerHour": 2.5, "maximumLitresPerHour": 3.0 },
+  { "rpm": 2600, "minimumLitresPerHour": 3.1, "maximumLitresPerHour": 3.7 },
+  { "rpm": 2800, "minimumLitresPerHour": 3.9, "maximumLitresPerHour": 4.5 },
+  { "rpm": 3000, "minimumLitresPerHour": 4.8, "maximumLitresPerHour": 5.4 },
+  { "rpm": 3200, "minimumLitresPerHour": 5.8, "maximumLitresPerHour": 6.5 }
+]

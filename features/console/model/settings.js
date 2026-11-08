@@ -5,10 +5,13 @@ import { DEFAULT_HISTORY_HOURS } from './twsHistory.js';
 import { DEFAULT_HEEL_ALARM_DEGREES } from './heelAlarm.js';
 import { DEFAULT_LOW_FUEL_PERCENT } from './lowFuelAlarm.js';
 import { DEFAULT_TACHOMETER_MAX_RPM, DEFAULT_TACHOMETER_RED_ZONE_RPM } from './engineRpmSettings.js';
+import { DEFAULT_DISPLAY_REFRESH_SECONDS } from './displayReadings.js';
+import { DEFAULT_ENGINE_CONSUMPTION_TABLE, ENGINE_CONSUMPTION_REFERENCE_VERSION } from './engineConsumptionTable.js';
 export const SETTINGS_STORAGE_KEY = '@ajustes_consola';
 export const DEFAULT_SETTINGS = {
     ...AIS_COLLISION_DEFAULTS,
     language: 'es',
+    displayRefreshSeconds: DEFAULT_DISPLAY_REFRESH_SECONDS,
     aisRangeNm: 6,
     historyHours: DEFAULT_HISTORY_HOURS,
     sogHistoryHours: DEFAULT_HISTORY_HOURS,
@@ -20,6 +23,8 @@ export const DEFAULT_SETTINGS = {
     lowFuelAlarmPercent: DEFAULT_LOW_FUEL_PERCENT,
     tachometerMaxRpm: DEFAULT_TACHOMETER_MAX_RPM,
     tachometerRedZoneRpm: DEFAULT_TACHOMETER_RED_ZONE_RPM,
+    engineConsumptionTable: DEFAULT_ENGINE_CONSUMPTION_TABLE.map(entry => ({ ...entry })),
+    engineConsumptionReferenceVersion: ENGINE_CONSUMPTION_REFERENCE_VERSION,
     depthAlarmMeters: 3,
     depthAlarmEnabled: true,
     depthAlarmSound: true,

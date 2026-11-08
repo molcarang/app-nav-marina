@@ -16,6 +16,7 @@ const DataSquare = ({
     value,
     unit,
     secondaryText,
+    secondaryTextAccessibilityLabel,
     color,
     textColor,
     showStatusDot = false,
@@ -184,7 +185,8 @@ const DataSquare = ({
                     {unit}
                 </Text>
                 {secondaryText && <Text numberOfLines={1} adjustsFontSizeToFit
-                    style={[styles.unit, { color: labelUnitColor, fontSize: fontBasis * 0.085, maxWidth: '94%' }]}>
+                    accessibilityLabel={secondaryTextAccessibilityLabel}
+                    style={[styles.unit, { color: labelUnitColor, fontSize: Math.max(9, Math.min(14, fontBasis * 0.085)), maxWidth: '94%' }]}>
                     {secondaryText}
                 </Text>}
             </TouchableOpacity>

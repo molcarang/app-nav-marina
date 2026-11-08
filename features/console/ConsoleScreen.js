@@ -25,6 +25,9 @@ import StartupLauncher from '../../components/StartupLauncher';
 import { useAisCollisionRisk } from './hooks/useAisCollisionRisk';
 import AisCollisionNotice from './components/AisCollisionNotice';
 import { useAisCollisionAlarm } from './hooks/useAisCollisionAlarm';
+import { useEngineConsumption } from './hooks/useEngineConsumption';
+import { EngineConsumptionTotalContext, useEngineConsumptionTotal } from './hooks/useEngineConsumptionTotal';
+import { EngineHoursContext, useEngineHours } from './hooks/useEngineHours';
 /** Coordina datos y acciones. Cada página se ocupa de su presentación. */
 export default function ConsoleScreen() {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -40,7 +43,18 @@ export default function ConsoleScreen() {
         'sog', settings.signalKAddress, isLoaded, settings.sogHistoryHours,
     );
     const data = useSignalKData(settings.signalKAddress, isLoaded, recordReading, recordSogReading);
-    const navigation = useMemo(() => deriveNavigationData(data), [data]);
+    const rawNavigation = useMemo(() => deriveNavigationData(data), [data]);
+    const engineConsumption = useEngineConsumption(rawNavigation.engineRpm, settings.engineConsumptionTable, data.isConnected);
+    const engineConsumptionTotal = useEngineConsumptionTotal({ rate: engineConsumption,
+        rpm: rawNavigation.engineRpm, receivedAt: rawNavigation.engineRpmReceivedAt,
+        connected: data.isConnected, source: settings.signalKAddress }, isLoaded);
+    const engineHours = useEngineHours({ rpm: rawNavigation.engineRpm,
+        receivedAt: rawNavigation.engineRpmReceivedAt, connected: data.isConnected,
+        source: settings.signalKAddress,
+        authoritativeHours: Number.isFinite(rawNavigation.engineRunTimeSeconds)
+            ? rawNavigation.engineRunTimeSeconds / 3600 : null,
+        authoritativeReceivedAt: rawNavigation.engineRunTimeReceivedAt }, isLoaded);
+    const navigation = useMemo(() => ({ ...rawNavigation, engineConsumptionLitresPerHour: engineConsumption }), [rawNavigation, engineConsumption]);
     const evaluatedAisTargets = useAisCollisionRisk(ais.targets, data, settings, data.isConnected && ais.status === 'connected');
     const aisAlarm = useAisCollisionAlarm(evaluatedAisTargets);
     const anchorWatch = useAnchorWatch(navigation.position, navigation.positionReceivedAt, data.isConnected);
@@ -83,6 +97,8 @@ export default function ConsoleScreen() {
     return (
         <LanguageProvider language={settings.language}>
         <AnchorWatchContext.Provider value={anchorWatch}>
+        <EngineConsumptionTotalContext.Provider value={engineConsumptionTotal}>
+        <EngineHoursContext.Provider value={engineHours}>
         <NightModeContext.Provider value={{ enabled: isNightMode, intensity: settings.nightIntensity, toggle: () => setNightMode(previous => !previous) }}>
         <View style={styles.mainContainer}>
             <UpdateNotice />
@@ -133,6 +149,8 @@ export default function ConsoleScreen() {
             {starting && <StartupLauncher ready={isLoaded} connected={data.isConnected} onFinish={finishStartup} />}
         </View>
         </NightModeContext.Provider>
+        </EngineHoursContext.Provider>
+        </EngineConsumptionTotalContext.Provider>
         </AnchorWatchContext.Provider>
         </LanguageProvider>
     );

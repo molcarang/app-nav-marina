@@ -160,6 +160,48 @@ real, revisa las fuentes antes de habilitar otro cálculo para los mismos paths.
 
 [Cálculo y paths de Derived Data](https://github.com/SignalK/signalk-derived-data/blob/master/src/calcs/windDirection.ts).
 
+### D. Guardar las horas de motor con Hour Meter
+
+Antes de configurar otro contador, busca `propulsion` en **Data Browser**. Si el
+AlbaCombi u otra fuente ya publica `propulsion.<identificador>.runTime`, utiliza
+esa lectura y no publiques una segunda fuente en el mismo path.
+
+Cuando no exista `runTime`, instala **Hour Meter** desde **App Store** y abre
+**Server → Plugin Config → Hour Meter**. Añade un dispositivo con estos valores:
+
+| Campo de Hour Meter | Valor recomendado |
+|---|---|
+| Device name | `Motor` |
+| SignalK value that indicates device is on | `propulsion.0.revolutions` |
+| SignalK timeout (secs) | `30` |
+| SignalK path to output hour meter data | `propulsion.0.runTime` |
+| SignalK path to output device status | Vacío |
+| Hours already on device | Horas reales que marque el motor en este momento |
+| Reporting interval (secs) | `5` o `10` |
+
+Guarda la configuración y comprueba en **Data Browser** que:
+
+- `propulsion.0.revolutions` se actualiza de forma continua y es mayor que cero
+  con el motor en marcha. Signal K expresa esta lectura en Hz: RPM / 60.
+- `propulsion.0.runTime` aparece bajo `vessels.self` y aumenta mientras hay RPM.
+- `runTime` está expresado en **segundos**. Para compararlo con el horómetro,
+  divide el valor entre 3600. Por ejemplo, 2569 h son 9.248.400 s.
+- Después de reiniciar Signal K, el total reaparece y no empieza de cero.
+
+El campo **Hours already on device** sirve para trasladar al plugin la lectura
+de un horómetro físico o un total anterior. No debe actualizarse en cada arranque.
+Si el plugin alterna encendido y apagado por pequeños cortes de datos, aumenta el
+timeout; no lo reduzcas por debajo del intervalo real de publicación de RPM.
+
+La ruta estándar es `propulsion.<identificador>.runTime`; `0` debe sustituirse
+por el mismo identificador que utiliza la fuente de RPM. Hour Meter conserva su
+propio historial y publica el total en Signal K. La app utiliza `runTime` como
+fuente principal, lo convierte de segundos a horas y conserva la última lectura
+en la tablet como respaldo si la ruta deja de estar disponible.
+
+[Documentación de Hour Meter](https://github.com/joelkoz/signalk-hour-meter) ·
+[Ruta estándar `runTime`](https://signalk.org/specification/1.7.0/doc/vesselsBranch.html)
+
 ## 5. Entrada de Signal K en OpenCPN
 
 En **Options → Connections → Add new connection**:
@@ -299,6 +341,7 @@ no incorpora una entrada de token: necesita integrar ese mecanismo para esa inst
 | Viento real | `environment.wind.speedTrue`, dirección verdadera o ángulo verdadero |
 | Timón | `steering.rudderAngle` |
 | Motor | `propulsion.<identificador>.revolutions` |
+| Horas de motor en Signal K | `propulsion.<identificador>.runTime`, en segundos |
 | Piloto | `steering.autopilot.state` |
 | AIS | Otros contextos `vessels.<identificador>` con `navigation.position` |
 
@@ -319,6 +362,8 @@ del radio de seis millas.
 | GPS ausente | Debe existir el objeto `navigation.position` |
 | COG vacío pero rumbo visible | Son datos diferentes; verifica `courseOverGroundTrue` |
 | AWA/AWS visibles pero TWA/TWS ausentes | Comprueba STW y activa True Wind Angle and Speed en Derived Data; véase 4.C |
+| Hour Meter no acumula | Comprueba que su entrada coincide con el path real de RPM, que recibe valores mayores que cero y que el timeout supera los cortes normales |
+| `runTime` vuelve a cero | Revisa **Hours already on device**, el historial del plugin y que no haya dos fuentes publicando el mismo path |
 | No salen RMB/APB | Destino activo, posición propia válida, salida TCP habilitada y Opciones cerrada |
 | OpenCPN emite pero Signal K no recibe | Entrada NMEA 0183 TCP Server 10110, dirección, filtro y registro de errores |
 | Data Monitor solo muestra JSON de instrumentos | Estás viendo entrada Signal K; busca la conexión de salida NMEA 0183 |
@@ -338,6 +383,7 @@ del radio de seis millas.
 - [ ] Se ha comprobado qué ocurre al cancelar el destino.
 - [ ] Los indicadores de la app concuerdan con Data Browser tras convertir unidades.
 - [ ] TWA/TWS llegan de la red o de Derived Data; sus entradas están actualizadas y no compiten con salidas simuladas.
+- [ ] Hour Meter publica `propulsion.0.runTime`, persiste tras reiniciar y no compite con otra fuente.
 - [ ] AIS se sitúa respecto a la posición propia.
 - [ ] Las alarmas y el sonido se han probado con datos controlados.
 - [ ] Antes de usar sensores reales se han desactivado todos los simuladores.

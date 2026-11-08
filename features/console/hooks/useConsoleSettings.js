@@ -9,6 +9,8 @@ import { normalizeHeelAlarmDegrees } from '../model/heelAlarm.js';
 import { normalizeLowFuelPercent } from '../model/lowFuelAlarm.js';
 import { normalizeEngineRpmSettings } from '../model/engineRpmSettings.js';
 import { normalizeAisCollisionSettings } from '../model/aisCollisionRisk.js';
+import { normalizeDisplayRefreshSeconds } from '../model/displayReadings.js';
+import { ENGINE_CONSUMPTION_REFERENCE_VERSION, isValidEngineConsumptionTable, normalizeEngineConsumptionTable, restoreEngineConsumptionSettings } from '../model/engineConsumptionTable.js';
 const normalizeDepthAlarm = value => Number.isFinite(value) && value >= 0.5 && value <= 30
     ? Math.round(value * 10) / 10 : DEFAULT_SETTINGS.depthAlarmMeters;
 const normalizeNightIntensity = value => Number.isFinite(value)
@@ -22,16 +24,19 @@ export function useConsoleSettings() {
         async function load() {
             try {
                 const saved = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
-                if (saved && mounted) {
-                    const restored = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+                if (mounted) {
+                    const previous = saved ? JSON.parse(saved) : {};
+                    const restored = { ...DEFAULT_SETTINGS, ...previous };
                     restored.aisRangeNm = normalizeAisRange(restored.aisRangeNm);
                     restored.language = normalizeLanguage(restored.language);
+                    restored.displayRefreshSeconds = normalizeDisplayRefreshSeconds(restored.displayRefreshSeconds);
                     restored.historyHours = normalizeHistoryHours(restored.historyHours);
                     restored.sogHistoryHours = normalizeHistoryHours(restored.sogHistoryHours);
                     restored.depthAlarmMeters = normalizeDepthAlarm(restored.depthAlarmMeters);
                     restored.heelAlarmDegrees = normalizeHeelAlarmDegrees(restored.heelAlarmDegrees);
                     restored.lowFuelAlarmPercent = normalizeLowFuelPercent(restored.lowFuelAlarmPercent);
                     Object.assign(restored, normalizeEngineRpmSettings(restored));
+                    Object.assign(restored, restoreEngineConsumptionSettings(previous));
                     Object.assign(restored, normalizeAisCollisionSettings(restored));
                     restored.nightIntensity = normalizeNightIntensity(restored.nightIntensity);
                     restored.depthAlarmSound = typeof restored.depthAlarmSound === 'boolean' ? restored.depthAlarmSound : true;
@@ -39,6 +44,10 @@ export function useConsoleSettings() {
                     try { restored.signalKAddress = normalizeServerAddress(restored.signalKAddress); }
                     catch { restored.signalKAddress = DEFAULT_SETTINGS.signalKAddress; }
                     setSettings(restored);
+                    if (previous.engineConsumptionReferenceVersion !== ENGINE_CONSUMPTION_REFERENCE_VERSION) {
+                        try { await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(restored)); }
+                        catch (error) { console.warn('No se pudo guardar la tabla inicial de consumo', error); }
+                    }
                 }
             }
             catch (error) {
@@ -53,9 +62,11 @@ export function useConsoleSettings() {
         setSettings(previous => ({ ...previous, [key]: key === 'depthAlarmMeters' ? normalizeDepthAlarm(value)
             : key === 'heelAlarmDegrees' ? normalizeHeelAlarmDegrees(value)
             : key === 'lowFuelAlarmPercent' ? normalizeLowFuelPercent(value)
+            : key === 'displayRefreshSeconds' ? normalizeDisplayRefreshSeconds(value)
             : key === 'nightIntensity' ? normalizeNightIntensity(value) : Math.round(value) }));
     }
     async function saveSetting(key, value) {
+        if (key === 'engineConsumptionTable' && !isValidEngineConsumptionTable(value)) return false;
         const next = key === 'aisCollisionSettings'
             ? { ...settings, ...normalizeAisCollisionSettings(value) }
             : key === 'engineRpmSettings'
@@ -63,6 +74,8 @@ export function useConsoleSettings() {
             : { ...settings, [key]: key === 'signalKAddress' ? normalizeServerAddress(value)
             : key === 'aisRangeNm' ? normalizeAisRange(value)
             : key === 'language' ? normalizeLanguage(value)
+            : key === 'engineConsumptionTable' ? normalizeEngineConsumptionTable(value)
+            : key === 'displayRefreshSeconds' ? normalizeDisplayRefreshSeconds(value)
             : ['depthAlarmSound', 'depthAlarmEnabled'].includes(key) ? Boolean(value)
             : key === 'depthAlarmMeters' ? normalizeDepthAlarm(value)
             : key === 'heelAlarmDegrees' ? normalizeHeelAlarmDegrees(value)

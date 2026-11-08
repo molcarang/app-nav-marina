@@ -2,7 +2,7 @@
   "expo": {
     "name": "OpenBoat",
     "slug": "app-nav-marina",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "appnavmarina",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.navmarina.app",
-      "versionCode": 5,
+      "versionCode": 6,
       "icon": "./assets/images/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",

@@ -8,6 +8,7 @@ import { normalizeServerAddress } from '../../../services/signalk/serverAddress.
 import { styles as baseStyles } from '../styles/settingsStyles';
 import HistoryRetentionSetting from './HistoryRetentionSetting';
 import EngineRpmSettings from './EngineRpmSettings';
+import EngineConsumptionSettings from './EngineConsumptionSettings';
 import NightDimmer from '../../../components/NightDimmer';
 import AisCollisionSettings from './AisCollisionSettings';
 /** Presenta ajustes; el hook se ocupa de guardarlos. */
@@ -48,6 +49,7 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
         } finally { setSaving(false); }
     }
     const sliderSettings = [
+            { label: t('displayRefresh'), key: 'displayRefreshSeconds', min: 0, max: 5, unit: ' s', color: '#8fcbdc' },
             { label: t('minWind'), key: 'minAnguloCeñida', min: 10, max: 45, color: '#00ff00' },
             { label: t('maxWind'), key: 'maxAnguloCeñida', min: 50, max: 90, color: '#ff0000' },
             { label: t('rudder'), key: 'rudderLimit', min: 20, max: 45, color: '#00ffff' },
@@ -81,6 +83,7 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
             />
             {s.key === 'heelAlarmDegrees' && <Text style={styles.serverHint}>{t('heelAlarmHint')}</Text>}
             {s.key === 'lowFuelAlarmPercent' && <Text style={styles.serverHint}>{t('lowFuelAlarmHint')}</Text>}
+            {s.key === 'displayRefreshSeconds' && <Text style={styles.serverHint}>{t('displayRefreshHint')}</Text>}
         </View>));
     }
     return (
@@ -157,7 +160,7 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
                             <Text style={styles.sectionChevron}>{expandedSection === 'navigation' ? '\u2212' : '+'}</Text>
                         </TouchableOpacity>
                         <View style={[styles.sectionBody, expandedSection !== 'navigation' && styles.sectionHidden]}>
-                    {renderSliders(['minAnguloCe\u00f1ida', 'maxAnguloCe\u00f1ida', 'rudderLimit', 'heelAlarmDegrees'])}
+                    {renderSliders(['displayRefreshSeconds', 'minAnguloCe\u00f1ida', 'maxAnguloCe\u00f1ida', 'rudderLimit', 'heelAlarmDegrees'])}
                         </View>
                     </View>
                     <View style={styles.section}>
@@ -203,6 +206,7 @@ export default function ConsoleSettingsModal({ visible, settings, isNightMode, o
                         </TouchableOpacity>
                         <View style={[styles.sectionBody, expandedSection !== 'engine' && styles.sectionHidden]}>
                     <EngineRpmSettings settings={settings} visible={visible} onSave={onSave} />
+                    <EngineConsumptionSettings settings={settings} visible={visible} onSave={onSave} />
 
                     {renderSliders(['lowFuelAlarmPercent'])}
                         </View>
