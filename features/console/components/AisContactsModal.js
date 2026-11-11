@@ -1,22 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from '../../../localization/LanguageProvider';
 import { visibleAisContacts } from '../model/aisContacts';
 import { isValidPosition } from '../model/gpsPosition';
 import { AIS_RISK_COLORS } from '../model/aisCollisionRisk';
+import AisVesselPopup from '../../../components/gauges/AisVesselPopup';
+
+const DOUBLE_TAP_MS = 350;
 
 export default function AisContactsModal({ visible, onClose, targets, position, receivedAt, connected, rangeNm }) {
     const { t } = useTranslation();
     const [, refresh] = useState(0);
+    const [selectedVessel, setSelectedVessel] = useState(null);
+    const lastTap = useRef({ id: null, at: 0 });
     useEffect(() => {
-        if (!visible) return;
+        if (!visible) {
+            setSelectedVessel(null);
+            lastTap.current = { id: null, at: 0 };
+            return;
+        }
         const timer = setInterval(() => refresh(value => value + 1), 1000);
         return () => clearInterval(timer);
     }, [visible]);
+    const handleContactPress = item => {
+        const now = Date.now();
+        const previous = lastTap.current;
+        if (previous.id === item.id && now - previous.at <= DOUBLE_TAP_MS) {
+            lastTap.current = { id: null, at: 0 };
+            setSelectedVessel(item);
+            return;
+        }
+        lastTap.current = { id: item.id, at: now };
+    };
     const now = Date.now();
     const fresh = isValidPosition(position) && Number.isFinite(receivedAt) && now - receivedAt < 30000;
     const contacts = visibleAisContacts(targets, position, receivedAt, connected, rangeNm, now);
-    return <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    return <><Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
         <View style={styles.backdrop}>
             <View style={styles.panel} accessibilityViewIsModal>
                 <View style={styles.header}>
@@ -26,10 +45,14 @@ export default function AisContactsModal({ visible, onClose, targets, position, 
                     </TouchableOpacity>
                 </View>
                 <Text style={styles.subtitle}>{t('aisContactsRange', { range: rangeNm, count: contacts.length })}</Text>
+                <Text style={styles.hint}>{t('aisContactsDetailHint')}</Text>
                 <FlatList style={styles.list} data={contacts} keyExtractor={item => item.id}
                     ListEmptyComponent={<Text style={styles.empty}>{t(!connected ? 'aisContactsDisconnected'
                         : !fresh ? 'aisContactsGpsNeeded' : 'aisContactsEmpty')}</Text>}
-                    renderItem={({ item }) => <View style={styles.row}>
+                    renderItem={({ item }) => <TouchableOpacity style={styles.row} activeOpacity={0.72}
+                        accessibilityRole="button" accessibilityHint={t('aisContactsDetailHint')}
+                        onPress={() => handleContactPress(item)} onLongPress={() => setSelectedVessel(item)}
+                        delayLongPress={600}>
                         <View style={styles.identity}>
                             <Text numberOfLines={1} style={[styles.name, { color: AIS_RISK_COLORS[item.collision?.level ?? 'unknown'] }]}>{item.name || t('aisContactUnnamed')}</Text>
                             <Text selectable style={styles.subtitle}>{item.mmsi ? `MMSI: ${item.mmsi}` : `ID: ${item.id.replace(/^vessels\./, '')}`}</Text>
@@ -39,10 +62,12 @@ export default function AisContactsModal({ visible, onClose, targets, position, 
                             </Text>
                         </View>
                         <Text style={styles.distance}>{item.distanceNm.toFixed(2)} NM</Text>
-                    </View>} />
+                    </TouchableOpacity>} />
             </View>
         </View>
-    </Modal>;
+    </Modal>
+    <AisVesselPopup vessel={visible ? selectedVessel : null} onClose={() => setSelectedVessel(null)} />
+    </>;
 }
 
 const styles = StyleSheet.create({
@@ -53,6 +78,7 @@ const styles = StyleSheet.create({
     close: { minHeight: 44, paddingHorizontal: 14, borderRadius: 10, borderWidth: 1, borderColor: '#58788b', justifyContent: 'center' },
     text: { fontFamily: 'NauticalFont', fontSize: 12, color: '#8fcbdc' },
     subtitle: { fontFamily: 'NauticalFont', fontSize: 11, color: '#9db5bf' },
+    hint: { fontFamily: 'NauticalFont', fontSize: 10, color: '#e4bb78' },
     list: { flexGrow: 0, flexShrink: 1 },
     row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#294452' },
     identity: { flex: 1, minWidth: 0, gap: 5 },

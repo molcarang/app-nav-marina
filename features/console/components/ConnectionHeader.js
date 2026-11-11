@@ -11,8 +11,9 @@ import AnchorButton from './AnchorButton';
 import SoftwareVersion from './SoftwareVersion';
 import AppExitButton from './AppExitButton';
 import EngineStatusIndicator from './EngineStatusIndicator';
+import EngineCompactPanel from './EngineCompactPanel';
 const HEADER_INDICATOR_HEIGHT = 36;
-export default function ConnectionHeader({ navigation, settings, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds, showEngineAlarms = false, compassCenterY, aisAlarm }) {
+export default function ConnectionHeader({ navigation, settings, isConnected, isNightMode, onOpenSettings, style, aisVisibleCount, aisTargets, aisStatus, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, onToggleAis, settingsWidth, settingsInline = false, onFullscreenBounds, showEngineAlarms = false, compassCenterY, aisAlarm, onEngineDashboardVisibilityChange, engineCompactActive = false, showEngineCompactPanel = false }) {
     const { t } = useTranslation();
     const { enabled: nightEnabled, toggle: toggleNightMode } = useContext(NightModeContext);
     const scale = useControlScale();
@@ -45,8 +46,9 @@ export default function ConnectionHeader({ navigation, settings, isConnected, is
             </View>
             <View style={{ position: 'absolute', left: 0, top: motorTop, flexDirection: 'column', gap: 8 * scale }}>
                 <EngineStatusIndicator connected={isConnected} engineRunning={navigation?.engineRunning} navigation={navigation}
-                    settings={settings} showEngineAlarms={showEngineAlarms}
-                    alarmScale={alarmScale} alarmTop={alarmTop} />
+                    settings={settings} showEngineAlarms={showEngineAlarms && !engineCompactActive}
+                    alarmScale={alarmScale} alarmTop={alarmTop}
+                    onDashboardVisibilityChange={onEngineDashboardVisibilityChange} />
             </View>
             </View>
             {toggleNightMode && <TouchableOpacity onPress={toggleNightMode}
@@ -78,8 +80,14 @@ export default function ConnectionHeader({ navigation, settings, isConnected, is
             {/* In portrait, use the gap above the compass for the taller motor indicator. */}
             {onToggleAis && <View style={{ width: '100%', gap: 8 * scale, alignItems: 'flex-start',
                 transform: [{ translateY: 12.6 * scale }] }}>
-                <AnchorButton position={navigation?.position} receivedAt={navigation?.positionReceivedAt} connected={isConnected} />
-                <AisToggleButton alarm={aisAlarm} targets={aisTargets} position={navigation?.position} positionReceivedAt={navigation?.positionReceivedAt} connected={isConnected && aisStatus === 'connected'} visibleCount={aisVisibleCount} auto={aisAuto} onToggleAuto={onToggleAisAuto} rangeNm={aisRangeNm} onRangeChange={onAisRangeChange} visible={aisVisible} onPress={onToggleAis} />
+                {showEngineCompactPanel
+                    ? <EngineCompactPanel fullWidth scale={Math.max(0.78, Math.min(1, scale))}
+                        rpm={navigation?.engineRpm}
+                        currentLitresPerHour={navigation?.engineConsumptionLitresPerHour}
+                        connected={isConnected} navigation={navigation} settings={settings} />
+                    : !engineCompactActive && <AnchorButton position={navigation?.position}
+                        receivedAt={navigation?.positionReceivedAt} connected={isConnected} />}
+                <AisToggleButton alarm={aisAlarm} targets={aisTargets} position={navigation?.position} heading={navigation?.headingDeg} positionReceivedAt={navigation?.positionReceivedAt} connected={isConnected && aisStatus === 'connected'} visibleCount={aisVisibleCount} auto={aisAuto} onToggleAuto={onToggleAisAuto} rangeNm={aisRangeNm} onRangeChange={onAisRangeChange} visible={aisVisible} onPress={onToggleAis} />
             </View>}
         </View>
     );

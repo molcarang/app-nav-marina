@@ -2,10 +2,10 @@ import { useTranslation } from '../../../localization/LanguageProvider';
 import AlternatorChargeIcon from '../../../components/icons/AlternatorChargeIcon';
 import StatusIndicator from './StatusIndicator';
 
-export default function AlternatorChargeAlarmIndicator({ connected, alternatorChargeAlarm, frameWidth }) {
+export default function AlternatorChargeAlarmIndicator({ connected, alternatorChargeAlarm, frameWidth, compactScale, compactHeightScale, iconScale }) {
     const { t } = useTranslation();
     const active = connected && alternatorChargeAlarm === true;
     const label = !connected || alternatorChargeAlarm == null ? 'alternatorChargeAlarmUnknown'
         : active ? 'alternatorChargeAlarmActive' : 'alternatorChargeAlarmInactive';
-    return <StatusIndicator active={active} label={t(label)} icon={AlternatorChargeIcon} alarm alarmColor="#ff9800" frameWidth={frameWidth} />;
+    return <StatusIndicator active={active} label={t(label)} icon={AlternatorChargeIcon} alarm alarmColor="#ff9800" frameWidth={frameWidth} compactScale={compactScale} compactHeightScale={compactHeightScale} iconScale={iconScale} />;
 }
