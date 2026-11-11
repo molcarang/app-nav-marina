@@ -5,13 +5,16 @@ import HeadingGauge from '../../../components/gauges/HeadingGauge';
 import ConsolePage from '../components/ConsolePage';
 import ConnectionHeader from '../components/ConnectionHeader';
 import { styles } from '../styles/consoleStyles';
+import { isEngineCompactPanelActive } from '../model/engineCompactPanel.js';
 /** Primera página: rumbo, viento, profundidad y máximos. */
-export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, isConnected, isNightMode, theme, windowWidth, gaugeSize, onOpenSettings, onResetSOG, onResetTWS, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted, aisVisibleCount, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, aisStatus, onToggleAis, aisTargets, aisAlarm }) {
+export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, isConnected, isNightMode, theme, windowWidth, gaugeSize, onOpenSettings, onResetSOG, onResetTWS, twsHistory, sogHistory, onSilenceDepth, depthSoundMuted, aisVisibleCount, aisAuto, onToggleAisAuto, aisRangeNm, onAisRangeChange, aisVisible, aisStatus, onToggleAis, aisTargets, aisAlarm, isEngineDashboardOpen, onEngineDashboardVisibilityChange }) {
     const [panelWidth, setPanelWidth] = useState(0);
     const compassRef = useRef(null);
     const [compassCenterY, setCompassCenterY] = useState(null);
     const pilotWidth = windowWidth * 0.9 / 3;
     const pilotRightInset = Math.max(0, (panelWidth - 3 * (pilotWidth + 6)) / 4) + 3;
+    const engineCompactActive = isEngineCompactPanelActive({ connected: isConnected,
+        rpm: navigation.engineRpm, sogKnots: navigation.sogKnots });
     return (
         <ConsolePage
             width={windowWidth}
@@ -25,6 +28,9 @@ export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, i
                     isConnected={isConnected}
                     isNightMode={isNightMode}
                     onOpenSettings={onOpenSettings}
+                    onEngineDashboardVisibilityChange={onEngineDashboardVisibilityChange}
+                    engineCompactActive={engineCompactActive}
+                    showEngineCompactPanel={engineCompactActive && !isEngineDashboardOpen}
                     settingsWidth={pilotWidth}
                     style={{ marginBottom: 5, width: '100%', paddingLeft: '4%', paddingRight: pilotRightInset }}
                 />
@@ -34,7 +40,7 @@ export default function NavigationPage({ navigation, settings, maxSOG, maxTWS, i
                         showAis={aisVisible} aisRangeNm={aisRangeNm}
                         aisTargets={aisTargets} position={navigation.position}
                         positionReceivedAt={navigation.positionReceivedAt} isConnected={isConnected}
-                        size={gaugeSize}
+                        size={gaugeSize * 1.10}
                         headingColor={theme.heading}
                         rotationAngle={-navigation.headingDeg}
                         value={navigation.headingDigital}

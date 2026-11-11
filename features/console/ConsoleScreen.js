@@ -80,6 +80,7 @@ export default function ConsoleScreen() {
     const resetTwsWithHistory = () => { resetTWS(); clearTwsHistory(); };
     const resetSogWithHistory = () => { resetSOG(); clearSogHistory(); };
     const [isSettingsOpen, setSettingsOpen] = useState(false);
+    const [isEngineDashboardOpen, setEngineDashboardOpen] = useState(false);
     const [isNightMode, setNightMode] = useState(false);
     const theme = getConsoleTheme(false, navigation.twaCog, settings);
     const gaugeSize = Math.min(Math.min(windowWidth * 0.90, windowHeight * 0.45) * 1.3915, windowWidth * 0.94);
@@ -89,6 +90,7 @@ export default function ConsoleScreen() {
         aisVisibleCount, aisRangeNm, aisAuto, onToggleAisAuto: toggleAisAuto,
         onAisRangeChange: value => { setAisAuto(false); saveSetting('aisRangeNm', value); },
         navigation, settings, maxSOG, isConnected: data.isConnected,
+        isEngineDashboardOpen, onEngineDashboardVisibilityChange: setEngineDashboardOpen,
         aisVisible, aisTargets: evaluatedAisTargets, aisStatus: ais.status, onToggleAis: () => setAisVisible(previous => !previous),
         isNightMode: false, theme, windowWidth, gaugeSize, twsHistory, sogHistory,
         onSilenceDepth: depthSoundActive && remainingSeconds === 0 ? silenceForMinute : undefined,

@@ -12,6 +12,8 @@ import ConsoleBackground from '../components/ConsoleBackground';
 import GpsPositionPanel, { GPS_PANEL_HEIGHT } from '../components/GpsPositionPanel';
 import WaypointPreviewPanel, { WAYPOINT_PREVIEW_HEIGHT } from '../components/WaypointPreviewPanel';
 import { isHeelAlarmActive } from '../model/heelAlarm.js';
+import EngineCompactPanel, { ENGINE_COMPACT_PANEL_HEIGHT } from '../components/EngineCompactPanel';
+import { isEngineCompactPanelActive } from '../model/engineCompactPanel.js';
 
 /** Dos mitades: compás a la izquierda y controles a la derecha. */
 export default function LandscapeNavigationPage(props) {
@@ -30,6 +32,7 @@ export default function LandscapeNavigationPage(props) {
     const [columnsOrigin, setColumnsOrigin] = useState(null);
     const [fullscreenBounds, setFullscreenBounds] = useState(null);
     const [maxTwsBounds, setMaxTwsBounds] = useState(null);
+    const [heelLayout, setHeelLayout] = useState(null);
     const recordMaxTwsBounds = useCallback(bounds => {
         setMaxTwsBounds({ ...bounds, scrollOffset: scrollOffsetRef.current });
     }, []);
@@ -50,9 +53,15 @@ export default function LandscapeNavigationPage(props) {
         : 8;
     // Centrar en el hueco real entre la cabecera y los controles AIS.
     const gaugeTop = Math.max(48 * controlScale, headerHeight + 8 * controlScale);
-    const aisHeight = props.aisVisible ? 60 * controlScale + 2 : 44 * controlScale;
-    const gaugeBottom = aisBottom
-        + (bottomControlsHeight || aisHeight + (44 + 8) * controlScale) + 8 * controlScale;
+    const compactPanelScale = Math.max(0.78, Math.min(1, controlScale));
+    const engineCompactActive = isEngineCompactPanelActive({ connected: isConnected,
+        rpm: navigation.engineRpm, sogKnots: navigation.sogKnots });
+    const showCompactEngine = engineCompactActive && !props.isEngineDashboardOpen;
+    // Reserve the tallest possible lower stack so switching anchor/engine panels never resizes the compass.
+    const maximumBottomControlsHeight = ENGINE_COMPACT_PANEL_HEIGHT * compactPanelScale
+        + 8 * controlScale + 60 * controlScale + 2;
+    const bottomControlsSpace = Math.max(bottomControlsHeight, maximumBottomControlsHeight);
+    const gaugeBottom = aisBottom + bottomControlsSpace + 8 * controlScale;
     const gaugeSize = Math.max(1, Math.min(previousGaugeSize * 1.10, columnWidth - 4,
         area.height - gaugeTop - gaugeBottom));
     const controlsWidth = Math.max(1, area.width - gaugeColumnWidth);
@@ -77,6 +86,11 @@ export default function LandscapeNavigationPage(props) {
         - waypointHeight - controlsSpacing) / 2);
     const layoutReady = area.width > 0 && area.height > 0 && headerHeight > 0
         && controlsHeight > 0 && bottomControlsHeight > 0;
+    const compactPanelTop = heelLayout
+        // HeelPanel includes 13 px of spacing below its visible SVG; align to the visible frame.
+        ? controlsTop + heelLayout.y + heelLayout.height - 13
+            - ENGINE_COMPACT_PANEL_HEIGHT * compactPanelScale - scrollOffset
+        : null;
 
     return (
         <View style={[localStyles.screen, { backgroundColor: isNightMode ? '#050000' : '#0a0a0a' }]}>
@@ -103,6 +117,8 @@ export default function LandscapeNavigationPage(props) {
                     isConnected={isConnected}
                     isNightMode={isNightMode}
                     onOpenSettings={onOpenSettings}
+                    onEngineDashboardVisibilityChange={props.onEngineDashboardVisibilityChange}
+                    engineCompactActive={engineCompactActive}
                     onFullscreenBounds={setFullscreenBounds}
                     settingsInline
                     style={{ width: '100%', paddingHorizontal: 8 }}
@@ -115,7 +131,7 @@ export default function LandscapeNavigationPage(props) {
                                 showAis={props.aisVisible} aisRangeNm={props.aisRangeNm}
                                 aisTargets={props.aisTargets} position={navigation.position}
                                 positionReceivedAt={navigation.positionReceivedAt} isConnected={isConnected}
-                                size={gaugeSize}
+                                size={gaugeSize * 1.10}
                                 value={navigation.headingDigital}
                                 awa={navigation.awa}
                                 awsKnots={navigation.awsKnots}
@@ -130,12 +146,20 @@ export default function LandscapeNavigationPage(props) {
                             />
                         )}
                         </View>
+                        {showCompactEngine && compactPanelTop != null &&
+                            <View style={{ position: 'absolute', left: 8, right: 8, top: compactPanelTop,
+                                alignItems: 'flex-start' }}>
+                                <EngineCompactPanel fullWidth scale={compactPanelScale} rpm={navigation.engineRpm}
+                                    currentLitresPerHour={navigation.engineConsumptionLitresPerHour}
+                                    connected={isConnected} navigation={navigation} settings={settings} />
+                            </View>}
                         <View style={{ position: 'absolute', left: 8,
                             right: 8, bottom: aisBottom, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <View style={{ width: '100%', gap: 8 * controlScale }}
                                 onLayout={({ nativeEvent }) => setBottomControlsHeight(nativeEvent.layout.height)}>
-                                <AnchorButton position={navigation.position} receivedAt={navigation.positionReceivedAt} connected={isConnected} />
-                                <AisToggleButton alarm={props.aisAlarm} targets={props.aisTargets} position={navigation.position} positionReceivedAt={navigation.positionReceivedAt} connected={isConnected && props.aisStatus === 'connected'} visibleCount={props.aisVisibleCount} fullWidth auto={props.aisAuto} onToggleAuto={props.onToggleAisAuto} rangeNm={props.aisRangeNm} onRangeChange={props.onAisRangeChange} visible={props.aisVisible} onPress={props.onToggleAis} />
+                                {!engineCompactActive && <AnchorButton position={navigation.position}
+                                        receivedAt={navigation.positionReceivedAt} connected={isConnected} />}
+                                <AisToggleButton alarm={props.aisAlarm} targets={props.aisTargets} position={navigation.position} heading={navigation.headingDeg} positionReceivedAt={navigation.positionReceivedAt} connected={isConnected && props.aisStatus === 'connected'} visibleCount={props.aisVisibleCount} fullWidth auto={props.aisAuto} onToggleAuto={props.onToggleAisAuto} rangeNm={props.aisRangeNm} onRangeChange={props.onAisRangeChange} visible={props.aisVisible} onPress={props.onToggleAis} />
                             </View>
                         </View>
                     </View>
@@ -160,19 +184,21 @@ export default function LandscapeNavigationPage(props) {
                                     cardHeight={cardHeight}
                                     onMaxTwsBounds={recordMaxTwsBounds}
                                 />
-                                <HeelPanel
-                                    backgroundColor={props.theme.bg}
-                                    alarmActive={isHeelAlarmActive(navigation.vesselHeelDeg, settings.heelAlarmDegrees)}
-                                    alarmColor={props.theme.alarm}
-                                    rudderAngle={navigation.rudderAngle}
-                                    rudderLimit={settings.rudderLimit}
-                                    heel={navigation.vesselHeelDeg}
-                                    maxHeel={props.maxHeel}
-                                    maxHeelSide={props.maxHeelSide}
-                                    onResetHeel={props.onResetHeel}
-                                    width={heelWidth}
-                                    isNightMode={isNightMode}
-                                />
+                                <View onLayout={({ nativeEvent }) => setHeelLayout(nativeEvent.layout)}>
+                                    <HeelPanel
+                                        backgroundColor={props.theme.bg}
+                                        alarmActive={isHeelAlarmActive(navigation.vesselHeelDeg, settings.heelAlarmDegrees)}
+                                        alarmColor={props.theme.alarm}
+                                        rudderAngle={navigation.rudderAngle}
+                                        rudderLimit={settings.rudderLimit}
+                                        heel={navigation.vesselHeelDeg}
+                                        maxHeel={props.maxHeel}
+                                        maxHeelSide={props.maxHeelSide}
+                                        onResetHeel={props.onResetHeel}
+                                        width={heelWidth}
+                                        isNightMode={isNightMode}
+                                    />
+                                </View>
                                 <GpsPositionPanel width={heelWidth} position={navigation.position}
                                     waterTemperatureCelsius={navigation.waterTemperatureCelsius}
                                     heading={navigation.headingDeg}

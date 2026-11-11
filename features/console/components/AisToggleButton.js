@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AisContactsModal from './AisContactsModal';
 import { useTranslation } from '../../../localization/LanguageProvider';
 import { useControlScale } from '../../../hooks/useControlScale';
@@ -6,17 +6,38 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { AIS_RANGES_NM, normalizeAisRange } from '../../../components/gauges/shared/aisRange';
 import AisRadarBackground from './AisRadarBackground';
 import AisAlarmBell from './AisAlarmBell';
+import AisRadarPopup from './AisRadarPopup';
 
-export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRangeChange, auto = false, onToggleAuto, fullWidth = false, visibleCount = 0, targets, position, positionReceivedAt, connected, alarm }) {
+const AIS_DOUBLE_TAP_MS = 320;
+
+export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRangeChange, auto = false, onToggleAuto, fullWidth = false, visibleCount = 0, targets, position, positionReceivedAt, connected, alarm, heading }) {
     const { t } = useTranslation();
     const scale = useControlScale();
     const [contactsOpen, setContactsOpen] = useState(false);
+    const [radarOpen, setRadarOpen] = useState(false);
+    const pendingTap = useRef(null);
+    useEffect(() => () => clearTimeout(pendingTap.current), []);
+    const handleAisPress = () => {
+        if (pendingTap.current) {
+            clearTimeout(pendingTap.current);
+            pendingTap.current = null;
+            setRadarOpen(true);
+            return;
+        }
+        pendingTap.current = setTimeout(() => {
+            pendingTap.current = null;
+            onPress?.();
+        }, AIS_DOUBLE_TAP_MS);
+    };
     const color = visible ? '#45d39a' : '#aaa';
     const range = normalizeAisRange(rangeNm);
     const index = AIS_RANGES_NM.indexOf(range);
     return <>
     <AisContactsModal visible={contactsOpen && visible} onClose={() => setContactsOpen(false)}
         targets={targets} position={position} receivedAt={positionReceivedAt} connected={connected} rangeNm={range} />
+    <AisRadarPopup visible={radarOpen} onClose={() => setRadarOpen(false)} targets={targets}
+        position={position} positionReceivedAt={positionReceivedAt} connected={connected}
+        rangeNm={range} heading={heading} />
     <View style={[
         styles.container,
         { gap: (visible && !alarm?.level ? 16 : 10) * scale, width: '100%' },
@@ -25,7 +46,7 @@ export default function AisToggleButton({ visible, onPress, rangeNm = 6, onRange
         visible && fullWidth && { width: '100%' },
     ]}>
         {visible && <AisRadarBackground />}
-        <TouchableOpacity onPress={onPress} accessibilityRole="switch"
+        <TouchableOpacity onPress={handleAisPress} accessibilityRole="switch"
         accessibilityState={{ checked: visible }} accessibilityLabel={t(visible ? 'hideAis' : 'showAis')}
         style={[styles.button, { borderColor: color, backgroundColor: visible ? '#173e33' : '#10202c', height: 44 * scale, minHeight: 44 * scale, paddingHorizontal: 12 * scale,
             width: 132 * scale, maxWidth: '100%', flexShrink: 1, minWidth: 0, alignItems: 'center' }]}>

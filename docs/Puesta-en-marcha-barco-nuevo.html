@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Puesta en marcha de OpenBoat en un barco nuevo</title>
+<style>
+  @page { size: A4; margin: 17mm 15mm 18mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: #17232c; font: 10.2pt/1.42 Arial, Helvetica, sans-serif; }
+  h1, h2, h3 { page-break-after: avoid; color: #073b59; }
+  h1 { margin: 0 0 9mm; font-size: 26pt; line-height: 1.08; }
+  h2 { margin: 7mm 0 3mm; padding-bottom: 1.4mm; border-bottom: 1px solid #79a8bd; font-size: 16pt; }
+  h3 { margin: 5mm 0 2mm; font-size: 12.5pt; }
+  p { margin: 0 0 3mm; }
+  ul, ol { margin: 1.5mm 0 3.5mm 6mm; padding-left: 5mm; }
+  li { margin: 0 0 1.1mm; }
+  a { color: #075f83; text-decoration: none; }
+  code { padding: .2mm .8mm; border-radius: 2px; background: #edf3f6; color: #173846; font: 9pt Consolas, monospace; }
+  pre { margin: 2mm 0 4mm; padding: 3mm; border-left: 3px solid #1685a6; background: #edf3f6; white-space: pre-wrap; font: 8.8pt/1.35 Consolas, monospace; }
+  table { width: 100%; margin: 2.5mm 0 5mm; border-collapse: collapse; page-break-inside: auto; font-size: 8.7pt; }
+  tr { page-break-inside: avoid; }
+  th { background: #0b526f; color: white; text-align: left; }
+  th, td { padding: 2mm 2.2mm; border: 1px solid #aabcc4; vertical-align: top; }
+  tbody tr:nth-child(even) td { background: #f3f7f8; }
+  .cover { height: 257mm; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; }
+  .cover .brand { color: #f18a19; font-size: 15pt; font-weight: 700; letter-spacing: 1.5px; }
+  .cover .subtitle { max-width: 145mm; color: #3f5d6a; font-size: 14pt; }
+  .cover .meta { padding-top: 5mm; border-top: 1px solid #8ea9b5; color: #48616c; }
+  .box { margin: 3mm 0 4mm; padding: 3mm 4mm; border-left: 4px solid #1685a6; background: #edf6f8; page-break-inside: avoid; }
+  .warning { border-left-color: #d6651b; background: #fff3e9; }
+  .danger { border-left-color: #bd2d2d; background: #fdecec; }
+  .ok { border-left-color: #27845d; background: #edf8f3; }
+  .label { font-weight: 700; color: #073b59; }
+  .check td:first-child { width: 8mm; text-align: center; font-size: 14pt; }
+  .small { color: #526a75; font-size: 8.8pt; }
+  .pagebreak { page-break-before: always; }
+  .toc td:first-child { width: 11mm; color: #f18a19; font-weight: 700; }
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2mm; margin: 5mm 0; }
+  .flow div { padding: 3mm 1.5mm; border: 1px solid #87a6b4; border-radius: 4px; background: #f1f6f8; text-align: center; font-size: 8.5pt; }
+  .arrow { color: #e87817; font-weight: 700; }
+  .footer-note { margin-top: 8mm; color: #607681; font-size: 8pt; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div>
+    <div class="brand">OPENBOAT</div>
+    <h1>Puesta en marcha<br>en un barco nuevo</h1>
+    <p class="subtitle">Guía de instalación, configuración y aceptación de OpenPlotter, Signal K, OpenCPN y la aplicación OpenBoat.</p>
+  </div>
+  <div class="box warning">
+    <b>Documento de puesta en servicio.</b> Las cifras de alarmas incluidas son valores iniciales de la aplicación, no límites universales de navegación. Deben revisarse para el barco, la zona, la instrumentación y la forma de operar.
+  </div>
+  <div class="meta">
+    <p><b>Proyecto:</b> app-nav-marina / OpenBoat</p>
+    <p><b>Revisión:</b> 10 de noviembre de 2026</p>
+    <p><b>Entorno previsto:</b> Raspberry Pi con OpenPlotter 4, Signal K, OpenCPN 5.14 y tablet Android o pantalla local.</p>
+  </div>
+</section>
+
+<h2>Contenido</h2>
+<table class="toc">
+  <tr><td>1</td><td>Alcance, arquitectura y reglas de seguridad</td></tr>
+  <tr><td>2</td><td>Datos que deben recopilarse antes de instalar</td></tr>
+  <tr><td>3</td><td>Preparación de Raspberry, OpenPlotter y red</td></tr>
+  <tr><td>4</td><td>Configuración inicial de Signal K y fuentes de datos</td></tr>
+  <tr><td>5</td><td>Plugins: Hour Meter y Derived Data</td></tr>
+  <tr><td>6</td><td>Inventario de paths, unidades y validación</td></tr>
+  <tr><td>7</td><td>OpenCPN, waypoints y navegación</td></tr>
+  <tr><td>8</td><td>Instalación y ajustes iniciales de OpenBoat</td></tr>
+  <tr><td>9</td><td>Pruebas en puerto y pruebas de mar</td></tr>
+  <tr><td>10</td><td>Copias de seguridad, mantenimiento y recuperación</td></tr>
+  <tr><td>11</td><td>Diagnóstico rápido y hoja de aceptación</td></tr>
+</table>
+
+<h2>1. Alcance y arquitectura</h2>
+<p>OpenBoat es una pantalla de presentación y alarma. La aplicación no se conecta directamente a los sensores: recibe un modelo normalizado desde Signal K. OpenCPN es opcional para los instrumentos, pero necesario cuando se quiere enviar a la app el destino o el tramo activo.</p>
+
+<div class="flow">
+  <div>Sensores<br>NMEA 2000 / 0183</div><div class="arrow">→</div><div>OpenPlotter<br>Signal K :3000</div><div class="arrow">→</div><div>OpenBoat<br>OpenCPN</div>
+</div>
+
+<div class="box danger"><b>No sustituye la vigilancia ni los instrumentos certificados.</b> AIS, CPA/TCPA, alarmas de profundidad, combustible, escora y motor son ayudas. Antes de navegar debe verificarse el funcionamiento independiente de los equipos esenciales y conservarse un método alternativo de posición y navegación.</div>
+
+<h3>Principios que evitan la mayoría de fallos</h3>
+<ul>
+  <li>Una sola fuente preferida por path. Dos fuentes activas para el mismo dato provocan saltos y lecturas incoherentes.</li>
+  <li>Unidades Signal K, no unidades de pantalla: m/s, radianes, kelvin, pascales, hercios y segundos.</li>
+  <li>Datos recientes. La app invalida instrumentos que dejan de actualizarse durante 30 segundos.</li>
+  <li>Simuladores desactivados antes de conectar los sensores reales.</li>
+  <li>Configuración respaldada antes y después de la puesta en marcha.</li>
+</ul>
+
+<h2>2. Datos que hay que recopilar antes</h2>
+<p>Completar esta hoja antes de tocar la configuración reduce cambios posteriores y evita inventar valores durante las pruebas.</p>
+<table>
+  <thead><tr><th>Dato</th><th>Valor del barco</th><th>Uso</th></tr></thead>
+  <tbody>
+    <tr><td>Nombre del barco</td><td>________________</td><td>Identidad en Signal K y AIS.</td></tr>
+    <tr><td>MMSI y distintivo</td><td>________________</td><td>Identidad AIS. Copiar del registro, sin improvisar.</td></tr>
+    <tr><td>Modelo de motor</td><td>________________</td><td>Escala RPM, zona roja y tabla de consumo.</td></tr>
+    <tr><td>Horas reales actuales</td><td>________________ h</td><td>Valor inicial de Hour Meter.</td></tr>
+    <tr><td>RPM máximas del fabricante</td><td>________________ rpm</td><td>Máximo del tacómetro.</td></tr>
+    <tr><td>Inicio zona roja</td><td>________________ rpm</td><td>Marca visual del tacómetro.</td></tr>
+    <tr><td>Capacidad de combustible</td><td>________________ L</td><td>Metadatos y contraste del nivel.</td></tr>
+    <tr><td>Calado y posición de sonda</td><td>________________ m</td><td>Interpretar profundidad bajo transductor.</td></tr>
+    <tr><td>IP o nombre de OpenPlotter</td><td>________________</td><td>Dirección de Signal K desde la tablet.</td></tr>
+    <tr><td>Fuente de GPS, viento, profundidad y motor</td><td>________________</td><td>Prioridades y diagnóstico.</td></tr>
+  </tbody>
+</table>
+
+<h3>Inventario físico mínimo</h3>
+<ul>
+  <li>Raspberry Pi y almacenamiento fiable, alimentación estabilizada y apagado controlado.</li>
+  <li>Interfaz NMEA 2000/CAN aislada y correctamente terminada; AlbaCombi u otro gateway identificado.</li>
+  <li>Router o punto de acceso del barco con DHCP reservado para OpenPlotter.</li>
+  <li>Tablet o pantalla local, cargador estable y audio comprobado para alarmas.</li>
+  <li>Copia de los manuales del motor, sensores y gateway.</li>
+</ul>
+
+<h2 class="pagebreak">3. Raspberry, OpenPlotter y red</h2>
+<ol>
+  <li>Instalar OpenPlotter, Signal K y OpenCPN. Aplicar actualizaciones antes de configurar el barco.</li>
+  <li>Establecer zona horaria, fecha y sincronización. Las marcas temporales incorrectas invalidan históricos y CPA/TCPA.</li>
+  <li>Reservar una IP para la Raspberry en el router. Mantener también el nombre <code>openplotter.local</code> si la red resuelve mDNS.</li>
+  <li>Abrir desde la Raspberry <code>http://localhost:3000</code> y desde la tablet <code>http://openplotter.local:3000</code> o la IP reservada.</li>
+  <li>Documentar SSID, IP, puerto y usuario administrador en un lugar protegido del barco.</li>
+</ol>
+
+<table>
+  <thead><tr><th>Servicio</th><th>Dirección/puerto</th><th>Observación</th></tr></thead>
+  <tbody>
+    <tr><td>Signal K</td><td><code>http://openplotter.local:3000</code></td><td>Servidor de instrumentos y WebSocket.</td></tr>
+    <tr><td>Signal K desde la propia Raspberry</td><td><code>http://localhost:3000</code></td><td>Solo funciona en el mismo equipo.</td></tr>
+    <tr><td>Entrada NMEA 0183 de navegación</td><td>TCP <code>10110</code></td><td>RMB/APB/XTE desde OpenCPN.</td></tr>
+    <tr><td>OpenBoat local Raspberry</td><td><code>127.0.0.1:8765</code></td><td>Servidor local del paquete Raspberry.</td></tr>
+  </tbody>
+</table>
+
+<div class="box warning"><b>No usar localhost en la tablet.</b> Allí significa “esta tablet”, no la Raspberry. Si la conexión se pierde pese a tener buena cobertura Wi‑Fi, revisar aislamiento de clientes, ahorro de energía, saturación del punto de acceso y respuesta del WebSocket de Signal K.</div>
+
+<h3>Instalación de OpenBoat en la Raspberry</h3>
+<ol>
+  <li>Extraer <code>navmarina-raspberry.zip</code>.</li>
+  <li>Ejecutar <code>bash install.sh</code> como usuario del escritorio, sin sudo.</li>
+  <li>Comprobar Chromium y Python 3.9 o posterior.</li>
+  <li>Abrir OpenBoat y guardar <code>http://localhost:3000</code> como servidor Signal K.</li>
+</ol>
+<pre>systemctl --user status navmarina.service
+journalctl --user -u navmarina.service -n 50</pre>
+
+<h2>4. Configuración inicial de Signal K</h2>
+<h3>4.1 Identidad y seguridad</h3>
+<ul>
+  <li>Verificar la identidad de <code>vessels.self</code>, nombre, MMSI y UUID. No cambiar el UUID una vez que otras aplicaciones dependan de él.</li>
+  <li>Si se activa seguridad en Signal K, comprobar previamente que OpenBoat pueda leer el stream. La versión actual no ofrece un campo para introducir token Signal K.</li>
+  <li>No exponer el puerto 3000 a Internet. Limitarlo a la red del barco.</li>
+</ul>
+
+<h3>4.2 Conexión NMEA 2000</h3>
+<ol>
+  <li>Configurar la interfaz CAN/gateway en OpenPlotter.</li>
+  <li>Confirmar terminación y alimentación del backbone antes de conectar.</li>
+  <li>Abrir <b>Data Browser</b> y comprobar fuente, valor y fecha de actualización.</li>
+  <li>Asignar prioridades si varios equipos publican el mismo path.</li>
+</ol>
+
+<h3>4.3 Valores que se introducen una sola vez</h3>
+<table>
+  <thead><tr><th>Valor</th><th>Dónde</th><th>Criterio</th></tr></thead>
+  <tbody>
+    <tr><td>Identidad del barco</td><td>Configuración del servidor/vessel</td><td>Datos registrales reales.</td></tr>
+    <tr><td>Horas iniciales de motor</td><td>Hour Meter → Hours already on device</td><td>Lectura física al momento de activar el plugin.</td></tr>
+    <tr><td>Fuente preferida por path</td><td>Data → Source Priority</td><td>Sensor real; evitar simuladores y duplicados.</td></tr>
+    <tr><td>Metadatos y offsets de sensores</td><td>Sensor, gateway o metadata</td><td>Según instalación física; documentar dónde se corrige.</td></tr>
+    <tr><td>Conexión OpenCPN</td><td>Data Connections</td><td>TCP 10110, identificador único.</td></tr>
+  </tbody>
+</table>
+
+<div class="box"><b>No escribir manualmente datos dinámicos</b> como posición, rumbo, RPM o viento para el uso normal. Deben publicarlos sensores o plugins. Data Fiddler solo se utiliza para pruebas controladas.</div>
+
+<h2 class="pagebreak">5. Plugins utilizados</h2>
+<h3>5.1 Hour Meter — requerido para horas persistentes</h3>
+<p>Instalar <b>Hour Meter</b> desde App Store solamente si el AlbaCombi o el motor no publican ya <code>propulsion.0.runTime</code>. Dos publicadores del mismo path deben evitarse.</p>
+<table>
+  <thead><tr><th>Campo</th><th>Valor recomendado</th><th>Notas</th></tr></thead>
+  <tbody>
+    <tr><td>Device name</td><td><code>Motor</code></td><td>Genera el identificador y el archivo <code>motor.dat</code>.</td></tr>
+    <tr><td>SignalK value that indicates device is on</td><td><code>propulsion.0.revolutions</code></td><td>Debe ser mayor que cero al arrancar.</td></tr>
+    <tr><td>SignalK timeout (secs)</td><td><code>30</code></td><td>Tolerancia a silencios de RPM.</td></tr>
+    <tr><td>SignalK resume last run (secs)</td><td><code>300</code></td><td>Une cortes breves en una misma sesión.</td></tr>
+    <tr><td>SignalK path to output hour meter data</td><td><code>propulsion.0.runTime</code></td><td>Unidad estándar: segundos.</td></tr>
+    <tr><td>SignalK path to output device status</td><td>Vacío</td><td>No es necesario para OpenBoat.</td></tr>
+    <tr><td>Hours already on device</td><td>Lectura real</td><td>Introducir una vez; no en cada arranque.</td></tr>
+    <tr><td>Reporting interval (secs)</td><td><code>5</code> o <code>10</code></td><td>Cadencia del horómetro en la app.</td></tr>
+  </tbody>
+</table>
+<p>Verificar que <code>runTime ÷ 3600</code> coincide con las horas esperadas. Después reiniciar Signal K y confirmar que reaparece. El historial suele quedar en:</p>
+<pre>/home/pi/.signalk/plugin-config-data/signalk-hour-meter/motor.dat
+/home/pi/.signalk/plugin-config-data/signalk-hour-meter.json</pre>
+<p class="small">La ruta exacta depende del usuario que ejecuta Signal K. Respaldar toda la carpeta <code>plugin-config-data</code>.</p>
+
+<h3>5.2 Derived Data — opcional para viento real</h3>
+<p>Instalar <code>signalk-derived-data</code> únicamente cuando Signal K recibe viento aparente y velocidad respecto al agua, pero no TWA/TWS.</p>
+<ol>
+  <li>App Store → instalar Derived Data.</li>
+  <li>Plugin Config → Derived Data → Wind.</li>
+  <li>Activar <b>True Wind Angle and Speed</b>.</li>
+  <li>Comprobar entradas: <code>angleApparent</code>, <code>speedApparent</code> y <code>navigation.speedThroughWater</code>.</li>
+  <li>Comprobar salidas: <code>angleTrueWater</code> y <code>speedTrue</code>.</li>
+</ol>
+<div class="box warning">Si B&amp;G, AlbaCombi u otra fuente ya publica viento real, no activar otro cálculo para los mismos paths sin configurar la prioridad de fuentes.</div>
+
+<h3>5.3 Plugins de simulación</h3>
+<p><b>No deben quedar activos en navegación real.</b> Standard Demo, AIS Demo, Signal K delta simulator y puentes GPS de prueba sirven para aceptación en taller. Desactivarlos antes de validar sensores del barco.</p>
+
+<h2>6. Paths y unidades que espera OpenBoat</h2>
+<table>
+  <thead><tr><th>Función</th><th>Path Signal K</th><th>Unidad/forma</th><th>Comprobación</th></tr></thead>
+  <tbody>
+    <tr><td>Posición</td><td><code>navigation.position</code></td><td>latitude/longitude</td><td>Fecha reciente y coordenadas plausibles.</td></tr>
+    <tr><td>Rumbo verdadero</td><td><code>navigation.headingTrue</code></td><td>rad</td><td>No confundir con COG.</td></tr>
+    <tr><td>Rumbo magnético</td><td><code>navigation.headingMagnetic</code> + <code>magneticVariation</code></td><td>rad</td><td>Respaldo si falta headingTrue.</td></tr>
+    <tr><td>COG / SOG</td><td><code>courseOverGroundTrue</code> / <code>speedOverGround</code></td><td>rad / m/s</td><td>Comparar navegando, no en parado.</td></tr>
+    <tr><td>Profundidad</td><td><code>environment.depth.belowTransducer</code></td><td>m</td><td>Confirmar referencia bajo transductor.</td></tr>
+    <tr><td>Escora</td><td><code>navigation.attitude.roll</code></td><td>rad</td><td>Signo babor/estribor correcto.</td></tr>
+    <tr><td>Viento aparente</td><td><code>environment.wind.angleApparent</code>, <code>speedApparent</code></td><td>rad / m/s</td><td>Ángulo relativo a proa.</td></tr>
+    <tr><td>Viento real</td><td><code>angleTrueWater</code>, <code>speedTrue</code>, <code>directionTrue</code></td><td>rad / m/s</td><td>No duplicar cálculo.</td></tr>
+    <tr><td>Corriente</td><td><code>environment.current.drift</code>, <code>setTrue</code></td><td>m/s / rad</td><td>Requiere fuente o cálculo fiable.</td></tr>
+    <tr><td>Timón</td><td><code>steering.rudderAngle</code></td><td>rad</td><td>Cero centrado y signo correcto.</td></tr>
+    <tr><td>RPM</td><td><code>propulsion.0.revolutions</code></td><td>Hz</td><td>30 Hz = 1800 RPM.</td></tr>
+    <tr><td>Horas motor</td><td><code>propulsion.0.runTime</code></td><td>s</td><td>9.248.400 s = 2569 h.</td></tr>
+    <tr><td>Temperatura motor</td><td><code>propulsion.0.temperature</code> o <code>coolantTemperature</code></td><td>K</td><td>°C = K − 273,15.</td></tr>
+    <tr><td>Presión aceite</td><td><code>propulsion.0.oilPressure</code></td><td>Pa</td><td>1 bar = 100.000 Pa.</td></tr>
+    <tr><td>Combustible</td><td><code>tanks.fuel.0.currentLevel</code></td><td>ratio 0–1</td><td>0,50 = 50 %.</td></tr>
+    <tr><td>Batería</td><td><code>electrical.batteries.0.voltage</code></td><td>V</td><td>Identificar qué batería publica.</td></tr>
+    <tr><td>Piloto</td><td><code>steering.autopilot.state</code></td><td>texto</td><td>Solo visualización.</td></tr>
+    <tr><td>AIS</td><td><code>vessels.&lt;id&gt;.navigation.*</code>, name, mmsi</td><td>modelo AIS</td><td>Posición, SOG y COG recientes.</td></tr>
+  </tbody>
+</table>
+
+<h3>Notificaciones de motor</h3>
+<p>Para los iconos de alarma se esperan rutas bajo <code>notifications.propulsion.*</code>: sobretemperatura, baja presión de aceite, carga de alternador y baja tensión. La app no inventa estas alarmas a partir de umbrales fijos.</p>
+
+<h2 class="pagebreak">7. OpenCPN y waypoint</h2>
+<h3>Entrada de Signal K en OpenCPN</h3>
+<table><tr><th>Campo</th><th>Valor</th></tr><tr><td>Tipo / protocolo</td><td>Network / Signal K</td></tr><tr><td>Dirección</td><td><code>127.0.0.1</code> si comparte Raspberry</td></tr><tr><td>Puerto</td><td><code>3000</code></td></tr><tr><td>Dirección de datos</td><td>Entrada</td></tr></table>
+
+<h3>Salida de destino hacia Signal K</h3>
+<p>En Signal K crear o reutilizar una conexión NMEA 0183 tipo <b>TCP Server on port 10110</b>. En OpenCPN crear una salida TCP a <code>127.0.0.1:10110</code>, marcar salida y filtrar <code>APB,RMB,XTE</code>. No marcar entrada en esa segunda conexión.</p>
+<p>Activar “Navegar hacia” y confirmar en Data Browser:</p>
+<pre>navigation.courseRhumbline.nextPoint.position
+navigation.courseRhumbline.nextPoint.distance
+navigation.courseRhumbline.nextPoint.bearingTrue
+navigation.courseRhumbline.nextPoint.ID
+navigation.courseRhumbline.crossTrackError</pre>
+<p>Cancelar el destino y verificar que el panel desaparece. Mantener abierta la ventana Opciones de OpenCPN puede detener temporalmente la salida.</p>
+
+<h2>8. Instalación y ajustes de OpenBoat</h2>
+<h3>8.1 Conexión</h3>
+<p>En la tablet guardar <code>http://openplotter.local:3000</code> o la IP reservada. En la instalación local de Raspberry usar <code>http://localhost:3000</code>. Nunca introducir el puerto 10110 como servidor de la app.</p>
+
+<h3>8.2 Valores iniciales de la aplicación</h3>
+<table>
+  <thead><tr><th>Ajuste</th><th>Valor inicial</th><th>Qué hacer a bordo</th></tr></thead>
+  <tbody>
+    <tr><td>Actualización de lecturas</td><td>2 s</td><td>Usar 0–5 s según estabilidad visual; alarmas siguen en vivo.</td></tr>
+    <tr><td>Alcance AIS</td><td>6 NM</td><td>Ajustar a densidad de tráfico; no afecta evaluación de colisión.</td></tr>
+    <tr><td>AIS naranja</td><td>CPA ≤ 0,50 NM y TCPA ≤ 15 min</td><td>Validar para zona y velocidad habitual.</td></tr>
+    <tr><td>AIS rojo</td><td>CPA ≤ 0,20 NM y TCPA ≤ 5 min</td><td>Debe ser igual o más restrictivo que naranja.</td></tr>
+    <tr><td>Alarma profundidad</td><td>3,0 m; activa y con sonido</td><td>Relacionar con calado, referencia de sonda y margen.</td></tr>
+    <tr><td>Escora</td><td>30°</td><td>Ajustar al barco y plan vélico.</td></tr>
+    <tr><td>Combustible bajo</td><td>20 %</td><td>Contrastar sensor, geometría del depósito y reserva real.</td></tr>
+    <tr><td>Tacómetro</td><td>5000 máximo / 4000 zona roja</td><td>Sustituir por datos del fabricante.</td></tr>
+    <tr><td>Historial TWS y SOG</td><td>2 h</td><td>Rango configurable 1–24 h.</td></tr>
+    <tr><td>Modo noche</td><td>30 %</td><td>Probar en oscuridad sin perder alarmas.</td></tr>
+  </tbody>
+</table>
+
+<h3>8.3 Tabla inicial de consumo</h3>
+<p>La app incorpora una curva conservadora. Debe reemplazarse por datos del motor, hélice y barco cuando estén disponibles.</p>
+<table>
+  <thead><tr><th>RPM</th><th>L/h</th><th>RPM</th><th>L/h</th><th>RPM</th><th>L/h</th></tr></thead>
+  <tbody>
+    <tr><td>1600</td><td>1,2</td><td>2200</td><td>2,4</td><td>2800</td><td>4,5</td></tr>
+    <tr><td>1800</td><td>1,5</td><td>2400</td><td>3,0</td><td>3000</td><td>5,4</td></tr>
+    <tr><td>2000</td><td>1,9</td><td>2600</td><td>3,7</td><td>3200</td><td>6,5</td></tr>
+  </tbody>
+</table>
+<p>Entre filas se interpola. Fuera de ellas se escala proporcionalmente desde la referencia más cercana. Es una estimación, no un caudalímetro. El acumulado depende de RPM válidas y de que la aplicación esté activa.</p>
+
+<h2>9. Pruebas de aceptación</h2>
+<h3>9.1 En puerto, motor parado</h3>
+<ul>
+  <li>Conexión estable durante al menos 30 minutos y recuperación tras apagar/encender Wi‑Fi.</li>
+  <li>GPS y fecha correctos; rumbo distinto de COG cuando corresponde.</li>
+  <li>Profundidad contrastada con instrumento principal y referencia conocida.</li>
+  <li>AIS: nombres, MMSI, distancias y apertura de ficha.</li>
+  <li>Sonidos de profundidad y colisión audibles con el volumen operativo.</li>
+  <li>Modo noche legible y sin ocultar alarmas.</li>
+</ul>
+
+<h3>9.2 Motor en marcha, barco amarrado</h3>
+<ul>
+  <li>RPM de Signal K coinciden con B&amp;G/motor en ralentí y varios regímenes permitidos.</li>
+  <li>Hour Meter aumenta, persiste tras reiniciar y no duplica otra fuente.</li>
+  <li>Temperatura, presión, batería y combustible tienen unidades y orden de magnitud correctos.</li>
+  <li>Consumo estimado responde a RPM; registrar diferencias para ajustar la tabla.</li>
+  <li>Indicadores RUNNING e IGNITION se comportan conforme al cableado real.</li>
+</ul>
+
+<h3>9.3 Prueba de mar</h3>
+<ul>
+  <li>Comparar AWA, TWA, AWS y TWS con B&amp;G en ambos costados y varios rumbos.</li>
+  <li>Comparar SOG/COG con OpenCPN y una fuente GNSS independiente.</li>
+  <li>Validar signo de escora y timón.</li>
+  <li>Activar un waypoint próximo y confirmar distancia, demora, XTE y cancelación.</li>
+  <li>Probar AIS con contactos reales sin provocar maniobras basadas únicamente en la app.</li>
+  <li>Anotar cualquier offset constante; corregirlo en la fuente adecuada, no ocultarlo en pantalla sin documentar.</li>
+</ul>
+
+<h2 class="pagebreak">10. Copias de seguridad y mantenimiento</h2>
+<h3>Qué respaldar</h3>
+<pre>/home/pi/.signalk/
+  settings.json
+  package.json
+  plugin-config-data/
+  security.json            (si existe; proteger especialmente)
+
+~/.local/share/navmarina/
+  browser/                 (perfil y ajustes del dashboard local)
+  releases/                (versiones instaladas)</pre>
+<p>El historial de Hour Meter y sus horas iniciales dependen de <code>plugin-config-data</code>. Hacer una copia después de la puesta en marcha y antes de actualizar plugins, OpenPlotter o la tarjeta SD.</p>
+
+<h3>Rutina recomendada</h3>
+<table>
+  <thead><tr><th>Frecuencia</th><th>Comprobación</th></tr></thead>
+  <tbody>
+    <tr><td>Antes de cada salida</td><td>Signal K conectado, GPS reciente, profundidad, AIS, batería y audio.</td></tr>
+    <tr><td>Mensual</td><td>Backup, espacio libre, logs, persistencia de horas y comparación del combustible.</td></tr>
+    <tr><td>Tras cambios de red</td><td>IP reservada, acceso desde tablet y reconexión.</td></tr>
+    <tr><td>Tras actualizar</td><td>Repetir prueba en puerto y conservar versión anterior hasta validar.</td></tr>
+    <tr><td>Inicio de temporada</td><td>Prueba de mar completa y revisión de umbrales.</td></tr>
+  </tbody>
+</table>
+
+<h2>11. Diagnóstico rápido</h2>
+<table>
+  <thead><tr><th>Síntoma</th><th>Revisar</th></tr></thead>
+  <tbody>
+    <tr><td>Conectado pero aparecen guiones</td><td>Path exacto, unidad, fuente y antigüedad en Data Browser.</td></tr>
+    <tr><td>Lecturas que saltan</td><td>Fuentes duplicadas, simuladores activos y Source Priority.</td></tr>
+    <tr><td>Cortes con buena señal Wi‑Fi</td><td>Respuesta del WebSocket/servidor, ahorro de energía, aislamiento y carga de Raspberry.</td></tr>
+    <tr><td>Aparente y real parecen opuestos</td><td>No comparar AWA con TWA como si fueran la misma referencia; comprobar signo y procedencia.</td></tr>
+    <tr><td>Hour Meter no aumenta</td><td>Entrada real de RPM, valor &gt; 0, timeout e identificador <code>0</code>.</td></tr>
+    <tr><td>Horas vuelven a cero</td><td>Archivo <code>motor.dat</code>, Hours already on device, permisos y backup.</td></tr>
+    <tr><td>Sin nombres AIS</td><td>Path raíz, name/MMSI y acceso REST del servidor.</td></tr>
+    <tr><td>Sin waypoint</td><td>RMB/APB/XTE, TCP 10110, destino activo y ventana Opciones cerrada.</td></tr>
+    <tr><td>Sin sonido</td><td>Volumen, salida HDMI/altavoz e interacción inicial del usuario.</td></tr>
+  </tbody>
+</table>
+
+<h3>Hoja final de aceptación</h3>
+<table class="check">
+  <tr><td>☐</td><td>Raspberry alimentada, refrigerada y con apagado controlado.</td></tr>
+  <tr><td>☐</td><td>IP reservada y Signal K accesible desde tablet y Raspberry.</td></tr>
+  <tr><td>☐</td><td>Simuladores desactivados y prioridades de fuentes revisadas.</td></tr>
+  <tr><td>☐</td><td>Todos los paths esenciales tienen valores y fechas recientes.</td></tr>
+  <tr><td>☐</td><td>Hour Meter conserva las horas reales tras reiniciar.</td></tr>
+  <tr><td>☐</td><td>OpenCPN recibe instrumentos y entrega waypoint activo.</td></tr>
+  <tr><td>☐</td><td>Umbrales de profundidad, escora, combustible y AIS validados.</td></tr>
+  <tr><td>☐</td><td>Alarmas sonoras probadas en el puesto de gobierno.</td></tr>
+  <tr><td>☐</td><td>Prueba de mar completada y diferencias documentadas.</td></tr>
+  <tr><td>☐</td><td>Backup completo creado y restauración comprendida.</td></tr>
+</table>
+
+<h2>Referencias del proyecto</h2>
+<ul>
+  <li><code>GUIA-INSTALACION-OPENCPN.md</code></li>
+  <li><code>services/signalk/STANDARD.md</code></li>
+  <li><code>raspberry/README.md</code></li>
+  <li><code>ANDROID-APK.md</code></li>
+</ul>
+<p class="footer-note">Este documento describe el estado del proyecto a 10/11/2026. Registrar en una copia a bordo cualquier desviación, identificador distinto de <code>propulsion.0</code>, calibración o plugin adicional.</p>
+
+</body>
+</html>

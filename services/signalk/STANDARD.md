@@ -61,6 +61,13 @@ El número de profundidad evita la espera mientras hay alarma y al salir de ella
   Solo se muestra con conexión y RPM válidas mayores que cero; se oculta con
   0 RPM, al caducar o faltar las RPM y al desconectar, aunque el estado
   explícito del motor siga indicando `started`.
+  Con RPM positivas y SOG superior a 1,5 kn, la pantalla principal sustituye
+  las opciones de fondeo por un resumen compacto con las RPM y el consumo
+  actual. Si el motor está parado, faltan RPM válidas o el SOG es igual o
+  inferior a 1,5 kn, vuelve a mostrar el panel de fondeo. El resumen se oculta
+  mientras el panel completo del motor está abierto. El mismo panel compacto
+  integra los cinco testigos de temperatura, aceite, alternador, batería y
+  combustible; durante su visualización se oculta la columna externa duplicada.
   Ajustes → Motor permite editar y guardar `engineConsumptionTable`, una tabla
   local de pares `{ rpm, litresPerHour }`. Se pueden añadir y eliminar filas,
   usar coma o punto decimal en L/h y guardar la tabla vacía para borrarla.
@@ -273,6 +280,22 @@ sonido. No reaparece por cambios de CPA/TCPA dentro de la misma zona ni por una
 bajada de rojo a naranja. Reaparece ante otro barco en alarma, una subida a rojo o
 una nueva entrada tras salir de alarma. Desaparece si terminan todos los avisos.
 La ficha individual conserva CPA, TCPA y el estado de evaluación.
+Una pulsación sobre `DATOS AIS` conserva la activación/desactivación habitual.
+Dos pulsaciones en menos de 320 ms abren un radar AIS ampliado, orientado por la
+proa y centrado en el barco propio, sin cambiar la visibilidad AIS del compás.
+En esa vista ampliada cada contacto muestra nombre o MMSI y una línea de proa
+según `navigation.headingTrue`, con COG como respaldo. Estas ayudas no se dibujan
+en el compás pequeño para evitar saturarlo. El radar ampliado reutiliza exactamente
+`AisRadarSweep` y `AisRangeRings`: vuelta cada 4 s, estela de 90 sectores y la
+misma fase de parpadeo de 1,5 s. Es decorativo y no modifica la cadencia ni la
+antigüedad real de los datos AIS.
+La etiqueta ampliada incluye CPA y TCPA y reutiliza `collision.level` y
+`AIS_RISK_COLORS`; por tanto aplica exactamente la misma evaluación conjunta y
+los mismos colores que los avisos AIS, sin crear umbrales paralelos. Los valores
+CPA/TCPA solo se muestran para `warning` o `danger`; se ocultan en verde, gris o
+con la evaluación desactivada.
+El símbolo del barco propio, situado en el centro, parpadea con el mismo ciclo
+de 1,5 s que la fase AIS para distinguirlo de los contactos recibidos.
 
 Se supone rumbo y velocidad constantes. No se generan órdenes ni recomendaciones
 de maniobra. Pruebas numéricas en `tests/ais-collision-risk.test.mjs`.
