@@ -298,5 +298,5 @@ export default {
   "aisNoticeClose": "Close approach alert",
   "aisAlarmMute": "Mute AIS alarm",
   "aisAlarmUnmute": "Unmute AIS alarm",
-  "aisAlarmMuteHint": "A new vessel alert or escalation from orange to red unmutes the sound. Red to orange stays muted. When all alerts end, the next alarm is rearmed."
+  "aisAlarmMuteHint": "Remembers each vessel's zone when muted. Sound resumes only if a vessel enters a closer zone than the one remembered or a new vessel enters orange or red. Press again to cancel muting."
 };

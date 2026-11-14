@@ -298,5 +298,5 @@ export default {
   "aisNoticeClose": "Fermer l’alerte de rapprochement",
   "aisAlarmMute": "Couper le son AIS",
   "aisAlarmUnmute": "Réactiver le son AIS",
-  "aisAlarmMuteHint": "Un nouveau bateau en alerte ou le passage d’orange à rouge réactive le son. De rouge à orange, le son reste coupé. À la fin de toutes les alertes, la prochaine alarme est réarmée."
+  "aisAlarmMuteHint": "Mémorise la zone de chaque bateau à la coupure du son. Le son reprend uniquement si un bateau entre dans une zone plus proche que celle mémorisée ou si un nouveau bateau entre en orange ou en rouge. Appuyez à nouveau pour réactiver le son."
 };

@@ -7,8 +7,8 @@ import { AIS_RISK_COLORS } from '../model/aisCollisionRisk';
 export default function AisAlarmBell({ alarm }) {
     const { t } = useTranslation();
     const scale = useControlScale();
-    if (!alarm?.level) return null;
-    const color = AIS_RISK_COLORS[alarm.level];
+    if (!alarm?.level && !alarm?.muted) return null;
+    const color = AIS_RISK_COLORS[alarm.level] ?? '#a5afb7';
     const side = Math.max(44, 44 * scale);
     return <TouchableOpacity accessibilityRole="button"
         accessibilityLabel={t(alarm.muted ? 'aisAlarmUnmute' : 'aisAlarmMute')}
