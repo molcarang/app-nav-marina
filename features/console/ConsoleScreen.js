@@ -56,7 +56,8 @@ export default function ConsoleScreen() {
         authoritativeReceivedAt: rawNavigation.engineRunTimeReceivedAt }, isLoaded);
     const navigation = useMemo(() => ({ ...rawNavigation, engineConsumptionLitresPerHour: engineConsumption }), [rawNavigation, engineConsumption]);
     const evaluatedAisTargets = useAisCollisionRisk(ais.targets, data, settings, data.isConnected && ais.status === 'connected');
-    const aisAlarm = useAisCollisionAlarm(evaluatedAisTargets);
+    const aisAlertTargets = aisVisible ? evaluatedAisTargets : {};
+    const aisAlarm = useAisCollisionAlarm(aisAlertTargets, aisVisible && settings.aisCollisionEnabled !== false);
     const anchorWatch = useAnchorWatch(navigation.position, navigation.positionReceivedAt, data.isConnected);
     useAnchorAlarmSound(anchorWatch.status === 'outside' || anchorWatch.status === 'gpsLost');
     const [aisAuto, setAisAuto] = useState(false);
@@ -104,7 +105,7 @@ export default function ConsoleScreen() {
         <NightModeContext.Provider value={{ enabled: isNightMode, intensity: settings.nightIntensity, toggle: () => setNightMode(previous => !previous) }}>
         <View style={styles.mainContainer}>
             <UpdateNotice />
-            <AisCollisionNotice targets={evaluatedAisTargets} />
+            <AisCollisionNotice targets={aisAlertTargets} />
             {isLandscape ? (
                 <LandscapeNavigationPage
                     {...pageProps}

@@ -298,5 +298,5 @@ export default {
   "aisNoticeClose": "Cerrar aviso de aproximación",
   "aisAlarmMute": "Silenciar alarma AIS",
   "aisAlarmUnmute": "Reactivar sonido AIS",
-  "aisAlarmMuteHint": "Otro barco en alarma o pasar de naranja a rojo reactiva el sonido. Pasar de rojo a naranja mantiene el silencio. Al terminar todos los avisos queda preparado para la próxima alarma."
+  "aisAlarmMuteHint": "Recuerda la zona de cada barco al silenciar. Solo reactiva el sonido si uno entra en una zona más cercana que la recordada o un barco nuevo entra en naranja o rojo. Volver a pulsar cancela el silencio."
 };

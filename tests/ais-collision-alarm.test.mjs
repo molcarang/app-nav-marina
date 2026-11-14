@@ -41,11 +41,11 @@ function harness() {
         throw Error(name);
     } });
     return {
-        render(targets) {
+        render(targets, enabled = true) {
             frames = [];
             do {
                 stateIndex = effectIndex = 0; pendingEffects = []; voices = []; dirty = false;
-                value = exports.useAisCollisionAlarm(targets);
+                value = exports.useAisCollisionAlarm(targets, enabled);
                 frames.push(voices.map(voice => voice.active));
                 for (const callback of pendingEffects) callback();
             } while (dirty);
@@ -112,7 +112,7 @@ test('naranja a rojo reactiva el sonido; al bajar sigue sin silenciarse automati
     assert.deepEqual(app.voices, [true, false]);
 });
 
-test('rojo a naranja mantiene el silencio sin un pitido transitorio; volver a rojo si rearma', () => {
+test('rojo a naranja y vuelta a rojo conserva la zona original del muteo sin pitidos transitorios', () => {
     const app = harness();
     app.render({ a: target('danger') }).toggleMute();
     assert.equal(app.render({ a: target('danger') }).muted, true);
@@ -121,8 +121,8 @@ test('rojo a naranja mantiene el silencio sin un pitido transitorio; volver a ro
     assert.equal(alarm.muted, true);
     assert.ok(app.frames.every(voices => voices.every(active => !active)));
     assert.equal(app.render({ a: target('warning') }).muted, true);
-    assert.equal(app.render({ a: target('danger') }).muted, false);
-    assert.deepEqual(app.voices, [false, true]);
+    assert.equal(app.render({ a: target('danger') }).muted, true);
+    assert.ok(app.frames.every(voices => voices.every(active => !active)));
 });
 
 test('rearma por el cambio de un contacto secundario aunque otro siga en rojo', () => {
@@ -133,16 +133,18 @@ test('rearma por el cambio de un contacto secundario aunque otro siga en rojo', 
     assert.deepEqual(app.voices, [false, true]);
 });
 
-test('un barco sale sin rearmar a los demas; si vuelve a entrar en la misma zona si rearma', () => {
+test('un barco conocido puede salir y volver a su zona silenciada; entrar en una mas cercana rearma', () => {
     const app = harness();
     app.render({ a: target('warning'), b: target('warning') }).toggleMute();
     assert.equal(app.render({ a: target('clear'), b: target('warning') }).muted, true);
     assert.deepEqual(app.voices, [false, false]);
-    assert.equal(app.render({ a: target('warning'), b: target('warning') }).muted, false);
-    assert.deepEqual(app.voices, [true, false]);
+    assert.equal(app.render({ a: target('warning'), b: target('warning') }).muted, true);
+    assert.deepEqual(app.voices, [false, false]);
+    assert.equal(app.render({ a: target('danger'), b: target('warning') }).muted, false);
+    assert.deepEqual(app.voices, [false, true]);
 });
 
-test('la salida de avisos conserva el silencio restante y terminar el episodio rearma el siguiente', () => {
+test('el muteo conserva la referencia aunque todos salgan de las zonas; un barco nuevo lo anula', () => {
     const app = harness();
     let alarm = app.render({ a: target('danger'), b: target('warning') });
     alarm.toggleMute();
@@ -151,19 +153,63 @@ test('la salida de avisos conserva el silencio restante y terminar el episodio r
     assert.deepEqual(app.voices, [false, false]);
     alarm = app.render({ b: target('clear') });
     assert.equal(alarm.level, null);
-    assert.equal(alarm.muted, false);
+    assert.equal(alarm.muted, true);
+    assert.deepEqual(app.voices, [false, false]);
+    assert.equal(app.render({}).muted, true);
+    alarm = app.render({ a: target('warning'), b: target('warning') });
+    assert.equal(alarm.muted, true);
+    assert.deepEqual(app.voices, [false, false]);
+    assert.equal(app.render({ a: target('danger'), b: target('warning') }).muted, true);
     alarm = app.render({ c: target('warning') });
     assert.equal(alarm.muted, false);
     assert.deepEqual(app.voices, [true, false]);
 });
 
-for (const end of ['unknown', 'disabled']) test(`datos invalidos o avisos desactivados (${end}) apagan y rearman`, () => {
+test('datos temporales desconocidos no cambian la zona recordada; desactivar el AIS borra el muteo', () => {
     const app = harness();
     app.render({ a: target('danger') }).toggleMute();
     assert.equal(app.render({ a: target('danger') }).muted, true);
-    assert.equal(app.render({ a: target(end) }).level, null);
+    assert.equal(app.render({ a: target('unknown') }).level, null);
+    assert.equal(app.render({ a: target('danger') }).muted, true);
+    let alarm = app.render({ a: target('danger') }, false);
+    assert.equal(alarm.level, null);
+    assert.equal(alarm.muted, false);
+    assert.deepEqual(app.voices, [false, false]);
+    alarm = app.render({ a: target('danger') });
+    assert.equal(alarm.muted, false);
+    assert.deepEqual(app.voices, [false, true]);
+});
+
+for (const level of ['warning', 'danger']) test(`un barco fuera de las zonas al mutear reactiva el sonido al entrar en ${level}`, () => {
+    const app = harness();
+    app.render({ a: target('danger'), b: target('clear') }).toggleMute();
+    assert.equal(app.render({ a: target('danger'), b: target('clear') }).muted, true);
+    assert.equal(app.render({ a: target('danger'), b: target(level) }).muted, false);
+    assert.deepEqual(app.voices, [false, true]);
+});
+
+test('el boton permite cancelar el muteo aunque todos los barcos esten fuera de las zonas', () => {
+    const app = harness();
+    app.render({ a: target('danger') }).toggleMute();
+    let alarm = app.render({ a: target('clear') });
+    assert.equal(alarm.level, null);
+    assert.equal(alarm.muted, true);
+    alarm.toggleMute();
+    alarm = app.render({ a: target('clear') });
+    assert.equal(alarm.muted, false);
+    assert.deepEqual(app.voices, [false, false]);
     assert.equal(app.render({ a: target('danger') }).muted, false);
     assert.deepEqual(app.voices, [false, true]);
+});
+
+test('cada pulsacion para silenciar toma una nueva referencia de todos los barcos actuales', () => {
+    const app = harness();
+    app.render({ a: target('warning'), b: target('danger') }).toggleMute();
+    assert.equal(app.render({ a: target('danger'), b: target('danger') }).muted, false);
+    app.render({ a: target('danger'), b: target('danger') }).toggleMute();
+    assert.equal(app.render({ a: target('warning'), b: target('warning') }).muted, true);
+    assert.equal(app.render({ a: target('danger'), b: target('danger') }).muted, true);
+    assert.deepEqual(app.voices, [false, false]);
 });
 
 for (const [name, seconds] of [['ais-warning-alarm', 0.16], ['ais-danger-alarm', 0.65]]) {
